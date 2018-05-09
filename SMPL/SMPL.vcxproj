@@ -20,10 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generator.cpp" />
+    <ClCompile Include="JointRegressor.cpp" />
+    <ClCompile Include="Optimizer.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXUtils.h" />
+    <ClInclude Include="JointRegressor.h" />
+    <ClInclude Include="Optimizer.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Definitions.h" />
     <ClInclude Include="Generator.h" />

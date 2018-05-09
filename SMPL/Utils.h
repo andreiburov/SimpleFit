@@ -2,13 +2,14 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 #include <Windows.h>
 #include <Eigen/Eigen>
 
 #include "DXUtils.h"
 #include "Definitions.h"
 
-namespace smpl
+namespace smpl 
 {
 	struct SparseMatrixGPU
 	{

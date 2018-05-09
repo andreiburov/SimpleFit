@@ -43,6 +43,8 @@ namespace smpl
 	const int HAND_LEFT = 23;
 	const int JOINT_COUNT = 24;
 
+	const int COCO_JOINT_COUNT = 18;
+
 	const int PARENT_INDEX[JOINT_COUNT] = {
 		-1,
 		HIP_CENTER,

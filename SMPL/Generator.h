@@ -1,12 +1,9 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
-#include "DXUtils.h"
 #include "Definitions.h"
 #include "D3D.h"
 #include "Utils.h"
+#include "JointRegressor.h"
 
 namespace smpl {
 
@@ -36,7 +33,7 @@ namespace smpl {
 		{
 		}
 
-		void operator()(const ShapeCoefficients& betas, std::vector<float3>& vertices)
+		void operator()(const ShapeCoefficients& betas, std::vector<float3>& vertices) const
 		{		
 			#pragma omp parallel for
 			for (uint i = 0; i < VERTEX_COUNT; i++)
@@ -52,32 +49,7 @@ namespace smpl {
 
 	private:
 		const D3D & d3d_;
-		std::vector<float3> shapedirs_;
-	};
-
-	class JointRegressor
-	{
-	public:
-		JointRegressor(const D3D& d3d, SparseMatrix& matrix) :
-			d3d_(d3d), matrix_(std::move(matrix)), eigen_matrix_(matrix_.ToEigen())
-		{
-		}
-
-		Joints operator()(const std::vector<float3>& vertices)
-		{
-			Joints joints(JOINT_COUNT, 3);
-			// triplets are read line by line, thus row major
-			Eigen::MatrixXf vertex_matrix = Eigen::Map<Eigen::MatrixXf, Eigen::RowMajor>((float*)(vertices.data()), 3, VERTEX_COUNT).transpose();
-			joints = eigen_matrix_ * vertex_matrix;
-
-			// joints have to be manipulated as vectors (columnwise)
-			return joints.transpose();
-		}
-
-	private:
-		const D3D& d3d_;
-		SparseMatrix matrix_;
-		Eigen::SparseMatrix<float> eigen_matrix_;
+		const std::vector<float3> shapedirs_;
 	};
 
 	class PoseMorph
@@ -88,7 +60,7 @@ namespace smpl {
 		{
 		}
 
-		void operator()(const PoseCoefficients& thetas, std::vector<float3>& vertices)
+		void operator()(const PoseCoefficients& thetas, std::vector<float3>& vertices) const
 		{
 			// invariant to rotation of the parent joint
 			Eigen::Matrix3f rotation[THETA_COUNT_WITHOUT_PARENT];
@@ -114,7 +86,7 @@ namespace smpl {
 
 	private:
 		const D3D& d3d_;
-		std::vector<float3> posedirs_;
+		const std::vector<float3> posedirs_;
 	};
 
 	class SkinMorph
@@ -125,7 +97,7 @@ namespace smpl {
 		{
 		}
 
-		void operator()(const PoseCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices)
+		void operator()(const PoseCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const
 		{
 			Eigen::Matrix4f palette[JOINT_COUNT];
 			std::fill_n(palette, JOINT_COUNT, Eigen::Matrix4f::Zero());
@@ -166,7 +138,7 @@ namespace smpl {
 
 	private:
 		const D3D& d3d_;
-		std::vector<Skin> skins_;
+		const std::vector<Skin> skins_;
 	};
 
 	class Generator
@@ -193,9 +165,9 @@ namespace smpl {
 	private:
 		const std::vector<float3> vertices_;
 		const std::vector<uint> indices_;
-		IdentityMorph identity_morph_;
-		JointRegressor joint_regressor_;
-		PoseMorph pose_morph_;
-		SkinMorph skin_morph_;
+		const IdentityMorph identity_morph_;
+		const JointRegressor joint_regressor_;
+		const PoseMorph pose_morph_;
+		const SkinMorph skin_morph_;
 	};
 }
