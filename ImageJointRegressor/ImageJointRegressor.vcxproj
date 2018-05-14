@@ -27,7 +27,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -72,9 +72,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>N:\TUM-PC\Desktop\Code\openpose\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\opencv\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe\include2;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\freeglut\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe3rdparty\include\boost-1_61;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe3rdparty\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>N:\TUM-PC\Desktop\Code\openpose\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\opencv\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe\include2;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\freeglut\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe3rdparty\include\boost-1_61;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe3rdparty\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -117,13 +119,14 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>N:/TUM-PC/Desktop/Code/openpose/SimpleFit/examples/tutorial_pose/Debug/1_extract_from_image.lib</ImportLibrary>
-      <ProgramDataBaseFile>N:/TUM-PC/Desktop/Code/openpose/SimpleFit/$(Platform)/$(Configuration)/1_extract_from_image.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
+    <Lib>
+      <AdditionalLibraryDirectories>..\src\openpose\Debug\openposed.lib;..\..\3rdparty\windows\caffe\lib\caffe.lib;..\..\3rdparty\windows\caffe\lib\caffeproto.lib;..\..\3rdparty\windows\freeglut\lib\freeglut.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudart_static.lib;..\..\3rdparty\windows\opencv\x64\vc14\lib\opencv_world310d.lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -140,6 +143,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>..\src\openpose\Debug\openposed.lib;..\..\3rdparty\windows\caffe\lib\caffe.lib;..\..\3rdparty\windows\caffe\lib\caffeproto.lib;..\..\3rdparty\windows\freeglut\lib\freeglut.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudart_static.lib;..\..\3rdparty\windows\opencv\x64\vc14\lib\opencv_world310d.lib;..\..\3rdparty\windows\caffe3rdparty\lib\gflagsd.lib;..\..\3rdparty\windows\caffe3rdparty\lib\glogd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>..\src\openpose\Debug\openposed.lib;..\..\3rdparty\windows\caffe\lib\caffe.lib;..\..\3rdparty\windows\caffe\lib\caffeproto.lib;..\..\3rdparty\windows\freeglut\lib\freeglut.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64\cudart_static.lib;..\..\3rdparty\windows\opencv\x64\vc14\lib\opencv_world310d.lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

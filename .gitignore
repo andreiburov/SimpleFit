@@ -8,7 +8,9 @@ Resources/
 Archive/
 examples/
 eigen-eigen-5a0156e40feb/
+OpenCV-2.4.13.6/
 src/openpose/
+Main/Photos/
 
 # Linux
 *.swp
