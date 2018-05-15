@@ -7,24 +7,6 @@
 
 namespace smpl {
 
-	struct GeneratorConfiguration
-	{
-		GeneratorConfiguration(const std::string& configuration_path)
-		{
-			ReadObjFile(configuration_path + std::string("/smpl_template.obj"), vertices, indices, skins);
-			ReadFloat3FromBinaryFile(configuration_path + std::string("/smpl_posedirs.bin"), posedirs, POSEDIRS_PER_VERTEX);
-			ReadFloat3FromBinaryFile(configuration_path + std::string("/smpl_shapedirs.bin"), shapedirs, SHAPEDIRS_PER_VERTEX);
-			ReadSparseMatrixFile(configuration_path + std::string("/smpl_regressor.txt"), joint_regressor);
-		}
-
-		std::vector<float3> vertices;
-		std::vector<uint> indices;
-		std::vector<Skin> skins;
-		std::vector<float3> posedirs;
-		std::vector<float3> shapedirs;
-		SparseMatrix joint_regressor;
-	};
-
 	class IdentityMorph
 	{
 	public:
@@ -105,22 +87,14 @@ namespace smpl {
 			// parent initialization
 			{
 				Eigen::AngleAxisf angle_axis(thetas[0].ToEigen().norm(), thetas[0].ToEigen().normalized());
-				palette[0].block<3,3>(0,0) = angle_axis.toRotationMatrix();
-				palette[0].rightCols<1>() = joints.col(0).homogeneous();
+				palette[0] = (Eigen::Translation3f(joints.col(0)) * angle_axis * Eigen::Translation3f(-joints.col(0))).matrix();
 			}
 
 			for (uint i = 1; i < JOINT_COUNT; i++)
 			{
 				Eigen::AngleAxisf angle_axis(thetas[i].ToEigen().norm(), thetas[i].ToEigen().normalized());
-				palette[i].block<3,3>(0,0) = angle_axis.toRotationMatrix();
-				palette[i].rightCols<1>() = (joints.col(i) - joints.col(PARENT_INDEX[i])).homogeneous();
-				palette[i] = palette[PARENT_INDEX[i]] * palette[i];
-			}
-
-			for (uint i = 0; i < JOINT_COUNT; i++)
-			{
-				Eigen::Vector4f j(joints.col(i)(0), joints.col(i)(1), joints.col(i)(2), 0.f);
-				palette[i].rightCols<1>() -= palette[i] * j;
+				palette[i] = palette[PARENT_INDEX[i]]
+					* (Eigen::Translation3f(joints.col(i)) * angle_axis * Eigen::Translation3f(-joints.col(i))).matrix();
 			}
 
 			#pragma omp parallel for
@@ -144,15 +118,34 @@ namespace smpl {
 	class Generator
 	{
 	public:
-		Generator(const D3D& d3d, GeneratorConfiguration configuration) :
+		struct Configuration
+		{
+			Configuration(const std::string& configuration_path)
+			{
+				ReadObjFile(configuration_path + std::string("/smpl_template.obj"), vertices, indices, skins);
+				ReadFloat3FromBinaryFile(configuration_path + std::string("/smpl_posedirs.bin"), posedirs, POSEDIRS_PER_VERTEX);
+				ReadFloat3FromBinaryFile(configuration_path + std::string("/smpl_shapedirs.bin"), shapedirs, SHAPEDIRS_PER_VERTEX);
+				ReadSparseMatrixFile(configuration_path + std::string("/smpl_regressor.txt"), joint_regressor);
+			}
+
+			std::vector<float3> vertices;
+			std::vector<uint> indices;
+			std::vector<Skin> skins;
+			std::vector<float3> posedirs;
+			std::vector<float3> shapedirs;
+			SparseMatrix joint_regressor;
+		};
+
+		Generator(const D3D& d3d, Configuration configuration) :
 			vertices_(configuration.vertices), indices_(configuration.indices),
 			identity_morph_(d3d, configuration.shapedirs), joint_regressor_(d3d, configuration.joint_regressor),
 			pose_morph_(d3d, configuration.posedirs), skin_morph_(d3d, configuration.skins)
 		{
 		}
 		
-		void operator()(const ShapeCoefficients& betas, const PoseCoefficients& thetas, Body& body)
+		Body operator()(const ShapeCoefficients& betas, const PoseCoefficients& thetas) const
 		{
+			Body body;
 			body.vertices = vertices_;
 			body.indices = indices_;
 
@@ -160,6 +153,8 @@ namespace smpl {
 			Joints joints = joint_regressor_(body.vertices);
 			pose_morph_(thetas, body.vertices);
 			skin_morph_(thetas, joints, body.vertices);
+			
+			return body;
 		}
 
 	private:

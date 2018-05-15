@@ -114,16 +114,22 @@ namespace smpl
 
 		Body(const Body& other)
 		{
-			std::copy(other.vertices.begin(), other.vertices.end(), vertices.begin());
-			std::copy(other.indices.begin(), other.indices.end(), indices.begin());
+			vertices = other.vertices;
+			indices = other.indices;
 		}
 
-		Body& operator=(Body other)
+		Body(Body&& other)
+		{
+			vertices = std::move(other.vertices);
+			indices = std::move(other.indices);
+		}
+
+		/*Body& operator=(Body other)
 		{
 			vertices.swap(other.vertices);
 			indices.swap(other.indices);
 			return *this;
-		}
+		}*/
 
 		void dump(const std::string& filename) const
 		{
