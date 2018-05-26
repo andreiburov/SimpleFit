@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generator.cpp" />
+    <ClCompile Include="Image.cpp" />
     <ClCompile Include="JointProjector.cpp" />
     <ClCompile Include="JointRegressor.cpp" />
     <ClCompile Include="Optimizer.cpp" />
@@ -27,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXUtils.h" />
+    <ClInclude Include="Image.h" />
     <ClInclude Include="JointProjector.h" />
     <ClInclude Include="JointRegressor.h" />
     <ClInclude Include="Optimizer.h" />
@@ -102,7 +104,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <IncludePath>$(SolutionDir)eigen-eigen-5a0156e40feb;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)FreeImage-3170\Dist\x64;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -184,7 +187,7 @@ xcopy /i /s $(ProjectDir)Model $(OutDir)Model
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>d3d11.lib</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;FreeImage.lib</AdditionalDependencies>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>

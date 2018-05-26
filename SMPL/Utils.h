@@ -23,7 +23,7 @@ namespace smpl
 		std::vector<Eigen::Triplet<float> > triplets;
 		
 		SparseMatrixGPU ToGPU();
-		Eigen::SparseMatrix<float> ToEigen();
+		Eigen::SparseMatrix<float> ToEigen(const uint& joint_count) const;
 	};
 
 	std::vector<byte> ReadShaderFromCSO(const std::string& filename);

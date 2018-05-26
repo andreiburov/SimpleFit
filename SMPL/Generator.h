@@ -82,7 +82,6 @@ namespace smpl {
 		void operator()(const PoseCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const
 		{
 			Eigen::Matrix4f palette[JOINT_COUNT];
-			std::fill_n(palette, JOINT_COUNT, Eigen::Matrix4f::Zero());
 
 			// parent initialization
 			{
@@ -138,7 +137,7 @@ namespace smpl {
 
 		Generator(const D3D& d3d, Configuration configuration) :
 			vertices_(configuration.vertices), indices_(configuration.indices),
-			identity_morph_(d3d, configuration.shapedirs), joint_regressor_(d3d, configuration.joint_regressor),
+			identity_morph_(d3d, configuration.shapedirs), joint_regressor_(d3d, configuration.joint_regressor, JOINT_COUNT),
 			pose_morph_(d3d, configuration.posedirs), skin_morph_(d3d, configuration.skins)
 		{
 		}

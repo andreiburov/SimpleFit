@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include "DXUtils.h"
+#include "Image.h"
 
 namespace smpl
 {
@@ -131,7 +132,28 @@ namespace smpl
 			return *this;
 		}*/
 
-		void dump(const std::string& filename) const
+		void Draw(Image& image, const Eigen::Matrix3f& intrinsics, const float3& scaling, const float3& translation) const
+		{
+			int w = image.GetWidth();
+			int h = image.GetHeight();
+
+			RGBTRIPLE white;
+			white.rgbtRed = 255;
+			white.rgbtGreen = 255;
+			white.rgbtBlue = 255;
+
+			for (uint i = 0; i < VERTEX_COUNT; i++)
+			{
+				Eigen::Vector3f p = intrinsics * (Eigen::Scaling(scaling.ToEigen()) * vertices[i].ToEigen() + translation.ToEigen());
+				p /= p(2);
+				if ((p(0) >= 0) && (p(0) < w) && (p(1) >= 0) && (p(1) < h))
+				{
+					image[int(p(1))][int(p(0))] = white;
+				}
+			}
+		}
+
+		void Dump(const std::string& filename) const
 		{
 			std::ofstream file(filename, std::ios::out);
 			for (auto& v : vertices)

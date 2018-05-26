@@ -291,7 +291,7 @@ static bool runAndSave(const string& outputFilename,
 }
 
 
-int Tmain( int argc, char** argv )
+int main( int argc, char** argv )
 {
     Size boardSize, imageSize;
     float squareSize = 1.f, aspectRatio = 1.f;

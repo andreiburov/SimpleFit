@@ -39,9 +39,9 @@ namespace smpl
 		return gpu_matrix;
 	}
 
-	Eigen::SparseMatrix<float> SparseMatrix::ToEigen()
+	Eigen::SparseMatrix<float> SparseMatrix::ToEigen(const uint& joint_count) const
 	{
-		Eigen::SparseMatrix<float> matrix(JOINT_COUNT, VERTEX_COUNT);
+		Eigen::SparseMatrix<float> matrix(joint_count, VERTEX_COUNT);
 		matrix.setFromTriplets(triplets.begin(), triplets.end());
 		return matrix;
 	}
