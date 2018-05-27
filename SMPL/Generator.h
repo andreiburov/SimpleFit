@@ -137,7 +137,7 @@ namespace smpl {
 
 		Generator(const D3D& d3d, Configuration configuration) :
 			vertices_(configuration.vertices), indices_(configuration.indices),
-			identity_morph_(d3d, configuration.shapedirs), joint_regressor_(d3d, configuration.joint_regressor, JOINT_COUNT),
+			identity_morph_(d3d, configuration.shapedirs), joint_regressor_(configuration.joint_regressor, JOINT_COUNT),
 			pose_morph_(d3d, configuration.posedirs), skin_morph_(d3d, configuration.skins)
 		{
 		}

@@ -132,7 +132,7 @@ namespace smpl
 			return *this;
 		}*/
 
-		void Draw(Image& image, const Eigen::Matrix3f& intrinsics, const float3& scaling, const float3& translation) const
+		void Draw(Image& image, const Eigen::Matrix3f& intrinsics, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation) const
 		{
 			int w = image.GetWidth();
 			int h = image.GetHeight();
@@ -144,7 +144,7 @@ namespace smpl
 
 			for (uint i = 0; i < VERTEX_COUNT; i++)
 			{
-				Eigen::Vector3f p = intrinsics * (Eigen::Scaling(scaling.ToEigen()) * vertices[i].ToEigen() + translation.ToEigen());
+				Eigen::Vector3f p = intrinsics * (Eigen::Scaling(scaling) * vertices[i].ToEigen() + translation);
 				p /= p(2);
 				if ((p(0) >= 0) && (p(0) < w) && (p(1) >= 0) && (p(1) < h))
 				{

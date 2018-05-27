@@ -7,8 +7,8 @@ namespace smpl
 	class JointRegressor
 	{
 	public:
-		JointRegressor(const D3D& d3d, const SparseMatrix& matrix, const uint& joint_count) :
-			d3d_(d3d), joint_count_(joint_count), matrix_(std::move(matrix)), eigen_matrix_(matrix_.ToEigen(joint_count))
+		JointRegressor(const SparseMatrix& matrix, const uint& joint_count) :
+			joint_count_(joint_count), matrix_(std::move(matrix)), eigen_matrix_(matrix_.ToEigen(joint_count))
 		{
 		}
 
@@ -24,7 +24,6 @@ namespace smpl
 		}
 
 	private:
-		const D3D& d3d_;
 		const uint joint_count_;
 		const SparseMatrix matrix_;
 		const Eigen::SparseMatrix<float> eigen_matrix_;

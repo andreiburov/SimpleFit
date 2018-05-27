@@ -35,10 +35,10 @@
     <ClInclude Include="JointRegressor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="JointProjector.h">
+    <ClInclude Include="Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Image.h">
+    <ClInclude Include="Projector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -55,10 +55,10 @@
     <ClCompile Include="JointRegressor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="JointProjector.cpp">
+    <ClCompile Include="Image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Image.cpp">
+    <ClCompile Include="Projector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
