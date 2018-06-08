@@ -38,47 +38,126 @@ namespace smpl
 		{
 			Body body = generate_(betas, thetas);
 			//body.Dump("new.obj");
-			float learning_rate = 1e-7f;
+			// betas
+			float learning_rate = 1e-3f; 
+			// translation
+			//float learning_rate = 1e-7f;
 			float energy = 1000.f;
 			float epsilon = 10;
 			uint count = 0;
-			
-			/*for (uint iteration = 0; iteration < 100; iteration++)*/
-			while (energy > epsilon)
+
+			// precompute shapedirs derivatives
+			std::cout << "precompute shapdirs' derivatives\n";
+			std::vector<Eigen::Vector3f> dshape;
+			dshape.reserve(COCO_JOINT_COUNT * BETA_COUNT);
 			{
-				Image image(640, 480);
-				body.Draw(image, project_.GetIntrinsics(), scaling, translation);
+				std::vector<float3> shapedirs = generate_.GetShapeDirs();
+				for (uint m = 0; m < COCO_JOINT_COUNT; m++)
+				{
+					Eigen::VectorXf regressor_m = regress_.GetRow(m);			
+					for (uint j = 0; j < BETA_COUNT; j++)
+					{
+						Eigen::Vector3f temp(0, 0, 0);
+						for (uint i = 0; i < VERTEX_COUNT; i++)
+						{
+							temp(0) += regressor_m(i) * shapedirs[i*BETA_COUNT + j].x;
+							temp(1) += regressor_m(i) * shapedirs[i*BETA_COUNT + j].y;
+							temp(2) += regressor_m(i) * shapedirs[i*BETA_COUNT + j].z;
+						}
+						dshape[m*BETA_COUNT + j] = temp;
+					}
+				}
+			}
+			
+			// figure out scaling and translation
+			//for (uint iteration = 0; iteration < 1000; iteration++)
+			///*while (energy > epsilon)*/
+			//{
+			//	Image image(640, 480);
+			//	body.Draw(image, project_.GetIntrinsics(), scaling, translation);
+
+			//	energy = 0.f;
+
+			//	Eigen::Vector3f dscaling(0.f, 0.f, 0.f);
+			//	Eigen::Vector3f dtranslation(0.f, 0.f, 0.f);
+
+			//	Joints joints = regress_(body.vertices);
+
+			//	for (uint i = 0; i < COCO_JOINT_COUNT; i++)
+			//	{
+			//		Eigen::Vector3f joint = joints.col(i);
+			//		Eigen::Vector3f transformed_joint = Eigen::Scaling(scaling) * joint + translation;
+			//		Eigen::Vector2f projection = project_(transformed_joint);
+			//		Eigen::Vector2f error = Eigen::Vector2f(projection(0) - tracked_joints_[2*i], projection(1) - tracked_joints_[2*i + 1]);
+			//		
+			//		energy += error.squaredNorm();
+			//		//dscaling += Eigen::Scaling(joint) * project_.derivative(transformed_joint) * error * 2.f;
+			//		dtranslation += project_.derivative(transformed_joint) * error * 2.f;
+			//	}
+
+			//	image.SavePNG("projection.png");
+
+			//	//scaling -= learning_rate * dscaling;
+			//	translation -= learning_rate * dtranslation;
+
+			//	if (count % 100 == 0)
+			//	{
+			//		std::cout << "Iteration: " << count << std::endl;
+			//		std::cout << "Energy: " << energy << std::endl;
+			//		std::cout << "Scaling: " << std::endl << scaling << std::endl;
+			//		std::cout << "Translation:" << std::endl << translation << std::endl << std::endl;
+			//	}
+			//	count++;
+			//}
+
+			//scaling = Eigen::Vector3f(1.32409f, 1.42544f, 0.997468f);
+			translation = Eigen::Vector3f(-0.0116004f, 0.54908f, -4.42525f);
+
+			count = 0;
+			// figure out betas
+			for (uint iteration = 0; iteration < 1000; iteration++)
+			/*while (energy > epsilon)*/
+			{
+				std::cout << "Generate new body " << count << std::endl;
+				Body local_body = generate_(betas, thetas);
+				std::cout << "Start optimization " << count << std::endl;
 
 				energy = 0.f;
-				
-				Eigen::Vector3f dscaling(0.f, 0.f, 0.f);
-				Eigen::Vector3f dtranslation(0.f, 0.f, 0.f);
+				float dbetas[10] = { 0 };
 
-				Joints joints = regress_(body.vertices);
+				Joints joints = regress_(local_body.vertices);
 
-				for (uint i = 0; i < COCO_JOINT_COUNT; i++)
+				for (uint m = 0; m < COCO_JOINT_COUNT; m++)
 				{
-					Eigen::Vector3f joint = joints.col(i);
+					Eigen::Vector3f joint = joints.col(m);
 					Eigen::Vector3f transformed_joint = Eigen::Scaling(scaling) * joint + translation;
 					Eigen::Vector2f projection = project_(transformed_joint);
-					Eigen::Vector2f error = Eigen::Vector2f(projection(0) - tracked_joints_[2*i], projection(1) - tracked_joints_[2*i + 1]);
-					
+					Eigen::Vector2f error = Eigen::Vector2f(projection(0) - tracked_joints_[2 * m], projection(1) - tracked_joints_[2 * m + 1]);
+
 					energy += error.squaredNorm();
-					dscaling += Eigen::Scaling(joint) * project_.derivative(transformed_joint) * error * 2.f;
-					dtranslation += project_.derivative(transformed_joint) * error * 2.f;
+
+					for (uint j = 0; j < BETA_COUNT; j++)
+					{
+						dbetas[j] += 2.f * error.transpose() * project_.derivative(transformed_joint).transpose() * Eigen::Scaling(scaling) * dshape[m*BETA_COUNT + j];
+					}
 				}
 
-				image.SavePNG("projection.png");
-
-				scaling -= learning_rate * dscaling;
-				translation -= learning_rate * dtranslation;
-
-				if (count % 100 == 0)
+				for (uint j = 0; j < BETA_COUNT; j++)
 				{
+					betas[j] -= learning_rate * dbetas[j];
+				}
+
+				if (count % 5 == 0)
+				{
+					Image image(640, 480);
+					local_body.Draw(image, project_.GetIntrinsics(), scaling, translation);
+					image.SavePNG(std::string("projections/").append(std::to_string(count)).append(".png").c_str());
 					std::cout << "Iteration: " << count << std::endl;
 					std::cout << "Energy: " << energy << std::endl;
-					std::cout << "Scaling: " << std::endl << scaling << std::endl;
-					std::cout << "Translation:" << std::endl << translation << std::endl << std::endl;
+					std::cout << "Betas: ";
+					for (uint j = 0; j < BETA_COUNT; j++)
+						std::cout << betas[j] << " ";
+					std::cout << std::endl;
 				}
 				count++;
 			}

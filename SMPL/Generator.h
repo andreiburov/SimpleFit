@@ -29,6 +29,11 @@ namespace smpl {
 			}
 		}
 
+		const std::vector<float3>& GetShapeDirs() const
+		{
+			return shapedirs_;
+		}
+
 	private:
 		const D3D & d3d_;
 		const std::vector<float3> shapedirs_;
@@ -154,6 +159,11 @@ namespace smpl {
 			skin_morph_(thetas, joints, body.vertices);
 			
 			return body;
+		}
+
+		const std::vector<float3>& GetShapeDirs() const
+		{
+			return identity_morph_.GetShapeDirs();
 		}
 
 	private:

@@ -11,7 +11,7 @@
 using namespace cv;
 using namespace std;
 
-int _main(int argc, char** argv)
+int _______________main(int argc, char** argv)
 {
 	namedWindow("Video");
 	namedWindow("Picture");

@@ -23,6 +23,11 @@ namespace smpl
 			return joints.transpose();
 		}
 
+		Eigen::VectorXf GetRow(uint i) const
+		{
+			return Eigen::VectorXf(eigen_matrix_.row(i));
+		}
+
 	private:
 		const uint joint_count_;
 		const SparseMatrix matrix_;
