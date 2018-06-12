@@ -21,6 +21,31 @@ namespace smpl
 			}
 		}
 
+		Image(const char* filename, const int width, const int height)
+			: width_(width), height_(height), bpp_(24)
+		{
+			FreeImage_Initialise();
+			bitmap_ = FreeImage_Load(FIF_PNG, filename, PNG_DEFAULT);
+			
+			if (width != FreeImage_GetWidth(bitmap_))
+			{
+				std::cerr << "Overlay width does not match the image width.\n";
+				exit(1);
+			}
+
+			if (height != FreeImage_GetHeight(bitmap_))
+			{
+				std::cerr << "Overlay height does not match the image height.\n";
+				exit(1);
+			}
+
+			if (!bitmap_)
+			{
+				std::cerr << "Could not allocate memory for the image.\n";
+				exit(1);
+			}
+		}
+
 		// first access y then access x!
 		RGBTRIPLE* operator[](unsigned i)
 		{
