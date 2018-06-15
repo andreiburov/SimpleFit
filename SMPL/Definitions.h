@@ -80,7 +80,7 @@ namespace smpl
 		float& operator [](int i) { return betas[i]; }
 	};
 
-	struct PoseCoefficients
+	struct PoseAxisAngleCoefficients
 	{
 		float3 thetas[THETA_COUNT];
 		float3 operator [](int i) const { return thetas[i]; }
@@ -89,6 +89,17 @@ namespace smpl
 		// access componentwise
 		float operator ()(int i) const { return thetas[i/3].data[i%3]; }
 		float& operator ()(int i) { return thetas[i/3].data[i%3]; }
+	};
+
+	struct PoseEulerCoefficients
+	{
+		float3 thetas[THETA_COUNT];
+		float3 operator [](int i) const { return thetas[i]; }
+		float3& operator [](int i) { return thetas[i]; }
+
+		// access componentwise
+		float operator ()(int i) const { return thetas[i / 3].data[i % 3]; }
+		float& operator ()(int i) { return thetas[i / 3].data[i % 3]; }
 	};
 
 	struct Skin
@@ -102,6 +113,7 @@ namespace smpl
 	struct Body
 	{
 		std::vector<float3> vertices;
+		std::vector<float3> deformed_template;
 		std::vector<uint> indices;
 
 		Body()
@@ -117,12 +129,14 @@ namespace smpl
 		{
 			vertices = other.vertices;
 			indices = other.indices;
+			deformed_template = other.deformed_template;
 		}
 
 		Body(Body&& other)
 		{
 			vertices = std::move(other.vertices);
 			indices = std::move(other.indices);
+			deformed_template = std::move(other.deformed_template);
 		}
 
 		/*Body& operator=(Body other)

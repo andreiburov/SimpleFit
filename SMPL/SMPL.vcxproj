@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="EulerAngles.cpp" />
     <ClCompile Include="Generator.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="Projector.cpp" />
@@ -28,6 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXUtils.h" />
+    <ClInclude Include="EulerAngles.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Projector.h" />
     <ClInclude Include="JointRegressor.h" />

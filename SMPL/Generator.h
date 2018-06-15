@@ -4,6 +4,7 @@
 #include "D3D.h"
 #include "Utils.h"
 #include "JointRegressor.h"
+#include "EulerAngles.h"
 
 namespace smpl {
 
@@ -47,7 +48,7 @@ namespace smpl {
 		{
 		}
 
-		void operator()(const PoseCoefficients& thetas, std::vector<float3>& vertices) const
+		void operator()(const PoseAxisAngleCoefficients& thetas, std::vector<float3>& vertices) const
 		{
 			// invariant to rotation of the parent joint
 			Eigen::Matrix3f rotation[THETA_COUNT_WITHOUT_PARENT];
@@ -60,6 +61,29 @@ namespace smpl {
 			}
 			
 			#pragma omp parallel for
+			for (uint i = 0; i < VERTEX_COUNT; i++)
+			{
+				Eigen::Vector3f v = vertices[i].ToEigen();
+				for (uint j = 0; j < THETA_MATRIX_COMPONENT_COUNT; j++)
+				{
+					v += rotation[j / 9].data()[j % 9] * posedirs_[i*THETA_MATRIX_COMPONENT_COUNT + j].ToEigen();
+				}
+				vertices[i] = float3(v);
+			}
+		}
+
+		void operator()(const PoseEulerCoefficients& thetas, std::vector<float3>& vertices) const
+		{
+			// invariant to rotation of the parent joint
+			Eigen::Matrix3f rotation[THETA_COUNT_WITHOUT_PARENT];
+
+			for (uint i = 0; i < THETA_COUNT_WITHOUT_PARENT; i++)
+			{
+				// rotations will be flattened row-wise
+				rotation[i] = (EulerRotation(thetas[i].x, thetas[i].y, thetas[i].z) - Eigen::Matrix3f::Identity()).transpose();
+			}
+
+#pragma omp parallel for
 			for (uint i = 0; i < VERTEX_COUNT; i++)
 			{
 				Eigen::Vector3f v = vertices[i].ToEigen();
@@ -84,7 +108,7 @@ namespace smpl {
 		{
 		}
 
-		void operator()(const PoseCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const
+		void operator()(const PoseAxisAngleCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const
 		{
 			Eigen::Matrix4f palette[JOINT_COUNT];
 
@@ -112,6 +136,39 @@ namespace smpl {
 
 				vertices[i] = float3((skin * vertices[i].ToEigen().homogeneous()).head(3));
 			}
+		}
+
+		void operator()(const PoseEulerCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const
+		{
+			Eigen::Matrix4f palette[JOINT_COUNT];
+
+			// parent initialization
+			{
+				palette[0] = EulerSkinning(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+			}
+
+			for (uint i = 1; i < JOINT_COUNT; i++)
+			{
+				palette[i] = palette[PARENT_INDEX[i]]
+					* EulerSkinning(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+			}
+
+#pragma omp parallel for
+			for (uint i = 0; i < VERTEX_COUNT; i++)
+			{
+				Eigen::Matrix4f skin
+					= skins_[i].weight.x * palette[skins_[i].joint_index.x]
+					+ skins_[i].weight.y * palette[skins_[i].joint_index.y]
+					+ skins_[i].weight.z * palette[skins_[i].joint_index.z]
+					+ skins_[i].weight.w * palette[skins_[i].joint_index.w];
+
+				vertices[i] = float3((skin * vertices[i].ToEigen().homogeneous()).head(3));
+			}
+		}
+
+		const std::vector<Skin>& GetSkins() const
+		{
+			return skins_;
 		}
 
 	private:
@@ -147,7 +204,7 @@ namespace smpl {
 		{
 		}
 		
-		Body operator()(const ShapeCoefficients& betas, const PoseCoefficients& thetas) const
+		Body operator()(const ShapeCoefficients& betas, const PoseAxisAngleCoefficients& thetas) const
 		{
 			Body body;
 			body.vertices = vertices_;
@@ -156,14 +213,41 @@ namespace smpl {
 			identity_morph_(betas, body.vertices);
 			Joints joints = joint_regressor_(body.vertices);
 			pose_morph_(thetas, body.vertices);
+
+			// for interspection
+			body.deformed_template = body.vertices;
+
 			skin_morph_(thetas, joints, body.vertices);
 			
+			return body;
+		}
+
+		Body operator()(const ShapeCoefficients& betas, const PoseEulerCoefficients& thetas) const
+		{
+			Body body;
+			body.vertices = vertices_;
+			body.indices = indices_;
+
+			identity_morph_(betas, body.vertices);
+			Joints joints = joint_regressor_(body.vertices);
+			pose_morph_(thetas, body.vertices);
+
+			// for interspection
+			body.deformed_template = body.vertices;
+
+			skin_morph_(thetas, joints, body.vertices);
+
 			return body;
 		}
 
 		const std::vector<float3>& GetShapeDirs() const
 		{
 			return identity_morph_.GetShapeDirs();
+		}
+
+		const std::vector<Skin>& GetSkins() const
+		{
+			return skin_morph_.GetSkins();
 		}
 
 	private:

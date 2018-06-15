@@ -171,6 +171,11 @@
   <ItemGroup>
     <ClInclude Include="OpenPoseTracker.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SMPL\SMPL.vcxproj">
+      <Project>{83782bea-c3b8-4414-9f19-fb1307afff51}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

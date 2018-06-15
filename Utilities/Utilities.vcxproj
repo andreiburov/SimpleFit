@@ -73,8 +73,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)OpenCV-2.4.13.6\build\include;$(SolutionDir)FreeImage-3170\Dist\x64\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)OpenCV-2.4.13.6\build\x64\vc14\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)OpenCV-2.4.13.6\build\include;$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)SMPL\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)x64\Debug\;$(LibraryPath)</LibraryPath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -102,14 +102,16 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile />
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>FreeImage.lib;d3d11.lib;opencv_calib3d2413d.lib;opencv_core2413d.lib;opencv_features2d2413d.lib;opencv_highgui2413d.lib;opencv_imgproc2413d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SMPL.lib;FreeImage.lib;d3d11.lib;opencv_calib3d2413.lib;opencv_core2413.lib;opencv_features2d2413.lib;opencv_highgui2413.lib;opencv_imgproc2413.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -184,6 +186,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SMPL\SMPL.vcxproj">
+      <Project>{83782bea-c3b8-4414-9f19-fb1307afff51}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -72,8 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)Catch2;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)OpenCV-2.4.13.6\build\include;$(SolutionDir)FreeImage-3170\Dist\x64\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)OpenCV-2.4.13.6\build\x64\vc14\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <IncludePath>$(SolutionDir)Catch2;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)OpenCV-2.4.13.6\build\include;$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)SMPL\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)x64\Debug\;$(SolutionDir)OpenCV-2.4.13.6\build\x64\vc14\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -90,13 +90,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>FreeImage.lib;d3d11.lib;opencv_calib3d2413d.lib;opencv_core2413d.lib;opencv_features2d2413d.lib;opencv_highgui2413d.lib;opencv_imgproc2413d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SMPL.lib;FreeImage.lib;d3d11.lib;opencv_calib3d2413d.lib;opencv_core2413d.lib;opencv_features2d2413d.lib;opencv_highgui2413d.lib;opencv_imgproc2413d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -150,8 +151,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="EulerAngles.cpp" />
+    <ClCompile Include="TestEulerAngles.cpp" />
     <ClCompile Include="UnitTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SMPL\SMPL.vcxproj">
+      <Project>{83782bea-c3b8-4414-9f19-fb1307afff51}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

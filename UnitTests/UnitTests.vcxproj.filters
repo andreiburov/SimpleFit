@@ -18,7 +18,7 @@
     <ClCompile Include="UnitTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EulerAngles.cpp">
+    <ClCompile Include="TestEulerAngles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
