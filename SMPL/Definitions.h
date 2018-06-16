@@ -139,12 +139,12 @@ namespace smpl
 			deformed_template = std::move(other.deformed_template);
 		}
 
-		/*Body& operator=(Body other)
+		Body& operator=(Body other)
 		{
 			vertices.swap(other.vertices);
 			indices.swap(other.indices);
 			return *this;
-		}*/
+		}
 
 		void Draw(Image& image, const Eigen::Matrix3f& intrinsics, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation) const
 		{
