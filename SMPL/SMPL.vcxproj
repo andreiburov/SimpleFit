@@ -44,7 +44,7 @@
     <ProjectGuid>{83782BEA-C3B8-4414-9F19-FB1307AFFF51}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SMPLWrapper</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -93,26 +93,30 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
     <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64;$(SolutionDir)eigen-eigen-5a0156e40feb;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)eigen-eigen-5a0156e40feb;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
     <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64;$(SolutionDir)eigen-eigen-5a0156e40feb;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)eigen-eigen-5a0156e40feb;$(IncludePath)</IncludePath>
@@ -142,11 +146,10 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <CustomBuildStep>
-      <Command>if exist $(OutDir)Model (
-rmdir /q /s $(OutDir)Model
-xcopy /i /s $(ProjectDir)Model $(OutDir)Model
-)</Command>
-      <Outputs>$(OutDir)Model</Outputs>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -170,8 +173,10 @@ xcopy /i /s $(ProjectDir)Model $(OutDir)Model
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <CustomBuildStep>
-      <Command>xcopy /i /s $(ProjectDir)Model $(OutDir)Model</Command>
-      <Outputs>$(OutDir)Model</Outputs>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -196,11 +201,10 @@ xcopy /i /s $(ProjectDir)Model $(OutDir)Model
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <CustomBuildStep>
-      <Command>if exist $(OutDir)Model (
-rmdir /q /s $(OutDir)Model
-xcopy /i /s $(ProjectDir)Model $(OutDir)Model
-)</Command>
-      <Outputs>$(OutDir)Model</Outputs>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -228,8 +232,10 @@ xcopy /i /s $(ProjectDir)Model $(OutDir)Model
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <CustomBuildStep>
-      <Command>xcopy /i /s $(ProjectDir)Model $(OutDir)Model</Command>
-      <Outputs>$(OutDir)Model</Outputs>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

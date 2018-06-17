@@ -50,6 +50,8 @@ void TW_CALL CopyStdStringToClient(std::string& destinationClientString, const s
 
 void TW_CALL GenerateBtnCB(void * /*clientData*/)
 {
+	g_BackgroundColor = Eigen::Vector4f(0.0f, (float)rand()/RAND_MAX, (float)rand()/RAND_MAX, 1.0f);
+
 	smpl::ShapeCoefficients shape;
 	smpl::PoseEulerCoefficients pose;
 	ZeroMemory(&shape, sizeof(shape));

@@ -1,7 +1,7 @@
 #include "Camera.h"
 
 Camera::Camera() :
-position_(Eigen::Vector3f(0.0, 0.0, 3.0)),
+position_(Eigen::Vector3f(0.0, 0.0, 2.0)),
 focus_(Eigen::Vector3f(0.0, 0.0, 0.0)),
 up_(Eigen::Vector3f(0.0, 1.0, 0.0))
 {

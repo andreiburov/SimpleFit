@@ -8,6 +8,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "Utilities.h"
+
 using namespace cv;
 using namespace std;
 
@@ -291,7 +293,7 @@ static bool runAndSave(const string& outputFilename,
 }
 
 
-int __main( int argc, char** argv )
+int calibration( int argc, char** argv )
 {
     Size boardSize, imageSize;
     float squareSize = 1.f, aspectRatio = 1.f;

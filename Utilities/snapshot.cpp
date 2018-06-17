@@ -8,10 +8,12 @@
 #include <string.h>
 #include <time.h>
 
+#include "Utilities.h"
+
 using namespace cv;
 using namespace std;
 
-int _____main(int argc, char** argv)
+int snapshot(int argc, char** argv)
 {
 	namedWindow("Video");
 	namedWindow("Picture");
