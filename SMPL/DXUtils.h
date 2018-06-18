@@ -46,6 +46,12 @@ namespace smpl
 		}
 		float operator [](int i) const { return data[i]; }
 		float& operator [](int i) { return data[i]; }
+		
+		friend std::ostream& operator<<(std::ostream& os, float3& other)
+		{
+			os << other.x << " " << other.y << " " << other.z;
+			return os;
+		}
 	};
 
 	union float4

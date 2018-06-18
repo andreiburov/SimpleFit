@@ -30,6 +30,10 @@ CubeModel					g_Cube(g_Camera);
 SmplModel					g_SmplModel(g_Camera);
 std::string					g_betas_string;
 std::string					g_thetas_string;
+Eigen::Quaternionf			g_thetas[smpl::THETA_COUNT];
+
+smpl::ShapeCoefficients		g_shape;
+smpl::PoseAxisAngleCoefficients g_pose;
 
 // Forward declarations
 HRESULT InitDevice(HWND wnd);
@@ -52,18 +56,13 @@ void TW_CALL GenerateBtnCB(void * /*clientData*/)
 {
 	g_BackgroundColor = Eigen::Vector4f(0.0f, (float)rand()/RAND_MAX, (float)rand()/RAND_MAX, 1.0f);
 
-	smpl::ShapeCoefficients shape;
-	smpl::PoseEulerCoefficients pose;
-	ZeroMemory(&shape, sizeof(shape));
-	ZeroMemory(&pose, sizeof(pose));
-
 	std::stringstream s1(g_betas_string);
 	float beta;
 	for (int i = 0; i < smpl::BETA_COUNT && !s1.eof(); i++)
 	{
 		s1 >> beta;
 		std::cout << beta << " ";
-		shape[i] = beta;
+		g_shape[i] = beta;
 	}
 
 	std::cout << std::endl;
@@ -74,13 +73,62 @@ void TW_CALL GenerateBtnCB(void * /*clientData*/)
 	{
 		s2 >> theta;
 		std::cout << theta << " ";
-		pose(i) = theta;
+		g_pose(i) = theta;
 	}
 
 	std::cout << std::endl;
 
-	g_SmplModel.Generate(shape, pose);
+	g_SmplModel.Generate(g_shape, g_pose);
 }
+
+void TW_CALL SetBeta(const void *value, void * clientData)
+{
+	int i = (int)clientData;
+	g_shape[i] = *(float*)(value);
+	
+	g_SmplModel.Generate(g_shape, g_pose);
+
+	std::stringstream ss;
+	for (UINT i = 0; i < smpl::BETA_COUNT; i++)
+	{
+		ss << g_shape[i] << " ";
+	}
+
+	g_betas_string = ss.str();
+}
+
+
+// Callback function called by AntTweakBar to get ambient occlusion state
+void TW_CALL GetBeta(void *value, void * clientData)
+{
+	int i = (int)clientData;
+	*(float*)(value) = g_shape[i];
+}
+
+void TW_CALL SetTheta(const void *value, void * clientData)
+{
+	int i = (int)clientData;
+	g_thetas[i] = *(Eigen::Quaternionf*)(value);
+	Eigen::AngleAxisf theta(g_thetas[i]);
+
+	g_pose[i] = smpl::float3(theta.axis() * theta.angle());
+	g_SmplModel.Generate(g_shape, g_pose);
+
+	std::stringstream ss;
+	for (UINT i = 0; i < smpl::THETA_COUNT; i++)
+	{
+		ss << g_pose[i] << " ";
+	}
+	
+	g_thetas_string = ss.str();
+}
+
+void TW_CALL GetTheta(void *value, void * clientData)
+{
+	int i = (int)clientData;
+	*(Eigen::Quaternionf*)(value) = g_thetas[i];
+}
+
 
 // Main
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
@@ -147,6 +195,20 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 	TwAddVarRW(g_bar, "Betas", TW_TYPE_STDSTRING, &g_betas_string, "");
 	TwAddVarRW(g_bar, "Thetas", TW_TYPE_STDSTRING, &g_thetas_string, "");
 	TwAddButton(g_bar, "Generate", GenerateBtnCB, nullptr, "generate from betas&thetas");
+	
+	for (UINT i = 0; i < smpl::BETA_COUNT; i++)
+	{
+		TwAddVarCB(g_bar, std::string("B").append(std::to_string(i)).c_str(),
+			TW_TYPE_FLOAT, SetBeta, GetBeta, (void*)i, "min=-10 max=10 step=0.1");
+	}
+
+	ZeroMemory(&g_shape, sizeof(g_shape));
+	ZeroMemory(&g_pose, sizeof(g_pose));
+	for (UINT i = 0; i < smpl::THETA_COUNT; i++)
+	{
+		TwAddVarCB(g_bar, std::string("T").append(std::to_string(i)).append(" ").append(smpl::JOINT_FROM_INDEX[i]).c_str(),
+			TW_TYPE_QUAT4F, SetTheta, GetTheta, (void*)i, "opened=true axisz=z");
+	}
 
 	// Main message loop
 	MSG msg = { 0 };

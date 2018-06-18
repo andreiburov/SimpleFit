@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Definitions.cpp" />
     <ClCompile Include="EulerAngles.cpp" />
     <ClCompile Include="Generator.cpp" />
     <ClCompile Include="Image.cpp" />

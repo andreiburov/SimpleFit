@@ -6,7 +6,6 @@
 
 namespace smpl
 {
-
 	const int BETA_COUNT = 10;
 	const int THETA_COUNT = 24;
 	const int THETA_COUNT_WITHOUT_PARENT = THETA_COUNT - 1;
@@ -43,6 +42,8 @@ namespace smpl
 	const int HAND_RIGHT = 22;
 	const int HAND_LEFT = 23;
 	const int JOINT_COUNT = 24;
+
+	extern const char* JOINT_FROM_INDEX[JOINT_COUNT];
 
 	const int COCO_JOINT_COUNT = 18;
 

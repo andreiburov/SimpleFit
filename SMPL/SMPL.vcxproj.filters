@@ -67,5 +67,8 @@
     <ClCompile Include="EulerAngles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Definitions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
