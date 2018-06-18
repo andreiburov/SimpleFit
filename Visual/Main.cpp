@@ -34,6 +34,8 @@ Eigen::Quaternionf			g_thetas[smpl::THETA_COUNT];
 
 smpl::ShapeCoefficients		g_shape;
 smpl::PoseAxisAngleCoefficients g_pose;
+smpl::PoseEulerCoefficients g_pose_euler;
+bool						g_use_euler = false;
 
 // Forward declarations
 HRESULT InitDevice(HWND wnd);
@@ -78,18 +80,33 @@ void TW_CALL GenerateBtnCB(void* /*clientData*/)
 	{
 		s2 >> theta;
 		std::cout << theta << " ";
-		g_pose(i) = theta;
-	}
-
-	for (int i = 0; i < smpl::THETA_COUNT; i++)
-	{
-		Eigen::Quaternionf q(Eigen::AngleAxisf(g_pose[i].ToEigen().norm(), g_pose[i].ToEigen().normalized()));
-		g_thetas[i] = q;
+		if (g_use_euler)
+		{
+			g_pose_euler(i) = theta;
+		}
+		else
+		{
+			g_pose(i) = theta;
+		}
 	}
 
 	std::cout << std::endl;
 
-	g_SmplModel.Generate(g_shape, g_pose);
+	if (g_use_euler)
+	{
+		g_SmplModel.Generate(g_shape, g_pose_euler);
+	}
+	else
+	{
+		for (int i = 0; i < smpl::THETA_COUNT; i++)
+		{
+			Eigen::Quaternionf q(Eigen::AngleAxisf(g_pose[i].ToEigen().norm(), g_pose[i].ToEigen().normalized()));
+			g_thetas[i] = q;
+		}
+
+
+		g_SmplModel.Generate(g_shape, g_pose);
+	}
 }
 
 void TW_CALL SetBeta(const void *value, void * clientData)
@@ -118,20 +135,23 @@ void TW_CALL GetBeta(void *value, void * clientData)
 
 void TW_CALL SetTheta(const void *value, void * clientData)
 {
-	int i = (int)clientData;
-	g_thetas[i] = *(Eigen::Quaternionf*)(value);
-	Eigen::AngleAxisf theta(g_thetas[i]);
-
-	g_pose[i] = smpl::float3(theta.axis() * theta.angle());
-	g_SmplModel.Generate(g_shape, g_pose);
-
-	std::stringstream ss;
-	for (UINT i = 0; i < smpl::THETA_COUNT; i++)
+	if (!g_use_euler)
 	{
-		ss << g_pose[i] << " ";
+		int i = (int)clientData;
+		g_thetas[i] = *(Eigen::Quaternionf*)(value);
+		Eigen::AngleAxisf theta(g_thetas[i]);
+
+		g_pose[i] = smpl::float3(theta.axis() * theta.angle());
+		g_SmplModel.Generate(g_shape, g_pose);
+
+		std::stringstream ss;
+		for (UINT i = 0; i < smpl::THETA_COUNT; i++)
+		{
+			ss << g_pose[i] << " ";
+		}
+
+		g_thetas_string = ss.str();
 	}
-	
-	g_thetas_string = ss.str();
 }
 
 void TW_CALL GetTheta(void *value, void * clientData)
@@ -203,6 +223,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 	TwCopyStdStringToClientFunc(CopyStdStringToClient);
 
 	TwAddVarRW(g_bar, "Background", TW_TYPE_COLOR4F, &g_BackgroundColor, "colormode=hls");
+	TwAddVarRW(g_bar, "Use Euler Angles", TW_TYPE_BOOLCPP, &g_use_euler, "");
 	TwAddVarRW(g_bar, "Betas", TW_TYPE_STDSTRING, &g_betas_string, "");
 	TwAddVarRW(g_bar, "Thetas", TW_TYPE_STDSTRING, &g_thetas_string, "");
 	TwAddButton(g_bar, "Generate", GenerateBtnCB, nullptr, ""); 
@@ -216,6 +237,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 
 	ZeroMemory(&g_shape, sizeof(g_shape));
 	ZeroMemory(&g_pose, sizeof(g_pose));
+	ZeroMemory(&g_pose_euler, sizeof(g_pose_euler));
 	for (UINT i = 0; i < smpl::THETA_COUNT; i++)
 	{
 		TwAddVarCB(g_bar, std::string("T").append(std::to_string(i)).append(" ").append(smpl::JOINT_FROM_INDEX[i]).c_str(),

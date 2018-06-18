@@ -6,7 +6,7 @@ class SmplModel
 {
 public:
 	SmplModel(Camera& camera)
-		: camera_(camera), generator_(smpl::D3D(), smpl::Generator::Configuration(std::string("Model")))
+		: camera_(camera), generator_(smpl::Generator::Configuration(std::string("Model")))
 	{ }
 
 	void Initialize(ID3D11Device* device, ID3D11DeviceContext* device_context);

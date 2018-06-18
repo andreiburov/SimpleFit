@@ -38,6 +38,13 @@ namespace smpl
 
 		void OptimizePose(const std::string& image_filename, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
+		enum JOINT_TYPE
+		{
+			SMPL, COCO
+		};
+
+		void OptimizePoseFrom3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
+
 		void operator()(const std::string& image_filename, ShapeCoefficients& betas, PoseAxisAngleCoefficients& thetas, Eigen::Vector3f& scaling, Eigen::Vector3f& translation);
 
 	private:

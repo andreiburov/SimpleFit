@@ -244,6 +244,116 @@ namespace smpl
 		}
 	}
 
+	void Optimizer::OptimizePoseFrom3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
+	{
+		float learning_rate = 1e-5f;
+		float energy = 1000.f;
+		float epsilon = 10;
+		uint count = 0;
+
+		std::vector<Skin> skins = generate_.GetSkins();
+
+		for (uint iteration = 0; iteration < 1000; iteration++)
+			/*while (energy > epsilon)*/
+		{
+			Body body = generate_(betas, thetas);
+
+			energy = 0.f;
+			float dthetas[THETA_COUNT * 3] = { 0 };
+
+			Joints smpl_joints = smpl_regress_(body.vertices);
+
+			// precompute skinning derivatives
+			Matrix3x4f dskinning[JOINT_COUNT * 3];
+			{
+				Eigen::Matrix4f palette[JOINT_COUNT];
+
+				// parent initialization
+				{
+					palette[0] = EulerSkinning(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+					dskinning[0] = EulerTruncatedSkinningDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+					dskinning[1] = EulerTruncatedSkinningDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+					dskinning[2] = EulerTruncatedSkinningDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+				}
+
+				for (uint i = 1; i < JOINT_COUNT; i++)
+				{
+					palette[i] = palette[PARENT_INDEX[i]] * EulerSkinning(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+					dskinning[i * 3 + 0] = (palette[PARENT_INDEX[i]]
+						* EulerSkinningDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
+					dskinning[i * 3 + 1] = (palette[PARENT_INDEX[i]]
+						* EulerSkinningDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
+					dskinning[i * 3 + 2] = (palette[PARENT_INDEX[i]]
+						* EulerSkinningDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
+				}
+			}
+
+			//Joints coco_joints = coco_regress_(body.vertices);
+			Joints joints = smpl_regress_(body.vertices);
+
+			for (uint m = 0; m < JOINT_COUNT; m++)
+			{
+				Eigen::Vector3f joint = joints.col(m);
+				Eigen::Vector3f error = Eigen::Vector3f(
+					joint(0) - tracked_joints_[3 * m], 
+					joint(1) - tracked_joints_[3 * m + 1],
+					joint(2) - tracked_joints_[3 * m + 2]);
+
+				energy += error.squaredNorm();
+
+				Eigen::Vector3f dpose_alpha(0, 0, 0);
+				Eigen::Vector3f dpose_beta(0, 0, 0);
+				Eigen::Vector3f dpose_gamma(0, 0, 0);
+
+#pragma omp parallel for
+				for (uint i = 0; i < VERTEX_COUNT; i++)
+				{
+					dpose_alpha = (
+						skins[i].weight.x * dskinning[skins[i].joint_index.x * 3] +
+						skins[i].weight.y * dskinning[skins[i].joint_index.y * 3] +
+						skins[i].weight.z * dskinning[skins[i].joint_index.z * 3] +
+						skins[i].weight.w * dskinning[skins[i].joint_index.w * 3]) * body.deformed_template[i].ToEigen().homogeneous();
+
+					dpose_beta = (
+						skins[i].weight.x * dskinning[skins[i].joint_index.x * 3 + 1] +
+						skins[i].weight.y * dskinning[skins[i].joint_index.y * 3 + 1] +
+						skins[i].weight.z * dskinning[skins[i].joint_index.z * 3 + 1] +
+						skins[i].weight.w * dskinning[skins[i].joint_index.w * 3 + 1]) * body.deformed_template[i].ToEigen().homogeneous();
+
+					dpose_gamma = (
+						skins[i].weight.x * dskinning[skins[i].joint_index.x * 3 + 2] +
+						skins[i].weight.y * dskinning[skins[i].joint_index.y * 3 + 2] +
+						skins[i].weight.z * dskinning[skins[i].joint_index.z * 3 + 2] +
+						skins[i].weight.w * dskinning[skins[i].joint_index.w * 3 + 2]) * body.deformed_template[i].ToEigen().homogeneous();
+				}
+
+				for (uint j = 0; j < THETA_COUNT; j++)
+				{
+					dthetas[j * 3 + 0] += 2.f * error.transpose() * dpose_alpha;
+					dthetas[j * 3 + 1] += 2.f * error.transpose() * dpose_beta;
+					dthetas[j * 3 + 2] += 2.f * error.transpose() * dpose_gamma;
+				}
+			}
+
+			for (uint j = 0; j < THETA_COUNT * 3; j++)
+			{
+				thetas(j) -= learning_rate * dthetas[j];
+			}
+
+			if (count % 5 == 0)
+			{
+				body.Dump(std::string("PoseReconstructionTemp/").append(std::to_string(count)).append(".obj"));
+				std::cout << "Iteration: " << count << std::endl;
+				std::cout << "Energy: " << energy << std::endl;
+				std::cout << "Thetas: ";
+				for (uint j = 0; j < THETA_COUNT * 3; j++)
+					std::cout << thetas(j) << " ";
+				std::cout << std::endl;
+			}
+			count++;
+		}
+	}
+
 	void Optimizer::operator()(const std::string& image_filename, ShapeCoefficients& betas, PoseAxisAngleCoefficients& thetas, Eigen::Vector3f& scaling, Eigen::Vector3f& translation)
 	{
 		Body body = generate_(betas, thetas);

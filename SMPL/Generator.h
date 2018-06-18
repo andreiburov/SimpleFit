@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Definitions.h"
-#include "D3D.h"
 #include "Utils.h"
 #include "JointRegressor.h"
 #include "EulerAngles.h"
@@ -11,8 +10,8 @@ namespace smpl {
 	class IdentityMorph
 	{
 	public:
-		IdentityMorph(const D3D& d3d, std::vector<float3>& shapedirs)
-			: d3d_(d3d), shapedirs_(std::move(shapedirs))
+		IdentityMorph(std::vector<float3>& shapedirs)
+			:shapedirs_(std::move(shapedirs))
 		{
 		}
 
@@ -36,15 +35,14 @@ namespace smpl {
 		}
 
 	private:
-		const D3D & d3d_;
 		const std::vector<float3> shapedirs_;
 	};
 
 	class PoseMorph
 	{
 	public:
-		PoseMorph(const D3D& d3d, std::vector<float3>& posedirs) :
-			d3d_(d3d), posedirs_(std::move(posedirs))
+		PoseMorph(std::vector<float3>& posedirs) :
+			posedirs_(std::move(posedirs))
 		{
 		}
 
@@ -96,15 +94,14 @@ namespace smpl {
 		}
 
 	private:
-		const D3D& d3d_;
 		const std::vector<float3> posedirs_;
 	};
 
 	class SkinMorph
 	{
 	public:
-		SkinMorph(const D3D& d3d, std::vector<Skin>& skins) :
-			d3d_(d3d), skins_(std::move(skins))
+		SkinMorph(std::vector<Skin>& skins) :
+			skins_(std::move(skins))
 		{
 		}
 
@@ -172,7 +169,6 @@ namespace smpl {
 		}
 
 	private:
-		const D3D& d3d_;
 		const std::vector<Skin> skins_;
 	};
 
@@ -197,10 +193,10 @@ namespace smpl {
 			SparseMatrix joint_regressor;
 		};
 
-		Generator(const D3D& d3d, Configuration configuration) :
+		Generator(Configuration configuration) :
 			vertices_(configuration.vertices), indices_(configuration.indices),
-			identity_morph_(d3d, configuration.shapedirs), joint_regressor_(configuration.joint_regressor, JOINT_COUNT),
-			pose_morph_(d3d, configuration.posedirs), skin_morph_(d3d, configuration.skins)
+			identity_morph_(configuration.shapedirs), joint_regressor_(configuration.joint_regressor, JOINT_COUNT),
+			pose_morph_(configuration.posedirs), skin_morph_(configuration.skins)
 		{
 		}
 		
