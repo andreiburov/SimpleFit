@@ -115,6 +115,11 @@ void SmplModel::Clear()
 	SAFE_RELEASE(camera_constant_buffer_);
 }
 
+void SmplModel::Dump(const std::string& filename)
+{
+	body_.Dump(filename);
+}
+
 void SmplModel::Generate(smpl::ShapeCoefficients& shape, smpl::PoseAxisAngleCoefficients& pose)
 {
 	body_ = generator_(shape, pose);

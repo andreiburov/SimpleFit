@@ -15,6 +15,7 @@ public:
 
 	void Generate(smpl::ShapeCoefficients& shape, smpl::PoseAxisAngleCoefficients& pose);
 	void Generate(smpl::ShapeCoefficients& shape, smpl::PoseEulerCoefficients& pose);
+	void Dump(const std::string& filename);
 
 private:
 

@@ -52,7 +52,12 @@ void TW_CALL CopyStdStringToClient(std::string& destinationClientString, const s
 	destinationClientString = sourceLibraryString;
 }
 
-void TW_CALL GenerateBtnCB(void * /*clientData*/)
+void TW_CALL DumpBtnCB(void* /*clientData*/)
+{
+	g_SmplModel.Dump("mesh.obj");
+}
+
+void TW_CALL GenerateBtnCB(void* /*clientData*/)
 {
 	g_BackgroundColor = Eigen::Vector4f(0.0f, (float)rand()/RAND_MAX, (float)rand()/RAND_MAX, 1.0f);
 
@@ -69,11 +74,17 @@ void TW_CALL GenerateBtnCB(void * /*clientData*/)
 
 	std::stringstream s2(g_thetas_string);
 	float theta;
-	for (int i = 0; i < smpl::THETA_COUNT && !s2.eof(); i++)
+	for (int i = 0; (i < smpl::THETA_COUNT * 3) && !s2.eof(); i++)
 	{
 		s2 >> theta;
 		std::cout << theta << " ";
 		g_pose(i) = theta;
+	}
+
+	for (int i = 0; i < smpl::THETA_COUNT; i++)
+	{
+		Eigen::Quaternionf q(Eigen::AngleAxisf(g_pose[i].ToEigen().norm(), g_pose[i].ToEigen().normalized()));
+		g_thetas[i] = q;
 	}
 
 	std::cout << std::endl;
@@ -194,7 +205,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 	TwAddVarRW(g_bar, "Background", TW_TYPE_COLOR4F, &g_BackgroundColor, "colormode=hls");
 	TwAddVarRW(g_bar, "Betas", TW_TYPE_STDSTRING, &g_betas_string, "");
 	TwAddVarRW(g_bar, "Thetas", TW_TYPE_STDSTRING, &g_thetas_string, "");
-	TwAddButton(g_bar, "Generate", GenerateBtnCB, nullptr, "generate from betas&thetas");
+	TwAddButton(g_bar, "Generate", GenerateBtnCB, nullptr, ""); 
+	TwAddButton(g_bar, "Dump", DumpBtnCB, nullptr, "");
 	
 	for (UINT i = 0; i < smpl::BETA_COUNT; i++)
 	{
