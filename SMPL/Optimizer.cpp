@@ -7,9 +7,9 @@ namespace smpl
 		coco_regress_(configuration.coco_regressor, COCO_JOINT_COUNT), smpl_regress_(configuration.smpl_regressor, JOINT_COUNT),
 		tracked_joints_(tracked_joints)
 	{
-		dshape_.reserve(COCO_JOINT_COUNT * BETA_COUNT);
+		dshape_.resize(COCO_JOINT_COUNT * BETA_COUNT);
 		{
-			std::vector<float3> shapedirs = generate_.GetShapeDirs();
+			const std::vector<float3>& shapedirs = generate_.GetShapeDirs();
 			for (uint m = 0; m < COCO_JOINT_COUNT; m++)
 			{
 				Eigen::VectorXf regressor_m = coco_regress_.GetRow(m);
@@ -134,6 +134,69 @@ namespace smpl
 		}
 	}
 
+	void Optimizer::ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas, 
+		const Joints& smpl_joints, 
+		Eigen::Matrix4f (&palette)[JOINT_COUNT],
+		Eigen::Matrix4f (&dskinning)[JOINT_COUNT * 3]) const
+	{
+		// parent initialization
+		{
+			palette[0] = EulerSkinning(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			dskinning[0] = EulerSkinningDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			dskinning[1] = EulerSkinningDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			dskinning[2] = EulerSkinningDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+		}
+
+		for (uint i = 1; i < JOINT_COUNT; i++)
+		{
+			palette[i] = palette[PARENT_INDEX[i]] * EulerSkinning(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+			dskinning[i * 3 + 0] = palette[PARENT_INDEX[i]]
+				* EulerSkinningDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+			dskinning[i * 3 + 1] = palette[PARENT_INDEX[i]]
+				* EulerSkinningDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+			dskinning[i * 3 + 2] = palette[PARENT_INDEX[i]]
+				* EulerSkinningDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+		}
+	}
+
+	void Optimizer::ComputeSkinningDerivativesTruncated(const PoseEulerCoefficients& thetas,
+		const Joints& smpl_joints,
+		Eigen::Matrix4f(&palette)[JOINT_COUNT],
+		Matrix3x4f(&dskinning)[JOINT_COUNT * 3]) const
+	{
+		// parent initialization
+		{
+			palette[0] = EulerSkinning(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			dskinning[0] = EulerTruncatedSkinningDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			dskinning[1] = EulerTruncatedSkinningDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			dskinning[2] = EulerTruncatedSkinningDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+		}
+
+		for (uint i = 1; i < JOINT_COUNT; i++)
+		{
+			palette[i] = palette[PARENT_INDEX[i]] * EulerSkinning(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+			dskinning[i * 3 + 0] = (palette[PARENT_INDEX[i]]
+				* EulerSkinningDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
+			dskinning[i * 3 + 1] = (palette[PARENT_INDEX[i]]
+				* EulerSkinningDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
+			dskinning[i * 3 + 2] = (palette[PARENT_INDEX[i]]
+				* EulerSkinningDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
+		}
+	}
+
+	Joints Optimizer::RegressJoints(const Body& body, const JOINT_TYPE& joint_type) const
+	{
+		switch (joint_type)
+		{
+		case SMPL:
+			return smpl_regress_(body.vertices);
+		case COCO:
+			return coco_regress_(body.vertices);
+		default:
+			return Joints();
+		}
+	}
+
 	void Optimizer::OptimizePose(const std::string& image_filename, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		float learning_rate = 1e-5f;
@@ -251,7 +314,7 @@ namespace smpl
 		float epsilon = 10;
 		uint count = 0;
 
-		std::vector<Skin> skins = generate_.GetSkins();
+		const std::vector<Skin>& skins = generate_.GetSkins();
 
 		for (uint iteration = 0; iteration < 1000; iteration++)
 			/*while (energy > epsilon)*/

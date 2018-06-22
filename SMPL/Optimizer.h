@@ -45,6 +45,13 @@ namespace smpl
 
 		void OptimizePoseFrom3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
+		void ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas, const Joints& smpl_joints, 
+			Eigen::Matrix4f (&palette)[JOINT_COUNT], Eigen::Matrix4f (&dskinning)[JOINT_COUNT * 3]) const;
+
+		void ComputeSkinningDerivativesTruncated(const PoseEulerCoefficients& thetas, const Joints& smpl_joints, Eigen::Matrix4f(&palette)[JOINT_COUNT], Matrix3x4f(&dskinning)[JOINT_COUNT * 3]) const;
+
+		Joints RegressJoints(const Body& body, const JOINT_TYPE& joint_type) const;
+
 		void operator()(const std::string& image_filename, ShapeCoefficients& betas, PoseAxisAngleCoefficients& thetas, Eigen::Vector3f& scaling, Eigen::Vector3f& translation);
 
 	private:

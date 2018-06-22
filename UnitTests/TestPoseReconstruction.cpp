@@ -3,11 +3,12 @@
 #include <Utils.h>
 #include <vector>
 
-TEST_CASE("Right Hand Up - Dumb")
+TEST_CASE("Right Hand Up")
 {
 	smpl::ShapeCoefficients shape;
 	smpl::PoseEulerCoefficients pose;
 	ZeroMemory(&shape, sizeof(shape));
+
 	float local_pose[smpl::JOINT_COUNT * 3] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.680623,-0.701102,0.87854,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 	for (UINT i = 0; i < smpl::JOINT_COUNT * 3; i++)
 	{
@@ -32,14 +33,31 @@ TEST_CASE("Right Hand Up - Dumb")
 		tracked_joints.push_back(smpl_joints.col(i)(2));
 	}
 
-	smpl::Optimizer optimize(smpl::Optimizer::Configuration(std::string("Model")),
-		smpl::Generator(smpl::Generator::Configuration(std::string("Model"))), tracked_joints);
-
-	optimize.OptimizePoseFrom3D(smpl::Optimizer::JOINT_TYPE::SMPL, shape, pose);
-
-	for (UINT i = 0; i < smpl::JOINT_COUNT * 3; i++)
+	SECTION("Solution is converged to from the bind pose")
 	{
-		REQUIRE(abs(local_pose[i] - pose(i)) < 0.01);
+		ZeroMemory(&pose, sizeof(pose));
+		smpl::Optimizer optimize(smpl::Optimizer::Configuration(std::string("Model")),
+			smpl::Generator(smpl::Generator::Configuration(std::string("Model"))), tracked_joints);
+
+		optimize.OptimizePoseFrom3D(smpl::Optimizer::JOINT_TYPE::SMPL, shape, pose);
+
+		for (UINT i = 0; i < smpl::JOINT_COUNT * 3; i++)
+		{
+			REQUIRE(abs(local_pose[i] - pose(i)) < 0.01);
+		}
+	}
+
+	SECTION("Solution does not diverge from the correct one")
+	{
+		smpl::Optimizer optimize(smpl::Optimizer::Configuration(std::string("Model")),
+			smpl::Generator(smpl::Generator::Configuration(std::string("Model"))), tracked_joints);
+
+		optimize.OptimizePoseFrom3D(smpl::Optimizer::JOINT_TYPE::SMPL, shape, pose);
+
+		for (UINT i = 0; i < smpl::JOINT_COUNT * 3; i++)
+		{
+			REQUIRE(abs(local_pose[i] - pose(i)) < 0.01);
+		}
 	}
 }
 
