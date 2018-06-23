@@ -27,5 +27,8 @@
     <ClCompile Include="TestKinematicChain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestSkinningDerivatives.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

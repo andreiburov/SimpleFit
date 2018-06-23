@@ -94,4 +94,25 @@ namespace euler_angles
 		Matrix3x4f dS1 = EulerTruncatedSkinningDerivativeToGamma(alpha, beta, gamma, t(0), t(1), t(2));
 		REQUIRE(S2.isApprox(S1 + delta * dS1, delta));
 	}
+
+	TEST_CASE("Skinning Derivative w.r.t. alpha and beta")
+	{
+		Eigen::Matrix4f S1 = EulerSkinning(alpha, beta, gamma, t(0), t(1), t(2));
+		Eigen::Matrix4f S2 = EulerSkinning(alpha + delta, beta + delta, gamma, t(0), t(1), t(2));
+
+		Eigen::Matrix4f daS1 = EulerSkinningDerivativeToAlpha(alpha, beta, gamma, t(0), t(1), t(2));
+		Eigen::Matrix4f dbS1 = EulerSkinningDerivativeToBeta(alpha, beta, gamma, t(0), t(1), t(2));
+		REQUIRE(S2.isApprox(S1 + delta * daS1 + delta * dbS1, delta));
+	}
+
+	TEST_CASE("Skinning Derivative w.r.t. alpha and beta and gamma")
+	{
+		Eigen::Matrix4f S1 = EulerSkinning(alpha, beta, gamma, t(0), t(1), t(2));
+		Eigen::Matrix4f S2 = EulerSkinning(alpha + delta, beta - delta, gamma + delta, t(0), t(1), t(2));
+
+		Eigen::Matrix4f daS1 = EulerSkinningDerivativeToAlpha(alpha, beta, gamma, t(0), t(1), t(2));
+		Eigen::Matrix4f dbS1 = EulerSkinningDerivativeToBeta(alpha, beta, gamma, t(0), t(1), t(2));
+		Eigen::Matrix4f dgS1 = EulerSkinningDerivativeToGamma(alpha, beta, gamma, t(0), t(1), t(2));
+		REQUIRE(S2.isApprox(S1 + delta * daS1 - delta * dbS1 + delta * dgS1, delta));
+	}
 }

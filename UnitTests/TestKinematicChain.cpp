@@ -11,16 +11,36 @@ namespace kinematic_chain
 	float beta_b = 0.3f;
 	float gamma_b = 0.4f;
 
-	float delta = 0.1f;
+	float delta = 0.15f;
 
-	float delta_alpha = -0.1f;
-	float delta_beta = 0.2f;
-	float delta_gamma = 0.1f;
+	//float delta_alpha = -0.05f;
+	//float delta_beta = 0.01f;
+	//float delta_gamma = -0.05f;
+
+	//float delta2_alpha = 0.03f;
+	//float delta2_beta = -0.02f;
+	//float delta2_gamma = 0.02f;
+
+	//float delta3_alpha = 0.01f;
+	//float delta3_beta = -0.03f;
+	//float delta3_gamma = -0.02f;
+
+	float delta_alpha = -0.5f;
+	float delta_beta = 0.1f;
+	float delta_gamma = -0.5f;
+
+	float delta2_alpha = 0.6f;
+	float delta2_beta = -0.4f;
+	float delta2_gamma = 0.4f;
+
+	float delta3_alpha = 0.4f;
+	float delta3_beta = -0.5f;
+	float delta3_gamma = -0.4f;
 	
 	Eigen::Vector3f j_a(0.1f, 2.3f, -0.2f);
 	Eigen::Vector3f j_b(2.3f, -1.2f, 0.9f);
 
-	TEST_CASE("2 Links Change in Alpha")
+	TEST_CASE("KC 2 Links in Alpha")
 	{
 		Eigen::Matrix4f A1 = EulerSkinning(alpha_a, beta_a, gamma_a, j_a(0), j_a(1), j_a(2));
 		Eigen::Matrix4f B1 = EulerSkinning(alpha_b, beta_b, gamma_b, j_b(0), j_b(1), j_b(2));
@@ -93,46 +113,10 @@ namespace kinematic_chain
 		}
 	}
 
-	TEST_CASE("SMPL Chain Change in 16th Gamma")
+	
+	TEST_CASE("KC 16th in Gamma")
 	{
-		UINT change_id = 16;
-
-		ZeroMemory(&shape, sizeof(shape));
-		ZeroMemory(&pose, sizeof(pose));
-		
-		smpl::Body body1 = generator(shape, pose);		
-		smpl::Joints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
-		optimizer.ComputeSkinningDerivatives(pose, joints, palette, dskinning);
-
-		// Update the palette in 16th Gamma and propagate the change
-		palette[change_id] += delta_alpha * dskinning[change_id * 3 + 0]
-			+ delta_beta * dskinning[change_id * 3 + 1]
-			+ delta_gamma * dskinning[change_id * 3 + 2];
-
-		for (UINT i = change_id + 1; i < smpl::JOINT_COUNT; i++)
-		{
-			palette[i] = palette[smpl::PARENT_INDEX[i]] * 
-				EulerSkinning(pose[i].x, pose[i].y, pose[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
-		}
-
-		pose[change_id] = smpl::float3(delta_alpha, delta_beta, delta_gamma);
-
-		// Initialize palette2
-		optimizer.ComputeSkinningDerivatives(pose, optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL), palette2, dskinning);
-
-		SECTION("Check palettes")
-		{
-			REQUIRE(palette[change_id].isApprox(palette2[change_id], delta));
-		}
-
-		SECTION("Check bodies")
-		{
-			CheckBodies(body1);
-		}
-	}
-
-	TEST_CASE("SMPL Chain Change in ith")
-	{
+		std::cout << "KC 16th in Gamma" << std::endl;
 		UINT change_id = 16;
 
 		ZeroMemory(&shape, sizeof(shape));
@@ -140,7 +124,7 @@ namespace kinematic_chain
 
 		smpl::Body body1 = generator(shape, pose);
 		smpl::Joints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
-		optimizer.ComputeSkinningDerivatives(pose, joints, palette, dskinning);
+		optimizer.ComputeSkinningLastDerivatives(pose, joints, palette, dskinning);
 
 		// Update the palette in 16th Gamma and propagate the change
 		palette[change_id] += delta * dskinning[change_id * 3 + 2];
@@ -153,11 +137,158 @@ namespace kinematic_chain
 		pose[change_id] = smpl::float3(0, 0, delta);
 
 		// Initialize palette2
-		optimizer.ComputeSkinningDerivatives(pose, optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL), palette2, dskinning);
+		optimizer.ComputeSkinningLastDerivatives(pose, optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL), palette2, dskinning);
 
 		SECTION("Check palettes")
 		{
 			REQUIRE(palette[change_id].isApprox(palette2[change_id], delta));
+		}
+
+		SECTION("Check bodies")
+		{
+			CheckBodies(body1);
+		}
+	}
+
+	TEST_CASE("KC 16th")
+	{
+		std::cout << "KC 16th" << std::endl;
+		UINT change = 16;
+
+		ZeroMemory(&shape, sizeof(shape));
+		ZeroMemory(&pose, sizeof(pose));
+
+		smpl::Body body1 = generator(shape, pose);
+		smpl::Joints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
+		optimizer.ComputeSkinningLastDerivatives(pose, joints, palette, dskinning);
+
+		// Update the palette in 16th Gamma and propagate the change
+		palette[change] += delta_alpha * dskinning[change * 3 + 0]
+			+ delta_beta * dskinning[change * 3 + 1]
+			+ delta_gamma * dskinning[change * 3 + 2];
+
+		for (UINT i = change + 1; i < smpl::JOINT_COUNT; i++)
+		{
+			palette[i] = palette[smpl::PARENT_INDEX[i]] *
+				EulerSkinning(0.f, 0.f, 0.f, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+		}
+
+		pose[change] = smpl::float3(delta_alpha, delta_beta, delta_gamma);
+
+		// Initialize palette2
+		optimizer.ComputeSkinningLastDerivatives(pose, optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL), palette2, dskinning);
+
+		SECTION("Check palettes")
+		{
+			REQUIRE(palette[change].isApprox(palette2[change], delta));
+		}
+
+		SECTION("Check bodies")
+		{
+			CheckBodies(body1);
+		}
+	}
+
+	TEST_CASE("KC 16th and 18th")
+	{
+		std::cout << "KC 16th and 18th" << std::endl;
+		UINT change = 16;
+		UINT change2 = 18;
+
+		ZeroMemory(&shape, sizeof(shape));
+		ZeroMemory(&pose, sizeof(pose));
+
+		smpl::Body body1 = generator(shape, pose);
+		smpl::Joints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
+		optimizer.ComputeSkinningLastDerivatives(pose, joints, palette, dskinning);
+
+		// Update the palette in 16th Gamma and propagate the change
+		palette[change] += delta_alpha * dskinning[change * 3 + 0]
+			+ delta_beta * dskinning[change * 3 + 1]
+			+ delta_gamma * dskinning[change * 3 + 2];
+
+		for (UINT i = change + 1; i < smpl::JOINT_COUNT; i++)
+		{
+			palette[i] = palette[smpl::PARENT_INDEX[i]] *
+				EulerSkinning(0.f, 0.f, 0.f, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+
+			if (i == change2)
+			{
+				palette[change2] += delta2_alpha * dskinning[change2 * 3 + 0]
+					+ delta2_beta * dskinning[change2 * 3 + 1]
+					+ delta2_gamma * dskinning[change2 * 3 + 2];
+			}
+		}
+
+		pose[change] = smpl::float3(delta_alpha, delta_beta, delta_gamma);
+		pose[change2] = smpl::float3(delta2_alpha, delta2_beta, delta2_gamma);
+
+		// Initialize palette2
+		optimizer.ComputeSkinningLastDerivatives(pose, optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL), palette2, dskinning);
+
+		SECTION("Check palettes")
+		{
+			REQUIRE(palette[change].isApprox(palette2[change], delta));
+			REQUIRE(palette[change2].isApprox(palette2[change2], delta));
+		}
+
+		SECTION("Check bodies")
+		{
+			CheckBodies(body1);
+		}
+	}
+
+	TEST_CASE("KC 13th and 16th and 18th")
+	{
+		std::cout << "KC 13th and 16th and 18th" << std::endl;
+
+		UINT change = 13;
+		UINT change2 = 16;
+		UINT change3 = 18;
+
+		ZeroMemory(&shape, sizeof(shape));
+		ZeroMemory(&pose, sizeof(pose));
+
+		smpl::Body body1 = generator(shape, pose);
+		smpl::Joints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
+		optimizer.ComputeSkinningLastDerivatives(pose, joints, palette, dskinning);
+
+		// Update the palette in 13th Gamma and propagate the change
+		palette[change] += delta_alpha * dskinning[change * 3 + 0]
+			+ delta_beta * dskinning[change * 3 + 1]
+			+ delta_gamma * dskinning[change * 3 + 2];
+
+		for (UINT i = change + 1; i < smpl::JOINT_COUNT; i++)
+		{
+			palette[i] = palette[smpl::PARENT_INDEX[i]] *
+				EulerSkinning(0.f, 0.f, 0.f, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+
+			if (i == change2)
+			{
+				palette[change2] += delta2_alpha * dskinning[change2 * 3 + 0]
+					+ delta2_beta * dskinning[change2 * 3 + 1]
+					+ delta2_gamma * dskinning[change2 * 3 + 2];
+			}
+
+			if (i == change3)
+			{
+				palette[change3] += delta3_alpha * dskinning[change3 * 3 + 0]
+					+ delta3_beta * dskinning[change3 * 3 + 1]
+					+ delta3_gamma * dskinning[change3 * 3 + 2];
+			}
+		}
+
+		pose[change] = smpl::float3(delta_alpha, delta_beta, delta_gamma);
+		pose[change2] = smpl::float3(delta2_alpha, delta2_beta, delta2_gamma);
+		pose[change3] = smpl::float3(delta3_alpha, delta3_beta, delta3_gamma);
+
+		// Initialize palette2
+		optimizer.ComputeSkinningLastDerivatives(pose, optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL), palette2, dskinning);
+
+		SECTION("Check palettes")
+		{
+			REQUIRE(palette[change].isApprox(palette2[change], delta));
+			REQUIRE(palette[change2].isApprox(palette2[change2], delta));
 		}
 
 		SECTION("Check bodies")

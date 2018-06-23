@@ -157,6 +157,7 @@
     <ClCompile Include="TestEulerAngles.cpp" />
     <ClCompile Include="TestKinematicChain.cpp" />
     <ClCompile Include="TestPoseReconstruction.cpp" />
+    <ClCompile Include="TestSkinningDerivatives.cpp" />
     <ClCompile Include="UnitTests.cpp" />
   </ItemGroup>
   <ItemGroup>
