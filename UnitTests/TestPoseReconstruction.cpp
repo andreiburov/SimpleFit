@@ -38,7 +38,7 @@ namespace pose_reconstruction
 			generator, tracked_joints);
 
 		ZeroMemory(&pose, sizeof(pose));
-		optimize.OptimizePoseFrom3D(smpl::Optimizer::JOINT_TYPE::SMPL, shape, pose);
+		optimize.OptimizePoseFromSmplJoints3D(smpl::Optimizer::JOINT_TYPE::SMPL, shape, pose);
 
 		Body body1 = generator(shape, pose);
 		body1.Dump("Body1.obj");
@@ -60,6 +60,14 @@ namespace pose_reconstruction
 		TestPoseReconstruction(pose);
 	}
 
+	TEST_CASE("PR 18th")
+	{
+		ZeroMemory(&pose, sizeof(pose));
+		pose[18] = float3(0.0898455f, -1.41424f, 0.540512f);
+
+		TestPoseReconstruction(pose);
+	}
+
 	TEST_CASE("PR 16th and 18th")
 	{
 		ZeroMemory(&pose, sizeof(pose));
@@ -71,6 +79,21 @@ namespace pose_reconstruction
 		//pose[16] = float3(-0.673621f, -0.970013f, 0.375232f);
 		//pose[1] = float3(-0.874163f, 0.817765f, 0.0412538f);
 
+		TestPoseReconstruction(pose);
+	}
+
+	TEST_CASE("PR Arbitrary")
+	{
+		ZeroMemory(&pose, sizeof(pose));
+		pose << std::string("0 0 0 -0.824325 0.441603 0.198994 0 0 0 0 0 0 0.824884 0.372528 -0.100031 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.2863 1.51537 0.506102 0 0 0 0 0 0 0 0 0 0 0 0");
+
+		TestPoseReconstruction(pose);
+	}
+
+	TEST_CASE("PR Ex2")
+	{
+		ZeroMemory(&pose, sizeof(pose));
+		pose << std::string("0 0 0 0 0 0 -0.0668457 -0.0334229 -0.0167114 0 0 0 0.530554 0.0663193 -0.13141 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.118155 -0.578989 0.712833 -0.938342 0.447251 -0.660308 -1.12746 -1.00539 -0.0105144 0.340818 1.23219 0.326739 0.541197 -0.270599 -0.105233 1.41988e-17 0.36455 0.0607583 0 0 0 0 0 0");
 		TestPoseReconstruction(pose);
 	}
 }

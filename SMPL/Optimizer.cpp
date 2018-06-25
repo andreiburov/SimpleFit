@@ -365,114 +365,133 @@ namespace smpl
 		}
 	}
 
-	void Optimizer::OptimizePoseFrom3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
+	void Optimizer::OptimizePoseFromSmplJoints3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		float learning_rate = 1e-1f;
 		float energy = 1000.f;
-		float epsilon = 10;
+		float epsilon = 1e-5f;
 		uint count = 0;
 
 		const std::vector<Skin>& skins = generate_.GetSkins();
 
-		for (uint iteration = 0; iteration < 2000; iteration++)
-			/*while (energy > epsilon)*/
+		std::vector<std::vector<int> > active_joints_sets = {
+			//{HIP_CENTER, STOMACH}, 
+			{ HIP_RIGHT, HIP_LEFT, BACKBONE, CHEST },
+			{ KNEE_RIGHT, KNEE_LEFT, PECK_RIGHT, PECK_LEFT, SHOULDER_CENTER },
+			{ ANKLE_RIGHT, ANKLE_LEFT, CHIN, SHOULDER_RIGHT, SHOULDER_LEFT },
+			{ FOOT_RIGHT, FOOT_LEFT, ELBOW_RIGHT, ELBOW_LEFT},
+			{ WRIST_RIGHT, WRIST_LEFT }, 
+			{ HAND_RIGHT, HAND_LEFT }
+		};
+
+		for (auto& active_joints : active_joints_sets)
 		{
-			Body body = generate_(betas, thetas);
-
-			energy = 0.f;
-			float dthetas[THETA_COUNT * 3] = { 0 };
-			Joints joints = smpl_regress_(body.vertices);
-			Eigen::Matrix4f* dskinning = new Eigen::Matrix4f[JOINT_COUNT * JOINT_COUNT * 3];
-			ComputeSkinningDerivatives(thetas, joints, dskinning);
-
-			for (uint m = 0; m < JOINT_COUNT; m++)
+			std::cout << "NEW ACTIVE JOINT SET" << std::endl;
+			for (uint iteration = 0; iteration < 1000; iteration++)
+				/*while (energy > epsilon)*/
 			{
-				Eigen::Vector3f joint = joints.col(m);
-				Eigen::Vector3f error = Eigen::Vector3f(
-					joint(0) - tracked_joints_[3 * m], 
-					joint(1) - tracked_joints_[3 * m + 1],
-					joint(2) - tracked_joints_[3 * m + 2]);
+				Body body = generate_(betas, thetas);
 
-				energy += error.squaredNorm();
+				energy = 0.f;
+				float dthetas[THETA_COUNT * 3] = { 0 };
+				Joints joints = smpl_regress_(body.vertices);
+				Eigen::Matrix4f* dskinning = new Eigen::Matrix4f[JOINT_COUNT * JOINT_COUNT * 3];
+				ComputeSkinningDerivatives(thetas, joints, dskinning);
 
-				Eigen::VectorXf regressor_m = smpl_regress_.GetRow(m);
-				
-				Eigen::Vector3f dpose_alpha(0, 0, 0);
-				Eigen::Vector3f dpose_beta(0, 0, 0);
-				Eigen::Vector3f dpose_gamma(0, 0, 0);
-
-				for (uint k = 0; k < JOINT_COUNT; k++) // Update dthetas
+				for (auto& m : active_joints)
 				{
-#pragma omp parallel for
-					for (uint i = 0; i < VERTEX_COUNT; i++)
+					Eigen::Vector3f joint = joints.col(m);
+					Eigen::Vector3f error = Eigen::Vector3f(
+						joint(0) - tracked_joints_[3 * m],
+						joint(1) - tracked_joints_[3 * m + 1],
+						joint(2) - tracked_joints_[3 * m + 2]);
+
+					energy += error.squaredNorm();
+
+					Eigen::VectorXf regressor_m = smpl_regress_.GetRow(m);
+
+					Eigen::Vector3f djoint_alpha(0, 0, 0);
+					Eigen::Vector3f djoint_beta(0, 0, 0);
+					Eigen::Vector3f djoint_gamma(0, 0, 0);
+
+					for (uint k = 0; k < JOINT_COUNT; k++) // Update dthetas
 					{
-						if (regressor_m(i) > 0.001f)
+#pragma omp parallel for
+						for (uint i = 0; i < VERTEX_COUNT; i++)
 						{
-							Eigen::Vector4f temp;
+							if (regressor_m(i) > 0.001f)
+							{
+								Eigen::Vector4f temp;
 
-							temp =
-								(skins[i].weight.x * dskinning[ALPHA(k) * THETA_COUNT + skins[i].joint_index.x] +
-								skins[i].weight.y * dskinning[ALPHA(k) * THETA_COUNT + skins[i].joint_index.y] +
-								skins[i].weight.z * dskinning[ALPHA(k) * THETA_COUNT + skins[i].joint_index.z] +
-								skins[i].weight.w * dskinning[ALPHA(k) * THETA_COUNT + skins[i].joint_index.w]) *
-								body.deformed_template[i].ToEigen().homogeneous();
+								temp =
+									(skins[i].weight.x * dskinning[ALPHA(k) * THETA_COUNT + skins[i].joint_index.x] +
+										skins[i].weight.y * dskinning[ALPHA(k) * THETA_COUNT + skins[i].joint_index.y] +
+										skins[i].weight.z * dskinning[ALPHA(k) * THETA_COUNT + skins[i].joint_index.z] +
+										skins[i].weight.w * dskinning[ALPHA(k) * THETA_COUNT + skins[i].joint_index.w]) *
+									body.deformed_template[i].ToEigen().homogeneous();
 
-							dpose_alpha(0) = regressor_m(i) * temp(0);
-							dpose_alpha(1) = regressor_m(i) * temp(1);
-							dpose_alpha(2) = regressor_m(i) * temp(2);
+								djoint_alpha(0) = regressor_m(i) * temp(0);
+								djoint_alpha(1) = regressor_m(i) * temp(1);
+								djoint_alpha(2) = regressor_m(i) * temp(2);
 
-							temp =
-								(skins[i].weight.x * dskinning[BETA(k) * THETA_COUNT + skins[i].joint_index.x] +
-								skins[i].weight.y * dskinning[BETA(k) * THETA_COUNT + skins[i].joint_index.y] +
-								skins[i].weight.z * dskinning[BETA(k) * THETA_COUNT + skins[i].joint_index.z] +
-								skins[i].weight.w * dskinning[BETA(k) * THETA_COUNT + skins[i].joint_index.w]) *
-								body.deformed_template[i].ToEigen().homogeneous();
+								temp =
+									(skins[i].weight.x * dskinning[BETA(k) * THETA_COUNT + skins[i].joint_index.x] +
+										skins[i].weight.y * dskinning[BETA(k) * THETA_COUNT + skins[i].joint_index.y] +
+										skins[i].weight.z * dskinning[BETA(k) * THETA_COUNT + skins[i].joint_index.z] +
+										skins[i].weight.w * dskinning[BETA(k) * THETA_COUNT + skins[i].joint_index.w]) *
+									body.deformed_template[i].ToEigen().homogeneous();
 
-							dpose_beta(0) = regressor_m(i) * temp(0);
-							dpose_beta(1) = regressor_m(i) * temp(1);
-							dpose_beta(2) = regressor_m(i) * temp(2);
+								djoint_beta(0) = regressor_m(i) * temp(0);
+								djoint_beta(1) = regressor_m(i) * temp(1);
+								djoint_beta(2) = regressor_m(i) * temp(2);
 
-							temp =
-								(skins[i].weight.x * dskinning[GAMMA(k) * THETA_COUNT + skins[i].joint_index.x] +
-								skins[i].weight.y * dskinning[GAMMA(k) * THETA_COUNT + skins[i].joint_index.y] +
-								skins[i].weight.z * dskinning[GAMMA(k) * THETA_COUNT + skins[i].joint_index.z] +
-								skins[i].weight.w * dskinning[GAMMA(k) * THETA_COUNT + skins[i].joint_index.w]) *
-								body.deformed_template[i].ToEigen().homogeneous();
+								temp =
+									(skins[i].weight.x * dskinning[GAMMA(k) * THETA_COUNT + skins[i].joint_index.x] +
+										skins[i].weight.y * dskinning[GAMMA(k) * THETA_COUNT + skins[i].joint_index.y] +
+										skins[i].weight.z * dskinning[GAMMA(k) * THETA_COUNT + skins[i].joint_index.z] +
+										skins[i].weight.w * dskinning[GAMMA(k) * THETA_COUNT + skins[i].joint_index.w]) *
+									body.deformed_template[i].ToEigen().homogeneous();
 
-							dpose_gamma(0) = regressor_m(i) * temp(0);
-							dpose_gamma(1) = regressor_m(i) * temp(1);
-							dpose_gamma(2) = regressor_m(i) * temp(2);
+								djoint_gamma(0) = regressor_m(i) * temp(0);
+								djoint_gamma(1) = regressor_m(i) * temp(1);
+								djoint_gamma(2) = regressor_m(i) * temp(2);
+							}
 						}
+
+						dthetas[ALPHA(k)] += 2.f * error.transpose() * djoint_alpha;
+						dthetas[BETA(k)] += 2.f * error.transpose() * djoint_beta;
+						dthetas[GAMMA(k)] += 2.f * error.transpose() * djoint_gamma;
 					}
-
-					dthetas[ALPHA(k)] += 2.f * error.transpose() * dpose_alpha;
-					dthetas[BETA(k)] += 2.f * error.transpose() * dpose_beta;
-					dthetas[GAMMA(k)] += 2.f * error.transpose() * dpose_gamma;
 				}
-			}
 
-			for (uint j = 0; j < THETA_COUNT * 3; j++)
-			{
-				thetas(j) -= learning_rate * dthetas[j];
-			}
+				for (auto& m : active_joints)
+				{
+					thetas(ALPHA(PARENT_INDEX[m])) -= learning_rate * dthetas[ALPHA(PARENT_INDEX[m])];
+					thetas(BETA(PARENT_INDEX[m])) -= learning_rate * dthetas[BETA(PARENT_INDEX[m])];
+					thetas(GAMMA(PARENT_INDEX[m])) -= learning_rate * dthetas[GAMMA(PARENT_INDEX[m])];
+				}
 
-			if (count % 100 == 0)
-			{
-				body.Dump(std::string("PoseReconstructionTemp/").append(std::to_string(count)).append(".obj"));
-				std::cout << "Iteration: " << count << std::endl;
-				std::cout << "Energy: " << energy << std::endl;
-				std::cout << "Thetas: ";
-				for (uint j = 0; j < THETA_COUNT * 3; j++)
-					std::cout << thetas(j) << " ";
-				std::cout << std::endl;
-				std::cout << "dThetas: ";
-				for (uint j = 0; j < THETA_COUNT * 3; j++)
-					std::cout << dthetas[j] << " ";
-				std::cout << std::endl;
-			}
-			count++;
+				if (count % 100 == 0)
+				{
+					body.Dump(std::string("PoseReconstructionTemp/").append(std::to_string(count)).append(".obj"));
+					std::cout << "Iteration: " << count << std::endl;
+					std::cout << "Energy: " << energy << std::endl;
+					std::cout << "Thetas: ";
+					for (uint j = 0; j < THETA_COUNT * 3; j++)
+						std::cout << thetas(j) << " ";
+					std::cout << std::endl;
+					std::cout << "dThetas: ";
+					for (uint j = 0; j < THETA_COUNT * 3; j++)
+						std::cout << dthetas[j] << " ";
+					std::cout << std::endl;
+				}
+				count++;
 
-			delete[] dskinning;
+				delete[] dskinning;
+
+				if (energy < epsilon)
+					break;
+			}
 		}
 	}
 

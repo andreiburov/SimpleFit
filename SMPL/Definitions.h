@@ -1,6 +1,8 @@
 #pragma once
 
 #include <fstream>
+#include <iostream>
+#include <sstream>
 #include "DXUtils.h"
 #include "Image.h"
 
@@ -101,6 +103,15 @@ namespace smpl
 		// access componentwise
 		float operator ()(int i) const { return thetas[i / 3].data[i % 3]; }
 		float& operator ()(int i) { return thetas[i / 3].data[i % 3]; }
+
+		friend void operator<<(PoseEulerCoefficients& pose, std::string& input)
+		{
+			std::stringstream ss(input);
+			for (int i = 0; (i < THETA_COUNT * 3) && !ss.eof(); i++)
+			{
+				ss >> pose(i);
+			}
+		}
 	};
 
 	struct Skin

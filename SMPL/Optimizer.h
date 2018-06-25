@@ -58,7 +58,7 @@ namespace smpl
 			SMPL, COCO
 		};
 
-		void OptimizePoseFrom3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
+		void OptimizePoseFromSmplJoints3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
 		void ComputeSkinning(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
 			Eigen::Matrix4f(&palette)[JOINT_COUNT]) const;
