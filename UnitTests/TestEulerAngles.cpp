@@ -41,6 +41,8 @@ namespace euler_angles
 		REQUIRE((S*x).head<3>().isApprox(T*x));
 	}
 
+	// Skinning Derivatives
+
 	TEST_CASE("Skinning Derivative w.r.t. alpha")
 	{
 		Eigen::Matrix4f S1 = EulerSkinning(alpha, beta, gamma, t(0), t(1), t(2));

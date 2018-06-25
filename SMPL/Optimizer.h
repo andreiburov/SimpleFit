@@ -7,17 +7,17 @@
 
 namespace smpl
 {
-	constexpr int ALPHA(int idx)
+	constexpr uint ALPHA(int idx)
 	{
 		return idx*3;
 	}
 
-	constexpr int BETA(int idx)
+	constexpr uint BETA(int idx)
 	{
 		return idx*3 + 1;
 	}
 
-	constexpr int GAMMA(int idx)
+	constexpr uint GAMMA(int idx)
 	{
 		return idx*3 + 2;
 	}

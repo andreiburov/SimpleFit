@@ -367,7 +367,7 @@ namespace smpl
 
 	void Optimizer::OptimizePoseFrom3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
-		float learning_rate = 1e-3f;
+		float learning_rate = 1e-1f;
 		float energy = 1000.f;
 		float epsilon = 10;
 		uint count = 0;
@@ -464,6 +464,10 @@ namespace smpl
 				std::cout << "Thetas: ";
 				for (uint j = 0; j < THETA_COUNT * 3; j++)
 					std::cout << thetas(j) << " ";
+				std::cout << std::endl;
+				std::cout << "dThetas: ";
+				for (uint j = 0; j < THETA_COUNT * 3; j++)
+					std::cout << dthetas[j] << " ";
 				std::cout << std::endl;
 			}
 			count++;
