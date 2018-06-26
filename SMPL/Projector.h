@@ -19,6 +19,13 @@ namespace smpl
 			return Eigen::Vector2f(t(0) / t(2), t(1) / t(2));
 		}
 
+		Eigen::Vector2f operator()(const Eigen::Vector3f& vertex,
+			const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation) const
+		{
+			Eigen::Vector3f t = intrinsics_ * (Eigen::Scaling(scaling) * vertex + translation);
+			return Eigen::Vector2f(t(0) / t(2), t(1) / t(2));
+		}
+
 		Eigen::Vector2f derivative(const Eigen::Vector3f& t, const Eigen::Vector3f& dt) const
 		{
 			float z2 = t(2)*t(2); // z squared

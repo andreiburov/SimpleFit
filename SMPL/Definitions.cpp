@@ -28,4 +28,17 @@ namespace smpl
 		"HAND_RIGHT",
 		"HAND_LEFT",
 	};
+
+	std::vector<float3> Joints2Vector(const Joints& joints)
+	{
+		std::vector<float3> r;
+
+		for (uint i = 0; i < joints.cols(); i++)
+		{
+			auto j = joints.col(i);
+			r.push_back(float3(j));
+		}
+
+		return r;
+	}
 }

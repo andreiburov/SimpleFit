@@ -28,28 +28,36 @@ namespace smpl
 
 		struct Configuration
 		{
+			SparseMatrix coco_regressor;
+			SparseMatrix smpl_regressor;
+
+			float intrinsics[9];
+
+			// taken from calibration (Utilities project)
+			/*float intrinsics[9] = {
+			-8.6140702901296027e+02f, 0.f, 3.2324049091782535e+02f,
+			0.f, 8.3086714228541780e+02f, 2.5605035868808250e+02f,
+			0.f, 0.f, 1.f
+			};*/
+
 			Configuration(const std::string& configuration_path)
 			{
 				ReadSparseMatrixFile(configuration_path + std::string("/coco_regressor.txt"), coco_regressor);
 				ReadSparseMatrixFile(configuration_path + std::string("/smpl_regressor.txt"), smpl_regressor);
+				std::ifstream intrinsics_file(configuration_path + std::string("/intrinsics.txt"));
+				if (intrinsics_file.fail()) MessageBoxA(NULL, "File not found: intrinsics.txt", "Error", MB_OK);
+				for (uint i = 0; i < 9; i++)
+				{
+					intrinsics_file >> intrinsics[i];
+				}
 			}
-
-			SparseMatrix coco_regressor;
-			SparseMatrix smpl_regressor;
-
-			// taken from calibration (Utilities project)
-			float intrinsics[9] = {
-				-8.6140702901296027e+02f, 0.f, 3.2324049091782535e+02f,
-				0.f, 8.3086714228541780e+02f, 2.5605035868808250e+02f,
-				0.f, 0.f, 1.f
-			};
 		};
 
 		Optimizer(Configuration& configuration, const Generator& generate, const std::vector<float>& tracked_joints);
 
 		void OptimizeExtrinsics(const std::string& image_filename, const Body& body, Eigen::Vector3f& scaling, Eigen::Vector3f& translation);
 
-		void OptimizeShape(const std::string& image_filename, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, const PoseAxisAngleCoefficients& thetas, ShapeCoefficients& betas);
+		void OptimizeShape(const std::string& image_filename, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, const PoseEulerCoefficients& thetas, ShapeCoefficients& betas);
 
 		void OptimizePose(const std::string& image_filename, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
@@ -57,6 +65,10 @@ namespace smpl
 		{
 			SMPL, COCO
 		};
+
+		void OptimizePoseFromSmplJoints2D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, 
+			const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation,
+			PoseEulerCoefficients& thetas);
 
 		void OptimizePoseFromSmplJoints3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 

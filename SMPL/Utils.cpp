@@ -148,7 +148,7 @@ namespace smpl
 		std::ifstream file(filename, std::ios::in);
 		if (!file)
 		{
-			std::cerr << "[ERROR] Can not open the file \"" << filename << "\"\n";
+			MessageBoxA(NULL, std::string("File not found: ").append(filename).c_str(), "Error", MB_OK);
 		}
 
 		int i, j;

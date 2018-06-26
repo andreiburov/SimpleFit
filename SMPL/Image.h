@@ -1,10 +1,19 @@
 #pragma once
+#include <Windows.h>
 #include <FreeImage.h>
 #include <iostream>
 #include <string>
+#include <Eigen/Eigen>
+#include <vector>
+#include "Definitions.h"
 
 namespace smpl
 {
+	extern RGBTRIPLE WHITE;
+	extern RGBTRIPLE RED;
+	extern RGBTRIPLE GREEN;
+	extern RGBTRIPLE BLUE;
+
 	class Image
 	{
 	public:
@@ -62,6 +71,17 @@ namespace smpl
 
 			RGBTRIPLE* scan_line = (RGBTRIPLE*)FreeImage_GetScanLine(bitmap_, height_ - i - 1);
 			return scan_line;
+		}
+
+		static void Draw3D(Image& image, const Eigen::Matrix3f& intrinsics, 
+			const Eigen::Vector3f& scaling,	const Eigen::Vector3f& translation, 
+			const RGBTRIPLE& color,	const int brush_size, const std::vector<float3>& pointcloud);
+
+		static void Draw3D(Image& image, const Eigen::Matrix3f& intrinsics,
+			const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation,
+			const RGBTRIPLE& color, const std::vector<float3>& pointcloud)
+		{
+			Draw3D(image, intrinsics, scaling, translation, color, 0, pointcloud);
 		}
 
 		void SavePNG(const std::string& filename)

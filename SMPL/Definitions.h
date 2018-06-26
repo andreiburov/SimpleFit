@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sstream>
 #include "DXUtils.h"
-#include "Image.h"
 
 namespace smpl
 {
@@ -81,6 +80,15 @@ namespace smpl
 		float betas[BETA_COUNT];
 		float operator [](int i) const { return betas[i]; }
 		float& operator [](int i) { return betas[i]; }
+
+		friend void operator<<(ShapeCoefficients& shape, std::string& input)
+		{
+			std::stringstream ss(input);
+			for (int i = 0; (i < BETA_COUNT * 3) && !ss.eof(); i++)
+			{
+				ss >> shape[i];
+			}
+		}
 	};
 
 	struct PoseAxisAngleCoefficients
@@ -122,6 +130,8 @@ namespace smpl
 
 	typedef Eigen::MatrixXf Joints;
 
+	std::vector<float3> Joints2Vector(const Joints& joints);
+
 	struct Body
 	{
 		std::vector<float3> vertices;
@@ -158,7 +168,7 @@ namespace smpl
 			return *this;
 		}
 
-		void Draw(Image& image, const Eigen::Matrix3f& intrinsics, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation) const
+		/*void Draw(Image& image, const Eigen::Matrix3f& intrinsics, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation) const
 		{
 			int w = image.GetWidth();
 			int h = image.GetHeight();
@@ -177,7 +187,7 @@ namespace smpl
 					image[int(p(1))][int(p(0))] = white;
 				}
 			}
-		}
+		}*/
 
 		void Dump(const std::string& filename) const
 		{

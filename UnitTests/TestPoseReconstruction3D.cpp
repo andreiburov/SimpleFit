@@ -2,10 +2,11 @@
 #include <SMPL.h>
 #include <Utils.h>
 #include <vector>
+#include <fstream>
 
 using namespace smpl;
 
-namespace pose_reconstruction
+namespace pose_reconstruction_3d
 {
 	float delta = 0.5f;
 
@@ -14,7 +15,7 @@ namespace pose_reconstruction
 	Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 	SparseMatrix smpl_matrix;
 
-	void TestPoseReconstruction(PoseEulerCoefficients& pose)
+	void TestPoseReconstruction3D(PoseEulerCoefficients& pose)
 	{
 		ZeroMemory(&shape, sizeof(shape));
 
@@ -44,31 +45,31 @@ namespace pose_reconstruction
 		body1.Dump("Body1.obj");
 	}
 
-	TEST_CASE("PR 16th in Gamma")
+	TEST_CASE("PR3D 16th in Gamma")
 	{
 		ZeroMemory(&pose, sizeof(pose));
 		pose[16] = float3(0, 0, delta);
 
-		TestPoseReconstruction(pose);
+		TestPoseReconstruction3D(pose);
 	}
 
-	TEST_CASE("PR 16th")
+	TEST_CASE("PR3D 16th")
 	{
 		ZeroMemory(&pose, sizeof(pose));
 		pose[16] = float3(-delta, -delta, delta);
 
-		TestPoseReconstruction(pose);
+		TestPoseReconstruction3D(pose);
 	}
 
-	TEST_CASE("PR 18th")
+	TEST_CASE("PR3D 18th")
 	{
 		ZeroMemory(&pose, sizeof(pose));
 		pose[18] = float3(0.0898455f, -1.41424f, 0.540512f);
 
-		TestPoseReconstruction(pose);
+		TestPoseReconstruction3D(pose);
 	}
 
-	TEST_CASE("PR 16th and 18th")
+	TEST_CASE("PR3D 16th and 18th")
 	{
 		ZeroMemory(&pose, sizeof(pose));
 
@@ -79,21 +80,31 @@ namespace pose_reconstruction
 		//pose[16] = float3(-0.673621f, -0.970013f, 0.375232f);
 		//pose[1] = float3(-0.874163f, 0.817765f, 0.0412538f);
 
-		TestPoseReconstruction(pose);
+		TestPoseReconstruction3D(pose);
 	}
 
-	TEST_CASE("PR Arbitrary")
+	TEST_CASE("PR3D Arbitrary")
 	{
 		ZeroMemory(&pose, sizeof(pose));
 		pose << std::string("0 0 0 -0.824325 0.441603 0.198994 0 0 0 0 0 0 0.824884 0.372528 -0.100031 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.2863 1.51537 0.506102 0 0 0 0 0 0 0 0 0 0 0 0");
 
-		TestPoseReconstruction(pose);
+		TestPoseReconstruction3D(pose);
 	}
 
-	TEST_CASE("PR Ex2")
+	TEST_CASE("PR3D From File")
 	{
 		ZeroMemory(&pose, sizeof(pose));
-		pose << std::string("0 0 0 0 0 0 -0.0668457 -0.0334229 -0.0167114 0 0 0 0.530554 0.0663193 -0.13141 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.118155 -0.578989 0.712833 -0.938342 0.447251 -0.660308 -1.12746 -1.00539 -0.0105144 0.340818 1.23219 0.326739 0.541197 -0.270599 -0.105233 1.41988e-17 0.36455 0.0607583 0 0 0 0 0 0");
-		TestPoseReconstruction(pose);
+		std::ifstream in("thetas.txt");
+
+		if (in.fail())
+		{
+			std::cerr << "The file thetas.txt does not exist!\n";
+		}
+
+		std::string str;
+		std::getline(in, str);
+		pose << str;
+		//pose << std::string("0 0 0 -0.83272 0.0960831 0.222415 0 0 0 0 0 0 0 0 0 0.839531 -0.151116 -0.0245641 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.479258 -2.88858e-17 0.0887515 0 0 0 -0.168738 -0.176219 0.636729 -1.09971 -1.4996 -0.10923 0.389453 1.22399 0.0947874 0 0 0 0 0 0 0 0 0 0 0 0");
+		TestPoseReconstruction3D(pose);
 	}
 }
