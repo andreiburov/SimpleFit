@@ -143,10 +143,10 @@ namespace smpl
 	void Optimizer::ComputeSkinning(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
 		Eigen::Matrix4f(&palette)[JOINT_COUNT]) const
 	{
-		palette[0] = EulerSkinningZYX(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+		palette[0] = EulerSkinningXYZ(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
 		for (uint i = 1; i < JOINT_COUNT; i++)
 		{
-			palette[i] = palette[PARENT_INDEX[i]] * EulerSkinningZYX(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+			palette[i] = palette[PARENT_INDEX[i]] * EulerSkinningXYZ(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
 		}
 	}
 
@@ -157,21 +157,21 @@ namespace smpl
 	{
 		// parent initialization
 		{
-			palette[0] = EulerSkinningZYX(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
-			dskinning[0] = EulerSkinningZYXDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
-			dskinning[1] = EulerSkinningZYXDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
-			dskinning[2] = EulerSkinningZYXDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			palette[0] = EulerSkinningXYZ(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			dskinning[0] = EulerSkinningXYZDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			dskinning[1] = EulerSkinningXYZDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+			dskinning[2] = EulerSkinningXYZDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
 		}
 
 		for (uint i = 1; i < JOINT_COUNT; i++)
 		{
-			palette[i] = palette[PARENT_INDEX[i]] * EulerSkinningZYX(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+			palette[i] = palette[PARENT_INDEX[i]] * EulerSkinningXYZ(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
 			dskinning[i * 3 + 0] = palette[PARENT_INDEX[i]]
-				* EulerSkinningZYXDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+				* EulerSkinningXYZDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
 			dskinning[i * 3 + 1] = palette[PARENT_INDEX[i]]
-				* EulerSkinningZYXDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+				* EulerSkinningXYZDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
 			dskinning[i * 3 + 2] = palette[PARENT_INDEX[i]]
-				* EulerSkinningZYXDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+				* EulerSkinningXYZDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
 		}
 	}
 
@@ -189,11 +189,11 @@ namespace smpl
 	{
 		// palette initialization
 		Eigen::Matrix4f skinning[JOINT_COUNT];
-		skinning[0] = EulerSkinningZYX(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+		skinning[0] = EulerSkinningXYZ(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
 		palette[0] = skinning[0];
 		for (uint i = 1; i < JOINT_COUNT; i++)
 		{
-			skinning[i] = EulerSkinningZYX(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+			skinning[i] = EulerSkinningXYZ(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 			palette[i] = palette[PARENT_INDEX[i]] * skinning[i];
 		}
 
@@ -215,23 +215,23 @@ namespace smpl
 		// main diagonal initialization
 		uint idx;
 		idx = ALPHA(0)*JOINT_COUNT;
-		dskinning[ALPHA(0)*JOINT_COUNT] = EulerSkinningZYXDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+		dskinning[ALPHA(0)*JOINT_COUNT] = EulerSkinningXYZDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
 		idx = BETA(0)*JOINT_COUNT;
-		dskinning[BETA(0)*JOINT_COUNT] = EulerSkinningZYXDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+		dskinning[BETA(0)*JOINT_COUNT] = EulerSkinningXYZDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
 		idx = GAMMA(0)*JOINT_COUNT;
-		dskinning[GAMMA(0)*JOINT_COUNT] = EulerSkinningZYXDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+		dskinning[GAMMA(0)*JOINT_COUNT] = EulerSkinningXYZDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
 		
 		for (uint i = 1; i < JOINT_COUNT; i++) // body parts with angles controlling them
 		{
 			idx = ALPHA(i)*JOINT_COUNT + i;
 			dskinning[ALPHA(i)*JOINT_COUNT + i] = palette[PARENT_INDEX[i]] *
-				EulerSkinningZYXDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				EulerSkinningXYZDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 			idx = BETA(i)*JOINT_COUNT + i;
 			dskinning[BETA(i)*JOINT_COUNT + i] = palette[PARENT_INDEX[i]] *
-				EulerSkinningZYXDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				EulerSkinningXYZDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 			idx = GAMMA(i)*JOINT_COUNT + i;
 			dskinning[GAMMA(i)*JOINT_COUNT + i] = palette[PARENT_INDEX[i]] *
-				EulerSkinningZYXDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				EulerSkinningXYZDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 		}
 
 		for (uint i = 0; i < JOINT_COUNT; i++) // thetas
@@ -287,21 +287,21 @@ namespace smpl
 
 				// parent initialization
 				{
-					palette[0] = EulerSkinningZYX(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
-					dskinning[0] = EulerTruncatedSkinningZYXDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
-					dskinning[1] = EulerTruncatedSkinningZYXDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
-					dskinning[2] = EulerTruncatedSkinningZYXDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+					palette[0] = EulerSkinningXYZ(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
+					dskinning[0] = EulerSkinningXYZDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2)).block<3, 4>(0, 0);
+					dskinning[1] = EulerSkinningXYZDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2)).block<3, 4>(0, 0);
+					dskinning[2] = EulerSkinningXYZDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2)).block<3, 4>(0, 0);
 				}
 
 				for (uint i = 1; i < JOINT_COUNT; i++)
 				{
-					palette[i] = palette[PARENT_INDEX[i]] * EulerSkinningZYX(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
+					palette[i] = palette[PARENT_INDEX[i]] * EulerSkinningXYZ(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2));
 					dskinning[i * 3 + 0] = (palette[PARENT_INDEX[i]]
-						* EulerSkinningZYXDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
+						* EulerSkinningXYZDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
 					dskinning[i * 3 + 1] = (palette[PARENT_INDEX[i]]
-						* EulerSkinningZYXDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
+						* EulerSkinningXYZDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
 					dskinning[i * 3 + 2] = (palette[PARENT_INDEX[i]]
-						* EulerSkinningZYXDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
+						* EulerSkinningXYZDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, smpl_joints.col(i)(0), smpl_joints.col(i)(1), smpl_joints.col(i)(2))).block<3, 4>(0, 0);
 				}
 			}
 
