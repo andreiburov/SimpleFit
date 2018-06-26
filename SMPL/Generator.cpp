@@ -48,7 +48,7 @@ namespace smpl
 		for (uint i = 0; i < THETA_COUNT_WITHOUT_PARENT; i++)
 		{
 			// rotations will be flattened row-wise
-			rotation[i] = (EulerRotation(thetas[i].x, thetas[i].y, thetas[i].z) - Eigen::Matrix3f::Identity()).transpose();
+			rotation[i] = (EulerRotationZYX(thetas[i].x, thetas[i].y, thetas[i].z) - Eigen::Matrix3f::Identity()).transpose();
 		}
 
 #pragma omp parallel for
@@ -99,13 +99,13 @@ namespace smpl
 
 		// parent initialization
 		{
-			palette[0] = EulerSkinning(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+			palette[0] = EulerSkinningZYX(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
 		}
 
 		for (uint i = 1; i < JOINT_COUNT; i++)
 		{
 			palette[i] = palette[PARENT_INDEX[i]]
-				* EulerSkinning(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				* EulerSkinningZYX(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 		}
 
 #pragma omp parallel for

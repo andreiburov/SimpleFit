@@ -1,0 +1,14 @@
+pkg load symbolic
+syms a b c
+syms x y z
+
+s1 = sin(a)
+s2 = sin(b)
+s3 = sin(c)
+c1 = cos(a)
+c2 = cos(b)
+c3 = cos(c)
+
+Tp = [[1, 0, 0, x]; [0, 1, 0, y]; [0, 0, 1, z]; [0, 0, 0, 1]]
+Tm = [[1, 0, 0, -x]; [0, 1, 0, -y]; [0, 0, 1, -z]; [0, 0, 0, 1]]
+R = [[c2*c3, -c2*s3, s2, 0]; [c1*s3+c3*s1*s2, c1*c3-s1* s2*s3, -c2*s1, 0]; [s1*s3-c1*c3*s2, c3*s1+c1*s2*s3, c1*c2, 0]; [0, 0, 0, 1]]

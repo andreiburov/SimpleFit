@@ -42,14 +42,14 @@ namespace kinematic_chain
 
 	TEST_CASE("KC 2 Links in Alpha")
 	{
-		Eigen::Matrix4f A1 = EulerSkinning(alpha_a, beta_a, gamma_a, j_a(0), j_a(1), j_a(2));
-		Eigen::Matrix4f B1 = EulerSkinning(alpha_b, beta_b, gamma_b, j_b(0), j_b(1), j_b(2));
-		Eigen::Matrix4f B2 = EulerSkinning(alpha_b + delta, beta_b, gamma_b, j_b(0), j_b(1), j_b(2));
+		Eigen::Matrix4f A1 = EulerSkinningZYX(alpha_a, beta_a, gamma_a, j_a(0), j_a(1), j_a(2));
+		Eigen::Matrix4f B1 = EulerSkinningZYX(alpha_b, beta_b, gamma_b, j_b(0), j_b(1), j_b(2));
+		Eigen::Matrix4f B2 = EulerSkinningZYX(alpha_b + delta, beta_b, gamma_b, j_b(0), j_b(1), j_b(2));
 
 		Eigen::Matrix4f S = A1 * B1;
 		Eigen::Matrix4f T = A1 * B2;
 
-		Eigen::Matrix4f dB1 = EulerSkinningDerivativeToAlpha(alpha_b, beta_b, gamma_b, j_b(0), j_b(1), j_b(2));
+		Eigen::Matrix4f dB1 = EulerSkinningZYXDerivativeToAlpha(alpha_b, beta_b, gamma_b, j_b(0), j_b(1), j_b(2));
 		Eigen::Matrix4f dS = A1 * dB1;
 
 		REQUIRE(T.isApprox(S + delta * dS, delta));
@@ -131,7 +131,7 @@ namespace kinematic_chain
 		for (UINT i = change_id + 1; i < smpl::JOINT_COUNT; i++)
 		{
 			palette[i] = palette[smpl::PARENT_INDEX[i]] *
-				EulerSkinning(pose[i].x, pose[i].y, pose[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				EulerSkinningZYX(pose[i].x, pose[i].y, pose[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 		}
 
 		pose[change_id] = smpl::float3(0, 0, delta);
@@ -170,7 +170,7 @@ namespace kinematic_chain
 		for (UINT i = change + 1; i < smpl::JOINT_COUNT; i++)
 		{
 			palette[i] = palette[smpl::PARENT_INDEX[i]] *
-				EulerSkinning(0.f, 0.f, 0.f, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				EulerSkinningZYX(0.f, 0.f, 0.f, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 		}
 
 		pose[change] = smpl::float3(delta_alpha, delta_beta, delta_gamma);
@@ -210,7 +210,7 @@ namespace kinematic_chain
 		for (UINT i = change + 1; i < smpl::JOINT_COUNT; i++)
 		{
 			palette[i] = palette[smpl::PARENT_INDEX[i]] *
-				EulerSkinning(0.f, 0.f, 0.f, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				EulerSkinningZYX(0.f, 0.f, 0.f, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 
 			if (i == change2)
 			{
@@ -261,7 +261,7 @@ namespace kinematic_chain
 		for (UINT i = change + 1; i < smpl::JOINT_COUNT; i++)
 		{
 			palette[i] = palette[smpl::PARENT_INDEX[i]] *
-				EulerSkinning(0.f, 0.f, 0.f, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				EulerSkinningZYX(0.f, 0.f, 0.f, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 
 			if (i == change2)
 			{

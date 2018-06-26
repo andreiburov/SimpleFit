@@ -30,6 +30,7 @@ CubeModel					g_Cube(g_Camera);
 SmplModel					g_SmplModel(g_Camera);
 std::string					g_betas_string;
 std::string					g_thetas_string;
+std::string					g_thetas_euler_string;
 Eigen::Quaternionf			g_thetas[smpl::THETA_COUNT];
 
 smpl::ShapeCoefficients		g_shape;
@@ -59,41 +60,39 @@ void TW_CALL DumpBtnCB(void* /*clientData*/)
 	g_SmplModel.Dump("mesh.obj");
 }
 
+void TW_CALL ResetBtnCB(void* /*clientData*/)
+{
+	ZeroMemory(&g_pose, sizeof(g_pose));
+	ZeroMemory(&g_pose_euler, sizeof(g_pose_euler));
+	ZeroMemory(&g_shape, sizeof(g_shape));
+
+	for (int i = 0; i < smpl::THETA_COUNT; i++)
+	{
+		g_thetas[i] = Eigen::Quaternionf::Identity();
+	}
+
+	g_betas_string = "";
+	g_thetas_string = "";
+	g_thetas_euler_string = "";
+
+	g_SmplModel.Generate(g_shape, g_pose);
+}
+
 void TW_CALL GenerateBtnCB(void* /*clientData*/)
 {
 	g_BackgroundColor = Eigen::Vector4f(0.0f, (float)rand()/RAND_MAX, (float)rand()/RAND_MAX, 1.0f);
 
-	std::stringstream s1(g_betas_string);
-	float beta;
-	for (int i = 0; i < smpl::BETA_COUNT && !s1.eof(); i++)
-	{
-		s1 >> beta;
-		std::cout << beta << " ";
-		g_shape[i] = beta;
-	}
-
-	std::cout << std::endl;
-
-	std::stringstream s2(g_thetas_string);
-	float theta;
-	for (int i = 0; (i < smpl::THETA_COUNT * 3) && !s2.eof(); i++)
-	{
-		s2 >> theta;
-		std::cout << theta << " ";
-		if (g_use_euler)
-		{
-			g_pose_euler(i) = theta;
-		}
-		else
-		{
-			g_pose(i) = theta;
-		}
-	}
-
-	std::cout << std::endl;
+	g_shape << g_betas_string;
+	g_pose << g_thetas_string;
+	g_pose_euler << g_thetas_euler_string;
 
 	if (g_use_euler)
 	{
+		for (int i = 0; i < smpl::THETA_COUNT; i++)
+		{
+			Eigen::Quaternionf q(EulerRotationZYX(g_pose_euler[i].x, g_pose_euler[i].y, g_pose_euler[i].z));
+			g_thetas[i] = q;
+		}
 		g_SmplModel.Generate(g_shape, g_pose_euler);
 	}
 	else
@@ -103,8 +102,6 @@ void TW_CALL GenerateBtnCB(void* /*clientData*/)
 			Eigen::Quaternionf q(Eigen::AngleAxisf(g_pose[i].ToEigen().norm(), g_pose[i].ToEigen().normalized()));
 			g_thetas[i] = q;
 		}
-
-
 		g_SmplModel.Generate(g_shape, g_pose);
 	}
 }
@@ -135,22 +132,41 @@ void TW_CALL GetBeta(void *value, void * clientData)
 
 void TW_CALL SetTheta(const void *value, void * clientData)
 {
-	if (!g_use_euler)
+	int i = (int)clientData;
+	g_thetas[i] = *(Eigen::Quaternionf*)(value);	
+
 	{
-		int i = (int)clientData;
-		g_thetas[i] = *(Eigen::Quaternionf*)(value);
-		Eigen::AngleAxisf theta(g_thetas[i]);
-
-		g_pose[i] = smpl::float3(theta.axis() * theta.angle());
-		g_SmplModel.Generate(g_shape, g_pose);
-
+		Eigen::Vector3f theta = g_thetas[i].toRotationMatrix().eulerAngles(0, 1, 2);
+		g_pose_euler[i] = smpl::float3(theta);
 		std::stringstream ss;
-		for (UINT i = 0; i < smpl::THETA_COUNT; i++)
+
+		for (UINT j = 0; j < smpl::THETA_COUNT; j++)
 		{
-			ss << g_pose[i] << " ";
+			ss << g_pose_euler[j] << " ";
+		}
+
+		g_thetas_euler_string = ss.str();
+	}
+	{
+		Eigen::AngleAxisf theta(g_thetas[i]);
+		g_pose[i] = smpl::float3(theta.axis() * theta.angle());
+		std::stringstream ss;
+
+		for (UINT j = 0; j < smpl::THETA_COUNT; j++)
+		{
+			ss << g_pose[j] << " ";
 		}
 
 		g_thetas_string = ss.str();
+	}
+
+	if (g_use_euler)
+	{
+		g_SmplModel.Generate(g_shape, g_pose_euler);
+	}
+	else
+	{
+		g_SmplModel.Generate(g_shape, g_pose);
 	}
 }
 
@@ -226,7 +242,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 	TwAddVarRW(g_bar, "Use Euler Angles", TW_TYPE_BOOLCPP, &g_use_euler, "");
 	TwAddVarRW(g_bar, "Betas", TW_TYPE_STDSTRING, &g_betas_string, "");
 	TwAddVarRW(g_bar, "Thetas", TW_TYPE_STDSTRING, &g_thetas_string, "");
-	TwAddButton(g_bar, "Generate", GenerateBtnCB, nullptr, ""); 
+	TwAddVarRW(g_bar, "Thetas Euler", TW_TYPE_STDSTRING, &g_thetas_euler_string, "");
+	TwAddButton(g_bar, "Generate", GenerateBtnCB, nullptr, "");
+	TwAddButton(g_bar, "Reset", ResetBtnCB, nullptr, "");
 	TwAddButton(g_bar, "Dump", DumpBtnCB, nullptr, "");
 	
 	for (UINT i = 0; i < smpl::BETA_COUNT; i++)

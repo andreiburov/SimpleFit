@@ -32,7 +32,7 @@ namespace smpl
 			return Eigen::Vector2f(intrinsics_(0, 0) * (dt(0) / t(2) - t(0)*dt(2) / z2), intrinsics_(1, 1) * (dt(1) / t(2) - t(1)*dt(2) / z2));
 		}
 
-		Eigen::MatrixXf derivative(const Eigen::Vector3f& t) const
+		Eigen::Matrix<float, 3, 2> derivative(const Eigen::Vector3f& t) const
 		{
 			float z2 = t(2) * t(2);
 			float r[6] = { intrinsics_(0,0) / t(2), 0, -intrinsics_(0,0) * t(0) / z2, 0, intrinsics_(1,1) / t(2), -intrinsics_(1,1) * t(1) / z2 };
