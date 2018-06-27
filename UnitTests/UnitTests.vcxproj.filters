@@ -36,5 +36,8 @@
     <ClCompile Include="TestShapeReconstruction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestExtrinscics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

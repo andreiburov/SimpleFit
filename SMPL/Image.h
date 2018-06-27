@@ -16,6 +16,7 @@ namespace smpl
 	extern RGBTRIPLE RED;
 	extern RGBTRIPLE GREEN;
 	extern RGBTRIPLE BLUE;
+	extern RGBTRIPLE YELLOW;
 
 	class Image
 	{
@@ -32,15 +33,17 @@ namespace smpl
 		RGBTRIPLE* operator[](int i);
 
 		static void Draw3D(Image& image, const Eigen::Matrix3f& intrinsics, 
-			const Eigen::Vector3f& scaling,	const Eigen::Vector3f& translation, 
+			const Eigen::Vector3f& translation, 
 			const RGBTRIPLE& color,	const int brush_size, const std::vector<float3>& pointcloud);
 
 		static void Draw3D(Image& image, const Eigen::Matrix3f& intrinsics,
-			const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation,
+			const Eigen::Vector3f& translation,
 			const RGBTRIPLE& color, const std::vector<float3>& pointcloud)
 		{
-			Draw3D(image, intrinsics, scaling, translation, color, 0, pointcloud);
+			Draw3D(image, intrinsics, translation, color, 0, pointcloud);
 		}
+
+		static void Draw2D(Image& image, const RGBTRIPLE& color, const int brush_size, const std::vector<float>& points);
 
 		void SavePNG(const std::string& filename)
 		{

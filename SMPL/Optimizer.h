@@ -68,16 +68,17 @@ namespace smpl
 
 		Optimizer(Configuration& configuration, const Generator& generate, const std::vector<float>& tracked_joints);
 
-		void OptimizeExtrinsics(const std::string& image_filename, const Body& body, Eigen::Vector3f& scaling, Eigen::Vector3f& translation);
+		void OptimizeExtrinsics(const std::string& image_filename, const Body& body, Eigen::Vector3f& translation);
 
 		void OptimizeShapeFromJoints2D(const JOINT_TYPE& joint_type, const std::string& image_filename, 
-			const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, 
-			const PoseEulerCoefficients& thetas, ShapeCoefficients& betas);
+			const Eigen::Vector3f& translation, const PoseEulerCoefficients& thetas,
+			ShapeCoefficients& betas);
 
-		void OptimizePose(const std::string& image_filename, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
+		void OptimizePose(const std::string& image_filename, const Eigen::Vector3f& translation,
+			const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
-		void OptimizePoseFromJoints2D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, 
-			const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation,
+		void OptimizePoseFromJoints2D(const JOINT_TYPE& joint_type, const std::string& image_filename, 
+			const Eigen::Vector3f& translation, const ShapeCoefficients& betas,
 			PoseEulerCoefficients& thetas);
 
 		void OptimizePoseFromSmplJoints3D(const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
@@ -98,7 +99,8 @@ namespace smpl
 
 		Joints RegressJoints(const Body& body, const JOINT_TYPE& joint_type) const;
 
-		void operator()(const std::string& image_filename, ShapeCoefficients& betas, PoseAxisAngleCoefficients& thetas, Eigen::Vector3f& scaling, Eigen::Vector3f& translation);
+		void operator()(const std::string& image_filename, ShapeCoefficients& betas, 
+			PoseAxisAngleCoefficients& thetas, Eigen::Vector3f& translation);
 
 	private:
 		const std::map<std::string, float> optimization_parameters;

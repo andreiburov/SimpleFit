@@ -14,7 +14,6 @@ namespace pose_reconstruction_2d
 	PoseEulerCoefficients pose;
 	Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 	SparseMatrix smpl_matrix, coco_matrix;
-	Eigen::Vector3f scaling(1.f, 1.f, 1.f);
 	Eigen::Vector3f	translation(0.f, 0.2f, -4.f);
 
 	void LogBodyAndProjection(const Body& body, const Joints& joints, const Projector& project,
@@ -22,8 +21,20 @@ namespace pose_reconstruction_2d
 	{
 		body.Dump(body_filename);
 		Image image;
-		Image::Draw3D(image, project.GetIntrinsics(), scaling, translation, WHITE, body.vertices);
-		Image::Draw3D(image, project.GetIntrinsics(), scaling, translation, BLUE, 2, Joints2Vector(joints));
+		Image::Draw3D(image, project.GetIntrinsics(), translation, WHITE, body.vertices);
+		Image::Draw3D(image, project.GetIntrinsics(), translation, BLUE, 2, Joints2Vector(joints));
+		image.SavePNG(projection_filename);
+	}
+
+	void LogBodyAndProjectionWithCorrespondances(const Body& body, const Joints& joints, 
+		const std::vector<float>& correspondances, const Projector& project,
+		const std::string& body_filename, const std::string& projection_filename)
+	{
+		body.Dump(body_filename);
+		Image image;
+		Image::Draw3D(image, project.GetIntrinsics(), translation, WHITE, body.vertices);
+		Image::Draw3D(image, project.GetIntrinsics(), translation, BLUE, 2, Joints2Vector(joints));
+		Image::Draw2D(image, YELLOW, 2, correspondances);
 		image.SavePNG(projection_filename);
 	}
 
@@ -46,7 +57,7 @@ namespace pose_reconstruction_2d
 		tracked_joints.reserve(smpl::JOINT_COUNT * 2);
 		for (UINT i = 0; i < smpl::JOINT_COUNT; i++)
 		{
-			auto j = project(joints2.col(i), scaling, translation);
+			auto j = project(joints2.col(i), translation);
 			tracked_joints.push_back(j(0));
 			tracked_joints.push_back(j(1));
 		}
@@ -54,7 +65,7 @@ namespace pose_reconstruction_2d
 		smpl::Optimizer optimize(configuration,	generator, tracked_joints);
 
 		ZeroMemory(&pose, sizeof(pose));
-		optimize.OptimizePoseFromJoints2D(joint_type, shape, scaling, translation, pose);
+		optimize.OptimizePoseFromJoints2D(joint_type, "black.png", translation, shape, pose);
 
 		Body body1 = generator(shape, pose);
 		Joints joints1 = (joint_type == smpl::Optimizer::JOINT_TYPE::COCO ?
@@ -62,7 +73,29 @@ namespace pose_reconstruction_2d
 		LogBodyAndProjection(body1, joints1, project, "Body1.obj", "Body1.png");
 	}
 
-	TEST_CASE("PR SMPL2D From File")
+	void TestRealPoseReconstruction2D(
+		const std::string& image_filename,
+		const std::vector<float>& tracked_joints,
+		const Eigen::Vector3f& translation)
+	{
+		ZeroMemory(&shape, sizeof(shape));
+		ZeroMemory(&pose, sizeof(pose));
+
+		Optimizer::Configuration configuration("../Model");
+		JointRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
+		Projector project(configuration.intrinsics);
+		smpl::Generator generator(smpl::Generator::Configuration(std::string("../Model")));
+		smpl::Optimizer optimize(configuration,	generator, tracked_joints);
+
+		optimize.OptimizePoseFromJoints2D(smpl::Optimizer::JOINT_TYPE::COCO, 
+			image_filename, translation, shape, pose);
+		
+		Body body = generator(shape, pose);
+		Joints joints = coco_regressor(body.vertices);
+		LogBodyAndProjectionWithCorrespondances(body, joints, tracked_joints, project, "Body2.obj", "Body2.png");
+	}
+
+	TEST_CASE("SPR SMPL2D From File")
 	{
 		ZeroMemory(&pose, sizeof(pose));
 		std::ifstream in("thetas.txt");
@@ -79,7 +112,7 @@ namespace pose_reconstruction_2d
 		TestSyntheticPoseReconstruction2D(smpl::Optimizer::JOINT_TYPE::SMPL, pose);
 	}
 
-	TEST_CASE("PR COCO2D From File")
+	TEST_CASE("SPR COCO2D From File")
 	{
 		ZeroMemory(&pose, sizeof(pose));
 		std::ifstream in("thetas.txt");
@@ -93,5 +126,30 @@ namespace pose_reconstruction_2d
 		std::getline(in, str);
 		pose << str;
 		TestSyntheticPoseReconstruction2D(smpl::Optimizer::JOINT_TYPE::COCO, pose);
+	}
+
+	TEST_CASE("RPR From File")
+	{
+		std::ifstream in("Frames0_joints/1_keypoints.json.2.txt");
+
+		if (in.fail())
+		{
+			MessageBoxA(NULL, "Frames0_joints/1_keypoints.json.2.txt does not exist!", "Error", MB_OK);
+		}
+
+		std::string line;
+		std::getline(in, line);
+		std::istringstream iss(line);
+		std::vector<float> tracked_joints;
+		tracked_joints.reserve(36);
+		float tracked;
+
+		while (iss >> tracked)
+		{
+			tracked_joints.push_back(tracked);
+		}
+
+		Eigen::Vector3f translation(-0.0401437f, 0.342779f, -3.93008f);
+		TestRealPoseReconstruction2D("Frames0/1.png", tracked_joints, translation);
 	}
 }

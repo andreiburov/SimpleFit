@@ -15,7 +15,11 @@ smpl_pose_3dreconstruction_log_every	100
 smpl_pose_2dreconstruction_learning_rate	1e-4
 smpl_pose_2dreconstruction_iterations	1000
 smpl_pose_2dreconstruction_log_every	100
-# synthetic
-coco_pose_2dreconstruction_learning_rate	1e-5
+# real
+coco_pose_2dreconstruction_learning_rate	1e-6
 coco_pose_2dreconstruction_iterations	1000
 coco_pose_2dreconstruction_log_every	100
+# synthetic
+# coco_pose_2dreconstruction_learning_rate	1e-5
+# coco_pose_2dreconstruction_iterations	1000
+# coco_pose_2dreconstruction_log_every	100

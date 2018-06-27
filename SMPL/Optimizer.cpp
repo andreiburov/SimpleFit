@@ -36,7 +36,7 @@ namespace smpl
 	{
 	}
 
-	void Optimizer::OptimizeExtrinsics(const std::string& image_filename, const Body& body, Eigen::Vector3f& scaling, Eigen::Vector3f& translation)
+	void Optimizer::OptimizeExtrinsics(const std::string& image_filename, const Body& body, Eigen::Vector3f& translation)
 	{
 		try
 		{
@@ -66,7 +66,7 @@ namespace smpl
 			for (uint i = 0; i < COCO_JOINT_COUNT; i++)
 			{
 				Eigen::Vector3f joint = joints.col(i);
-				Eigen::Vector3f transformed_joint = Eigen::Scaling(scaling) * joint + translation;
+				Eigen::Vector3f transformed_joint = joint + translation;
 				Eigen::Vector2f projection = project_(transformed_joint);
 				Eigen::Vector2f error = Eigen::Vector2f(projection(0) - tracked_joints_[2 * i], projection(1) - tracked_joints_[2 * i + 1]);
 
@@ -75,19 +75,18 @@ namespace smpl
 				dtranslation += project_.derivative(transformed_joint) * error * 2.f;
 			}
 
-			image.SavePNG("projection.png");
-
 			//scaling -= learning_rate * dscaling;
 			translation -= learning_rate * dtranslation;
 
 			if (count % log_every == 0)
 			{
 				Image image(image_filename.c_str());
-				Image::Draw3D(image, project_.GetIntrinsics(), scaling, translation, GREEN, body.vertices);
-				image.SavePNG(std::string("projections/").append("0extrinsics_").append(std::to_string(count)).append(".png").c_str());
+				Image::Draw3D(image, project_.GetIntrinsics(), translation, WHITE, body.vertices);
+				Image::Draw3D(image, project_.GetIntrinsics(), translation, BLUE, 2, Joints2Vector(joints));
+				Image::Draw2D(image, YELLOW, 2, tracked_joints_);
+				image.SavePNG(std::string("ExtrinscisTemp/").append(std::to_string(count)).append(".png").c_str());
 				std::cout << "Iteration: " << count << std::endl;
 				std::cout << "Energy: " << energy << std::endl;
-				std::cout << "Scaling: " << std::endl << scaling << std::endl;
 				std::cout << "Translation:" << std::endl << translation << std::endl << std::endl;
 			}
 			count++;
@@ -95,7 +94,7 @@ namespace smpl
 	}
 
 	void Optimizer::OptimizeShapeFromJoints2D(const JOINT_TYPE& joint_type, const std::string& image_filename,
-		const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation,
+		const Eigen::Vector3f& translation,
 		const PoseEulerCoefficients& thetas, ShapeCoefficients& betas)
 	{
 		try
@@ -127,7 +126,7 @@ namespace smpl
 			for (uint m = 0; m < COCO_JOINT_COUNT; m++)
 			{
 				Eigen::Vector3f joint = joints.col(m);
-				Eigen::Vector3f transformed_joint = Eigen::Scaling(scaling) * joint + translation;
+				Eigen::Vector3f transformed_joint = joint + translation;
 				Eigen::Vector2f projection = project_(transformed_joint);
 				Eigen::Vector2f error = Eigen::Vector2f(projection(0) - tracked_joints_[2 * m], projection(1) - tracked_joints_[2 * m + 1]);
 
@@ -135,7 +134,7 @@ namespace smpl
 
 				for (uint j = 0; j < BETA_COUNT; j++)
 				{
-					dbetas[j] += 2.f * error.transpose() * project_.derivative(transformed_joint).transpose() * Eigen::Scaling(scaling) * dshape_[m*BETA_COUNT + j];
+					dbetas[j] += 2.f * error.transpose() * project_.derivative(transformed_joint).transpose() * dshape_[m*BETA_COUNT + j];
 				}
 			}
 
@@ -146,10 +145,10 @@ namespace smpl
 
 			if (count % log_every == 0)
 			{
-				Image image;
-				Image::Draw3D(image, project_.GetIntrinsics(), scaling, translation, WHITE, body.vertices);
-				Image::Draw3D(image, project_.GetIntrinsics(), scaling, translation, BLUE, 2, Joints2Vector(joints));
-
+				Image image(image_filename.c_str());
+				Image::Draw3D(image, project_.GetIntrinsics(), translation, WHITE, body.vertices);
+				Image::Draw3D(image, project_.GetIntrinsics(), translation, BLUE, 2, Joints2Vector(joints));
+				Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 				image.SavePNG(std::string("ShapeReconstructionTemp/").append(std::to_string(count)).append(".png"));
 	
 				std::cout << "Iteration: " << count << std::endl;
@@ -163,13 +162,14 @@ namespace smpl
 		}
 	}
 
-	void Optimizer::OptimizePose(const std::string& image_filename, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
+	void Optimizer::OptimizePose(const std::string& image_filename, const Eigen::Vector3f& translation, 
+		const ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		// Here will be 2nd order
 	}
 
-	void Optimizer::OptimizePoseFromJoints2D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas,
-		const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, 
+	void Optimizer::OptimizePoseFromJoints2D(const JOINT_TYPE& joint_type, const std::string& image_filename,
+		const Eigen::Vector3f& translation, const ShapeCoefficients& betas,
 		PoseEulerCoefficients& thetas)
 	{
 		float energy = 1000.f;
@@ -248,7 +248,7 @@ namespace smpl
 				for (auto& m : checked_joints_sets[l])
 				{
 					Eigen::Vector3f joint = reconstruction_joints.col(m);
-					Eigen::Vector3f transformed_joint = Eigen::Scaling(scaling) * joint + translation;
+					Eigen::Vector3f transformed_joint = joint + translation;
 					Eigen::Vector2f projection = project_(transformed_joint);
 					Eigen::Vector2f error = Eigen::Vector2f(
 						projection(0) - tracked_joints_[2 * m], 
@@ -321,9 +321,9 @@ namespace smpl
 
 				if (count % log_every == 0)
 				{
-					Image image;
-					Image::Draw3D(image, project_.GetIntrinsics(), scaling, translation, WHITE, body.vertices);
-					Image::Draw3D(image, project_.GetIntrinsics(), scaling, translation, BLUE, 2, Joints2Vector(reconstruction_joints));
+					Image image(image_filename.c_str());
+					Image::Draw3D(image, project_.GetIntrinsics(), translation, WHITE, body.vertices);
+					Image::Draw3D(image, project_.GetIntrinsics(), translation, BLUE, 2, Joints2Vector(reconstruction_joints));
 
 					std::vector<float3> checked_joint_coordinates;
 					checked_joint_coordinates.reserve(10);
@@ -331,7 +331,7 @@ namespace smpl
 					{
 						checked_joint_coordinates.push_back(float3(reconstruction_joints.col(m)));
 					}
-					Image::Draw3D(image, project_.GetIntrinsics(), scaling, translation, RED, 2, checked_joint_coordinates);
+					Image::Draw3D(image, project_.GetIntrinsics(), translation, RED, 2, checked_joint_coordinates);
 
 					std::vector<float3> movable_joint_coordinates;
 					movable_joint_coordinates.reserve(10);
@@ -339,7 +339,8 @@ namespace smpl
 					{
 						movable_joint_coordinates.push_back(float3(smpl_joints.col(m)));
 					}
-					Image::Draw3D(image, project_.GetIntrinsics(), scaling, translation, GREEN, 2, movable_joint_coordinates);
+					Image::Draw3D(image, project_.GetIntrinsics(), translation, GREEN, 2, movable_joint_coordinates);
+					Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 					
 					image.SavePNG(std::string("PoseReconstructionTemp2D/").append(std::to_string(count)).append(".png"));
 					std::cout << "Iteration: " << count << std::endl;
@@ -640,21 +641,21 @@ namespace smpl
 		}
 	}
 
-	void Optimizer::operator()(const std::string& image_filename, ShapeCoefficients& betas, PoseAxisAngleCoefficients& thetas, Eigen::Vector3f& scaling, Eigen::Vector3f& translation)
+	void Optimizer::operator()(const std::string& image_filename, ShapeCoefficients& betas,
+		PoseAxisAngleCoefficients& thetas, Eigen::Vector3f& translation)
 	{
 		Body body = generate_(betas, thetas);
 		//body.Dump("new.obj");
 
-		//OptimizeExtrinsics(image_filename, body, scaling, translation);
+		//OptimizeExtrinsics(image_filename, body, translation);
 
-		//scaling = Eigen::Vector3f(1.32409f, 1.42544f, 0.997468f);
 		// jake - tpose
 		//translation = Eigen::Vector3f(-0.279263f, 0.366249f, - 4.01858f);
 
 		// andrei - surrender
 		translation = Eigen::Vector3f(0.0404971f, 0.416566f, -3.69404f);
 
-		//OptimizeShapeFromJoints2D(image_filename, scaling, translation, thetas, betas);
+		//OptimizeShapeFromJoints2D(image_filename, translation, thetas, betas);
 
 		PoseEulerCoefficients eulers;
 
@@ -664,6 +665,6 @@ namespace smpl
 		// andrei - surrender
 		betas = { 0.0631728f, 0.463201f, 1.29514f, -0.267553f, -0.250164f, 0.171496f, -0.185418f, 0.0712007f, 0.116954f, -0.326455f, };
 
-		OptimizePose(image_filename, scaling, translation, betas, eulers);
+		//OptimizePose(image_filename, translation, betas, eulers);
 	}
 }
