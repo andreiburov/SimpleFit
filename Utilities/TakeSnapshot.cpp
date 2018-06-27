@@ -13,7 +13,7 @@
 using namespace cv;
 using namespace std;
 
-int snapshot(int argc, char** argv)
+int TakeSnapshot(int argc, char** argv)
 {
 	namedWindow("Video");
 	namedWindow("Picture");

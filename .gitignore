@@ -16,7 +16,9 @@ mLib/
 src/openpose/
 openpose/
 Main/Photos/
+Utilities/Video/
 *.png
+*.avi
 
 # Linux
 *.swp

@@ -179,11 +179,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="calibration.cpp" />
+    <ClCompile Include="CameraCalibration.cpp" />
     <ClCompile Include="ConvertBinary.cpp" />
     <ClCompile Include="FreeImageExample.cpp" />
     <ClCompile Include="Image.cpp" />
-    <ClCompile Include="snapshot.cpp" />
+    <ClCompile Include="RecordVideo.cpp" />
+    <ClCompile Include="TakeSnapshot.cpp" />
     <ClCompile Include="Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>

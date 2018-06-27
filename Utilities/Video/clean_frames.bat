@@ -1,0 +1,1 @@
+for /d %%x in (Frames*) do del /q "%%x"

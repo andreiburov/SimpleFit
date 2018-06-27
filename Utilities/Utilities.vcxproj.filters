@@ -18,19 +18,22 @@
     <ClCompile Include="Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calibration.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Image.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="snapshot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ConvertBinary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FreeImageExample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TakeSnapshot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraCalibration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RecordVideo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
