@@ -1,0 +1,2 @@
+cd /d N:\TUM-PC\Desktop\Code\openpose-1.2.1-win64-binaries
+bin\OpenPoseDemo.exe --image_dir N:\TUM-PC\Desktop\Code\openpose\SimpleFit\UnitTests\Frames0 --write_images N:\TUM-PC\Desktop\Code\openpose\SimpleFit\UnitTests\Frames0_joints --write_json N:\TUM-PC\Desktop\Code\openpose\SimpleFit\UnitTests\Frames0_joints

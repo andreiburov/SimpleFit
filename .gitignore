@@ -17,6 +17,7 @@ src/openpose/
 openpose/
 Main/Photos/
 Utilities/Video/
+UnitTests/Frames0_joints/
 *.png
 *.avi
 

@@ -1,0 +1,2 @@
+#for i in *_keypoints.json; do cat $i | sed -n '6p;7q' | sed -e 's/^[ \t]*//' | tr ',' '\n' | sed 's/^.*$/&f/' | awk '!(NR%3==0)' | tr '\n' ',' |  sed 's/.$/\n/' > "$i.txt"; done
+for i in *_keypoints.json; do cat $i | sed -n '6p;7q' | sed -e 's/^[ \t]*//' | tr ',' '\n' | awk '!(NR%3==0)' | tr '\n' ' ' |  sed 's/$/\n/' > "$i.2.txt"; done

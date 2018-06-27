@@ -44,10 +44,6 @@ namespace smpl
 	const int HAND_LEFT = 23;
 	const int JOINT_COUNT = 24;
 
-	extern const char* JOINT_FROM_INDEX[JOINT_COUNT];
-
-	const int COCO_JOINT_COUNT = 18;
-
 	const int PARENT_INDEX[JOINT_COUNT] = {
 		-1,	// 0
 		HIP_CENTER, // 1
@@ -73,6 +69,49 @@ namespace smpl
 		ELBOW_LEFT, // 21
 		WRIST_RIGHT, // 22
 		WRIST_LEFT // 23
+	};
+
+	extern const char* JOINT_FROM_INDEX[JOINT_COUNT];
+
+	const int COCO_NOSE = 0;
+	const int COCO_SHOULDER_CENTER = 1;
+	const int COCO_SHOULDER_LEFT = 2;
+	const int COCO_ELBOW_LEFT = 3;
+	const int COCO_WRIST_LEFT = 4;
+	const int COCO_SHOULDER_RIGHT = 5;
+	const int COCO_ELBOW_RIGHT = 6;
+	const int COCO_WRIST_RIGHT = 7;
+	const int COCO_HIP_LEFT = 8;
+	const int COCO_KNEE_LEFT = 9;
+	const int COCO_ANKLE_LEFT = 10;
+	const int COCO_HIP_RIGHT = 11;
+	const int COCO_KNEE_RIGHT = 12;
+	const int COCO_ANKLE_RIGHT = 13;
+	const int COCO_EYE_LEFT = 14;
+	const int COCO_EYE_RIGHT = 15;
+	const int COCO_EAR_LEFT = 16;
+	const int COCO_EAR_RIGHT = 17;
+	const int COCO_JOINT_COUNT = 18;
+
+	const int COCO_PARENT_INDEX[COCO_JOINT_COUNT] = {
+		COCO_SHOULDER_CENTER, // 0
+		-1, // 1
+		COCO_SHOULDER_CENTER, // 2
+		COCO_SHOULDER_LEFT, // 3
+		COCO_ELBOW_LEFT, // 4
+		COCO_SHOULDER_CENTER, // 5
+		COCO_SHOULDER_RIGHT, // 6
+		COCO_ELBOW_RIGHT, // 7
+		COCO_SHOULDER_CENTER, // 8
+		COCO_HIP_LEFT, // 9
+		COCO_KNEE_LEFT, // 10
+		COCO_SHOULDER_CENTER, // 11
+		COCO_HIP_RIGHT, // 12
+		COCO_ANKLE_RIGHT, // 13
+		COCO_NOSE, // 14
+		COCO_NOSE, // 15
+		COCO_EYE_LEFT, // 16
+		COCO_EYE_RIGHT // 17
 	};
 
 	struct ShapeCoefficients

@@ -5,6 +5,8 @@
 #include "Projector.h"
 #include "Generator.h"
 
+#include <map>
+
 namespace smpl
 {
 	constexpr uint ALPHA(int idx)
@@ -25,6 +27,11 @@ namespace smpl
 	class Optimizer
 	{
 	public:
+		
+		enum JOINT_TYPE
+		{
+			SMPL, COCO
+		};
 
 		struct Configuration
 		{
@@ -32,6 +39,8 @@ namespace smpl
 			SparseMatrix smpl_regressor;
 
 			float intrinsics[9];
+
+			std::map<std::string, float> optimization_parameters;
 
 			// taken from calibration (Utilities project)
 			/*float intrinsics[9] = {
@@ -50,28 +59,31 @@ namespace smpl
 				{
 					intrinsics_file >> intrinsics[i];
 				}
+				ReadOptimizationConfiguration(configuration_path + std::string("/optimization_configuration.txt"));
 			}
+
+			void ReadOptimizationConfiguration(const std::string& filename);
 		};
+
 
 		Optimizer(Configuration& configuration, const Generator& generate, const std::vector<float>& tracked_joints);
 
 		void OptimizeExtrinsics(const std::string& image_filename, const Body& body, Eigen::Vector3f& scaling, Eigen::Vector3f& translation);
 
-		void OptimizeShape(const std::string& image_filename, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, const PoseEulerCoefficients& thetas, ShapeCoefficients& betas);
+		void OptimizeShapeFromJoints2D(const JOINT_TYPE& joint_type, const std::string& image_filename, 
+			const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, 
+			const PoseEulerCoefficients& thetas, ShapeCoefficients& betas);
 
 		void OptimizePose(const std::string& image_filename, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
-		enum JOINT_TYPE
-		{
-			SMPL, COCO
-		};
-
-		void OptimizePoseFromSmplJoints2D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, 
+		void OptimizePoseFromJoints2D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, 
 			const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation,
 			PoseEulerCoefficients& thetas);
 
-		void OptimizePoseFromSmplJoints3D(const JOINT_TYPE& joint_type, const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
+		void OptimizePoseFromSmplJoints3D(const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
+		void ComputeShapeDerivatives(const JOINT_TYPE& joint_type);
+		
 		void ComputeSkinning(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
 			Eigen::Matrix4f(&palette)[JOINT_COUNT]) const;
 
@@ -89,11 +101,16 @@ namespace smpl
 		void operator()(const std::string& image_filename, ShapeCoefficients& betas, PoseAxisAngleCoefficients& thetas, Eigen::Vector3f& scaling, Eigen::Vector3f& translation);
 
 	private:
+		const std::map<std::string, float> optimization_parameters;
 		const Generator generate_;
 		const Projector project_;
 		const JointRegressor coco_regress_;
 		const JointRegressor smpl_regress_;
 		const std::vector<float> tracked_joints_;
 		std::vector<Eigen::Vector3f> dshape_;
+
+		float learning_rate = 1e-7f;
+		uint iterations = 1000;
+		uint log_every = 100;
 	};
 }

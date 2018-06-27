@@ -39,7 +39,7 @@ namespace pose_reconstruction_3d
 			generator, tracked_joints);
 
 		ZeroMemory(&pose, sizeof(pose));
-		optimize.OptimizePoseFromSmplJoints3D(smpl::Optimizer::JOINT_TYPE::SMPL, shape, pose);
+		optimize.OptimizePoseFromSmplJoints3D(shape, pose);
 
 		Body body1 = generator(shape, pose);
 		body1.Dump("Body1.obj");

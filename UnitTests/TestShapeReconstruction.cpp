@@ -18,13 +18,14 @@ namespace shape_reconstruction
 		const std::string& body_filename, const std::string& projection_filename)
 	{
 		body.Dump(body_filename);
-		Image image(640, 480);
+		Image image;
 		Image::Draw3D(image, project.GetIntrinsics(), scaling, translation, WHITE, body.vertices);
 		Image::Draw3D(image, project.GetIntrinsics(), scaling, translation, BLUE, 2, Joints2Vector(joints));
 		image.SavePNG(projection_filename);
 	}
 
-	void TestSyntheticShapeReconstruction2D(ShapeCoefficients& shape)
+	void TestSyntheticShapeReconstruction2D(
+		const smpl::Optimizer::JOINT_TYPE& joint_type, ShapeCoefficients& shape)
 	{
 		ZeroMemory(&pose, sizeof(pose));
 
@@ -48,7 +49,8 @@ namespace shape_reconstruction
 		smpl::Optimizer optimize(configuration, generator, tracked_joints);
 
 		ZeroMemory(&shape, sizeof(shape));
-		optimize.OptimizeShape(std::string(""), scaling, translation, pose, shape);
+		optimize.OptimizeShapeFromJoints2D(joint_type, std::string(""), 
+			scaling, translation, pose, shape);
 
 		Body body1 = generator(shape, pose);
 		Joints joints1 = coco_regressor(body1.vertices);
@@ -68,6 +70,6 @@ namespace shape_reconstruction
 		std::string str;
 		std::getline(in, str);
 		shape << str;
-		TestSyntheticShapeReconstruction2D(shape);
+		TestSyntheticShapeReconstruction2D(smpl::Optimizer::JOINT_TYPE::COCO, shape);
 	}
 }

@@ -1,0 +1,21 @@
+# configuration for gradient descent optimizer
+# real
+extrinsics_learning_rate	1e-7
+extrinsics_iterations	1000
+extrinsics_log_every	100
+# real
+shape_2dreconstruction_learning_rate	1e-3
+shape_2dreconstruction_iterations	1000
+shape_2dreconstruction_log_every	100
+# synthetic
+smpl_pose_3dreconstruction_learning_rate	1e-1
+smpl_pose_3dreconstruction_iterations	1000
+smpl_pose_3dreconstruction_log_every	100
+# synthetic
+smpl_pose_2dreconstruction_learning_rate	1e-4
+smpl_pose_2dreconstruction_iterations	1000
+smpl_pose_2dreconstruction_log_every	100
+# synthetic
+coco_pose_2dreconstruction_learning_rate	1e-5
+coco_pose_2dreconstruction_iterations	1000
+coco_pose_2dreconstruction_log_every	100

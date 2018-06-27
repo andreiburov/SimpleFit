@@ -86,6 +86,8 @@ int RecordVideo(int argc, char** argv)
 					video_writer->release();
 					delete video_writer;
 				}));
+
+				video_writer = nullptr;
 			}
 		}
 
