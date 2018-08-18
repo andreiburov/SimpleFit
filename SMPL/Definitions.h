@@ -93,6 +93,9 @@ namespace smpl
 	const int COCO_EAR_RIGHT = 17;
 	const int COCO_JOINT_COUNT = 18;
 
+	const int RESIDUALS = COCO_JOINT_COUNT * 2 + BETA_COUNT + THETA_COUNT * 3;
+	const int UNKNOWNS = 3 + BETA_COUNT + THETA_COUNT * 3;
+
 	const int COCO_PARENT_INDEX[COCO_JOINT_COUNT] = {
 		COCO_SHOULDER_CENTER, // 0
 		-1, // 1
@@ -120,6 +123,25 @@ namespace smpl
 		float operator [](int i) const { return betas[i]; }
 		float& operator [](int i) { return betas[i]; }
 
+		ShapeCoefficients()
+		{
+			ZeroMemory(&betas, BETA_COUNT * sizeof(float));
+		}
+
+		ShapeCoefficients(ShapeCoefficients& other)
+		{
+			memcpy(betas, other.betas, BETA_COUNT * sizeof(float));
+		}
+
+		ShapeCoefficients& operator=(std::initializer_list<float> other)
+		{
+			uint j = 0;
+			for (auto it = other.begin(); j < BETA_COUNT, it != other.end(); ++j, ++it)
+			{
+				betas[j] = *it;
+			}
+		}
+
 		friend void operator<<(ShapeCoefficients& shape, std::string& input)
 		{
 			std::stringstream ss(input);
@@ -127,6 +149,14 @@ namespace smpl
 			{
 				ss >> shape[i];
 			}
+		}
+
+		friend std::ostream& operator<<(std::ostream& out, const ShapeCoefficients& shape)
+		{
+			for (uint i = 0; i < BETA_COUNT - 1; i++)
+				out << shape[i] << " ";
+			out << shape[BETA_COUNT - 1];
+			return out;
 		}
 	};
 
@@ -139,6 +169,16 @@ namespace smpl
 		// access componentwise
 		float operator ()(int i) const { return thetas[i/3].data[i%3]; }
 		float& operator ()(int i) { return thetas[i/3].data[i%3]; }
+
+		PoseAxisAngleCoefficients()
+		{
+			ZeroMemory(&thetas, THETA_COUNT * sizeof(float) * 3);
+		}
+
+		PoseAxisAngleCoefficients(PoseAxisAngleCoefficients& other)
+		{
+			memcpy(thetas, other.thetas, THETA_COUNT * sizeof(float) * 3);
+		}
 
 		friend void operator<<(PoseAxisAngleCoefficients& pose, std::string& input)
 		{
@@ -160,6 +200,16 @@ namespace smpl
 		float operator ()(int i) const { return thetas[i / 3].data[i % 3]; }
 		float& operator ()(int i) { return thetas[i / 3].data[i % 3]; }
 
+		PoseEulerCoefficients()
+		{
+			ZeroMemory(&thetas, THETA_COUNT * sizeof(float) * 3);
+		}
+
+		PoseEulerCoefficients(PoseEulerCoefficients& other)
+		{
+			memcpy(thetas, other.thetas, THETA_COUNT * sizeof(float) * 3);
+		}
+
 		friend void operator<<(PoseEulerCoefficients& pose, std::string& input)
 		{
 			std::stringstream ss(input);
@@ -167,6 +217,14 @@ namespace smpl
 			{
 				ss >> pose(i);
 			}
+		}
+
+		friend std::ostream& operator<<(std::ostream& out, const PoseEulerCoefficients& pose)
+		{
+			for (uint i = 0; i < (THETA_COUNT*3) - 1; i++)
+				out << pose(i) << " ";
+			out << pose((THETA_COUNT * 3) - 1);
+			return out;
 		}
 	};
 

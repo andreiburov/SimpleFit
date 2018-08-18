@@ -74,16 +74,34 @@ namespace smpl
 			const Eigen::Vector3f& translation, const PoseEulerCoefficients& thetas,
 			ShapeCoefficients& betas);
 
-		void OptimizePose(const std::string& image_filename, const Eigen::Vector3f& translation,
-			const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
-
 		void OptimizePoseFromJoints2D(const JOINT_TYPE& joint_type, const std::string& image_filename, 
 			const Eigen::Vector3f& translation, const ShapeCoefficients& betas,
 			PoseEulerCoefficients& thetas);
 
 		void OptimizePoseFromSmplJoints3D(const ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
-		void ComputeShapeDerivatives(const JOINT_TYPE& joint_type);
+		void ReconstructCamera(const std::string& image_filename, Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas, uint& count);
+
+		// regularized translation, theta1, ... , thetaN, betas 
+		float ReconstructTotal(const std::string& image_filename, Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas, uint& count);
+
+		// translation, theta0, regularized betas
+		void ReconstructCoarse(const std::string& image_filename, Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas, uint& count);
+
+		// regularized translation, theta1, ... , thetaN, betas 
+		void ReconstructFine(const std::string& image_filename, Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas, uint& count);
+
+		void Reconstruct(const std::string& image_filename, Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
+		
+		void ComputeShapeDerivativesAllJointTypes();
+		
+		void ComputeShapeDerivatives(const JOINT_TYPE& joint_type,
+			std::vector<Eigen::Vector3f>& dshape);
 		
 		void ComputeSkinning(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
 			Eigen::Matrix4f(&palette)[JOINT_COUNT]) const;
@@ -97,6 +115,16 @@ namespace smpl
 		void ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
 			Eigen::Matrix4f* dskinning) const;
 
+		void ComputeJacobianAndError(Eigen::MatrixXf& jacobian, Eigen::VectorXf& error, 
+			const Body& body, const Joints& coco_joints, const Joints& smpl_joint_, 
+			const Eigen::Vector3f& translation, const ShapeCoefficients& betas,
+			const PoseEulerCoefficients& thetas, int active_set, 
+			float shape_prior_weight, float pose_prior_weight);
+
+		void Log(const std::string& image_filename, const Body& body,
+			const Joints& reconstruction_joints, const Joints& smpl_joints,
+			const Eigen::Vector3f& translation, int active_set, int count) const;
+
 		Joints RegressJoints(const Body& body, const JOINT_TYPE& joint_type) const;
 
 		void operator()(const std::string& image_filename, ShapeCoefficients& betas, 
@@ -109,10 +137,16 @@ namespace smpl
 		const JointRegressor coco_regress_;
 		const JointRegressor smpl_regress_;
 		const std::vector<float> tracked_joints_;
-		std::vector<Eigen::Vector3f> dshape_;
+		std::vector<Eigen::Vector3f> dshape_coco_;
+		std::vector<Eigen::Vector3f> dshape_smpl_;
 
-		float learning_rate = 1e-7f;
-		uint iterations = 1000;
-		uint log_every = 100;
+		float learning_rate_ = 1e-7f;
+		uint iterations_ = 1000;
+		uint log_every_ = 100;
+		std::vector<std::vector<int> > checked_joint_sets_smpl_;
+		std::vector<std::vector<int> > movable_joint_sets_smpl_;
+		std::vector<std::vector<int> > checked_joint_sets_coco_;
+		std::vector<std::vector<int> > movable_joint_sets_coco_;
+		std::vector< int > active_betas_;
 	};
 }
