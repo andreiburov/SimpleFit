@@ -703,7 +703,7 @@ namespace smpl
 	void Optimizer::ReconstructCamera(const std::string& image_filename, Eigen::Vector3f& translation,
 		ShapeCoefficients& betas, PoseEulerCoefficients& thetas, uint& count)
 	{
-		iterations_ = 20;
+		iterations_ = 10;
 
 		const int residuals = COCO_JOINT_COUNT * 2 + 1 + 1; // projection error, beta0, theta0 pitch
 		const int unknowns = 3 + 1 + 3; // translation, beta0, theta0
@@ -846,7 +846,7 @@ namespace smpl
 
 			jacobian << dtranslation, dbetas, dtheta0;
 
-			Log(image_filename, body, coco_joints, smpl_joints, translation, 0, iteration + count);
+			//Log(image_filename, body, coco_joints, smpl_joints, translation, 0, iteration + count);
 			std::cout << "Iteration: " << iteration + count << std::endl;
 			std::cout << "Error: " << error.squaredNorm() << std::endl;
 			std::cout << "Translation:" << std::endl << translation(0) << " " << translation(1) << " " << translation(2) << std::endl;
@@ -893,7 +893,7 @@ namespace smpl
 			}
 		}
 
-		count += iterations_;
+		//count += iterations_;
 	}
 
 	float Optimizer::ReconstructTotal(const std::string& image_filename, Eigen::Vector3f& translation,
@@ -925,23 +925,23 @@ namespace smpl
 			1, 100, 100, //4
 			1, 100, 100, //5
 			2, 4, 4, //6
-			2, 2, 4, //7
-			2, 2, 4, //8
-			4, 4, 4, //9
-			4, 4, 4, //10
-			4, 4, 4, //11
+			100, 100, 100, //7
+			100, 100, 100, //8
+			10, 4, 4, //9
+			100, 100, 100, //10
+			100, 100, 100, //11
 			1, 1, 2, //12
-			2, 4, 2, //13
-			2, 4, 2, //14
+			10, 10, 10, //13
+			10, 10, 10, //14
 			4, 2, 4, //15
 			2, 1, 1, //16
 			2, 1, 1, //17
 			100, 100, 1, //18
 			100, 100, 1, //19
-			1, 2, 1, //20
-			1, 2, 1, //21
-			2, 4, 1, //22
-			2, 4, 1  //23
+			100, 100, 100, //20
+			100, 100, 100, //21
+			100, 100, 100, //22
+			100, 100, 100  //23
 		};
 
 		std::vector<int> bend_mask = {  
@@ -1160,7 +1160,7 @@ namespace smpl
 				if (lambda < lambda_min) lambda = lambda_min;
 
 				
-				Log(image_filename, body, coco_joints, smpl_joints, translation, 0, iteration + count);
+				//Log(image_filename, body, coco_joints, smpl_joints, translation, 0, iteration + count);
 			}
 			else if (last_residual_error < current_residual_error)
 			{
@@ -1179,7 +1179,7 @@ namespace smpl
 			last_residual_error = current_residual_error;
 		}
 
-		count += iterations_;
+		//count += iterations_;
 		return last_residual_error;
 	}
 
@@ -1389,10 +1389,8 @@ namespace smpl
 	}
 
 	void Optimizer::Reconstruct(const std::string& image_filename, Eigen::Vector3f& translation,
-		ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
+		ShapeCoefficients& betas, PoseEulerCoefficients& thetas, uint& count)
 	{
-		uint count = 0;
-
 		// fixed pitch, reconstruct roll, yaw up to a sign, translation and beta0
 		ReconstructCamera(image_filename, translation, betas, thetas, count);
 
@@ -1421,7 +1419,7 @@ namespace smpl
 		}
 
 		Log(image_filename, body, coco_regress_(body.vertices), smpl_regress_(body.vertices), translation, 0, count);
-		body.Dump("reconstruction.obj");
+		body.Dump(std::string("Reconstruction3D/").append(std::to_string(count++)).append(".obj"));
 	}
 
 	void Optimizer::ComputeShapeDerivativesAllJointTypes()

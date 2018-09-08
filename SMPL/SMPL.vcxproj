@@ -22,7 +22,6 @@
     <ClCompile Include="Definitions.cpp" />
     <ClCompile Include="EulerAngles.cpp" />
     <ClCompile Include="Generator.cpp" />
-    <ClCompile Include="GrabCutter.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="Projector.cpp" />
     <ClCompile Include="JointRegressor.cpp" />
@@ -32,7 +31,6 @@
   <ItemGroup>
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="EulerAngles.h" />
-    <ClInclude Include="GrabCutter.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Projector.h" />
     <ClInclude Include="JointRegressor.h" />

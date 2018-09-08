@@ -96,7 +96,7 @@ namespace smpl
 			ShapeCoefficients& betas, PoseEulerCoefficients& thetas, uint& count);
 
 		void Reconstruct(const std::string& image_filename, Eigen::Vector3f& translation,
-			ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas, uint& count);
 		
 		void ComputeShapeDerivativesAllJointTypes();
 		

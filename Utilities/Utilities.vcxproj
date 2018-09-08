@@ -179,6 +179,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\OpenCV-2.4.13.6\sources\samples\cpp\grabcut.cpp" />
     <ClCompile Include="CameraCalibration.cpp" />
     <ClCompile Include="ConvertBinary.cpp" />
     <ClCompile Include="FreeImageExample.cpp" />

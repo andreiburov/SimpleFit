@@ -16,6 +16,7 @@ mLib/
 src/openpose/
 openpose/
 Main/Photos/
+ReconstructionTemp/
 Utilities/Video/
 UnitTests/Frames0_joints/
 *.png

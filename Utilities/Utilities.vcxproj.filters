@@ -36,6 +36,9 @@
     <ClCompile Include="RecordVideo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\OpenCV-2.4.13.6\sources\samples\cpp\grabcut.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Image.h">
