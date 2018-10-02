@@ -29,7 +29,6 @@ void SmplModel::Initialize(ID3D11Device* device, ID3D11DeviceContext* device_con
 
 	// Generate Template SMPL Body
 	Generate();
-
 	{
 		D3D11_BUFFER_DESC vertex_buffer_desc = { 0 };
 		vertex_buffer_desc.ByteWidth = sizeof(smpl::float3) * (unsigned int)smpl::VERTEX_COUNT;

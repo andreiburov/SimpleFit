@@ -11,6 +11,8 @@
 
 namespace smpl 
 {
+	extern D3D d3d_context;
+
 	struct SparseMatrixGPU
 	{
 		std::vector<float> values;

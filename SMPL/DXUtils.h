@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <Eigen/Eigen>
+#include <renderdoc_app.h>
 
 namespace smpl
 {
@@ -197,5 +198,65 @@ namespace smpl
 		float4x4(const Eigen::Matrix4f& m) { memcpy(data, m.data(), 16 * sizeof(float)); };
 		void SetIdentity() { m00 = m11 = m22 = m33 = 1.0f;  m01 = m02 = m03 = m10 = m12 = m13 = m20 = m21 = m23 = m30 = m31 = m32 = 0.0f; }
 		Eigen::Matrix4f ToEigen() const { Eigen::Matrix4f res; memcpy(res.data(), data, 16 * sizeof(float)); return res; }
+	};
+
+	struct D3D
+	{
+		D3D()
+		{
+			VALIDATE(InitDevice(), L"Device not initialized");
+		}
+
+		~D3D()
+		{
+			if (device_context) device_context->ClearState();
+			SAFE_RELEASE(device_context);
+			SAFE_RELEASE(device);
+		}
+
+		HRESULT InitDevice()
+		{
+			HRESULT hr = S_OK;
+			UINT createDeviceFlags = 0;
+#ifdef _DEBUG
+			createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+			D3D_DRIVER_TYPE driver_types[] =
+			{
+				D3D_DRIVER_TYPE_HARDWARE,
+				D3D_DRIVER_TYPE_WARP,
+				D3D_DRIVER_TYPE_REFERENCE,
+			};
+			UINT driver_types_count = ARRAYSIZE(driver_types);
+			D3D_FEATURE_LEVEL feature_levels[] =
+			{
+				D3D_FEATURE_LEVEL_11_1,
+				D3D_FEATURE_LEVEL_11_0,
+				D3D_FEATURE_LEVEL_10_1,
+				D3D_FEATURE_LEVEL_10_0,
+			};
+			UINT feature_levels_count = ARRAYSIZE(feature_levels);
+			for (UINT driverTypeIndex = 0; driverTypeIndex < driver_types_count; driverTypeIndex++)
+			{
+				D3D_DRIVER_TYPE driverType = driver_types[driverTypeIndex];
+				hr = D3D11CreateDevice(nullptr, driverType, nullptr, createDeviceFlags, feature_levels, feature_levels_count,
+					D3D11_SDK_VERSION, &device, &feature_level, &device_context);
+				if (hr == E_INVALIDARG)
+				{
+					// DirectX 11.0 platforms will not recognize D3D_FEATURE_LEVEL_11_1 so we need to retry without it
+					hr = D3D11CreateDevice(nullptr, driverType, nullptr, createDeviceFlags, &feature_levels[1], feature_levels_count - 1,
+						D3D11_SDK_VERSION, &device, &feature_level, &device_context);
+				}
+				if (SUCCEEDED(hr))
+					break;
+			}
+			if (FAILED(hr))
+				return hr;
+			return S_OK;
+		}
+
+		D3D_FEATURE_LEVEL        feature_level = D3D_FEATURE_LEVEL_11_0;
+		ID3D11Device*            device = nullptr;
+		ID3D11DeviceContext*     device_context = nullptr;
 	};
 } // smpl

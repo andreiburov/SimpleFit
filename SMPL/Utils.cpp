@@ -11,6 +11,8 @@
 
 namespace smpl 
 {
+	D3D d3d_context;
+
 	SparseMatrixGPU SparseMatrix::ToGPU()
 	{
 		Eigen::SparseMatrix<float, Eigen::RowMajor> matrix(JOINT_COUNT, VERTEX_COUNT);

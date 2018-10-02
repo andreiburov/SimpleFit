@@ -73,7 +73,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)SMPL;N:\TUM-PC\Desktop\Code\openpose\SimpleFit\FreeImage-3170\Dist\x64;N:\TUM-PC\Desktop\Code\openpose\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\opencv\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe\include2;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\freeglut\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe3rdparty\include\boost-1_61;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe3rdparty\include;$(SolutionDir)eigen-eigen-5a0156e40feb;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)SMPL;N:\TUM-PC\Desktop\Code\openpose\SimpleFit\FreeImage-3170\Dist\x64;N:\TUM-PC\Desktop\Code\openpose\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\opencv\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe\include2;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\freeglut\include;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe3rdparty\include\boost-1_61;N:\TUM-PC\Desktop\Code\openpose\3rdparty\windows\caffe3rdparty\include;$(SolutionDir)eigen-eigen-5a0156e40feb;C:\Program Files\RenderDoc;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>

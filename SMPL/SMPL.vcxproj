@@ -26,6 +26,8 @@
     <ClCompile Include="Projector.cpp" />
     <ClCompile Include="JointRegressor.cpp" />
     <ClCompile Include="Optimizer.cpp" />
+    <ClCompile Include="SilhouetteMaker.cpp" />
+    <ClCompile Include="SilhouetteOptimizer.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -35,10 +37,41 @@
     <ClInclude Include="Projector.h" />
     <ClInclude Include="JointRegressor.h" />
     <ClInclude Include="Optimizer.h" />
+    <ClInclude Include="SilhouetteMaker.h" />
+    <ClInclude Include="SilhouetteOptimizer.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Definitions.h" />
     <ClInclude Include="Generator.h" />
     <ClInclude Include="SMPL.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Silhouette.hlsli" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SilhouetteGS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="SilhouettePS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="SilhouetteVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -96,7 +129,7 @@
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
-    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64;$(SolutionDir)eigen-eigen-5a0156e40feb;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64;$(SolutionDir)eigen-eigen-5a0156e40feb;C:\Program Files\RenderDoc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -111,7 +144,7 @@
     <LinkIncremental>true</LinkIncremental>
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
-    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64;$(SolutionDir)eigen-eigen-5a0156e40feb;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64;$(SolutionDir)eigen-eigen-5a0156e40feb;C:\Program Files\RenderDoc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -186,7 +219,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>

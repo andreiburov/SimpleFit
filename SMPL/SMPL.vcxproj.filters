@@ -44,6 +44,12 @@
     <ClInclude Include="EulerAngles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SilhouetteMaker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SilhouetteOptimizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generator.cpp">
@@ -70,5 +76,27 @@
     <ClCompile Include="Definitions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SilhouetteMaker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SilhouetteOptimizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Silhouette.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SilhouetteGS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SilhouettePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SilhouetteVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

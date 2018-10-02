@@ -36,13 +36,16 @@
     <ClCompile Include="TestShapeReconstruction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestExtrinscics.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TestEigen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TestReconstruction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestSilhouetteReconstruction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestExtrinsics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -140,6 +140,8 @@ namespace smpl
 			{
 				betas[j] = *it;
 			}
+
+			return *this;
 		}
 
 		friend void operator<<(ShapeCoefficients& shape, std::string& input)

@@ -6,7 +6,7 @@
 
 using namespace smpl;
 
-namespace extrinscics
+namespace extrinsics
 {
 	ShapeCoefficients shape;
 	PoseEulerCoefficients pose;

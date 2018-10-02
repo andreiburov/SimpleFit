@@ -70,12 +70,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)AntTweakBar_116\include;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)SMPL;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)AntTweakBar_116\include;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)SMPL;C:\Program Files\RenderDoc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)AntTweakBar_116\lib;$(SolutionDir)$(Platform)\$(Configuration)\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)AntTweakBar_116\include;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)SMPL;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)AntTweakBar_116\include;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)SMPL;C:\Program Files\RenderDoc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)AntTweakBar_116\lib;$(SolutionDir)$(Platform)\$(Configuration)\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -84,7 +84,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_HAS_ITERATOR_DEBUGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PreBuildEvent>
       <Command>fxc /Od /Zi /T vs_4_0_level_9_1 /E MainVS /Fh $(IntDir)TwSimpleDX11_VS.h TwSimpleDX11.hlsl

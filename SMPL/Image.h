@@ -16,6 +16,7 @@ namespace smpl
 	extern RGBTRIPLE RED;
 	extern RGBTRIPLE GREEN;
 	extern RGBTRIPLE BLUE;
+	extern RGBTRIPLE BLACK;
 	extern RGBTRIPLE YELLOW;
 
 	class Image

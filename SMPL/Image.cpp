@@ -6,6 +6,7 @@ namespace smpl
 	RGBTRIPLE BLUE = { 255, 0, 0 };
 	RGBTRIPLE GREEN = { 0, 255, 0 };
 	RGBTRIPLE RED = { 0, 0, 255 };
+	RGBTRIPLE BLACK = { 0, 0, 0 };
 	RGBTRIPLE YELLOW = { 0, 255, 255 };
 
 	Image::Image()
@@ -152,4 +153,3 @@ namespace smpl
 		}
 	}
 }
-

@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)SMPL;$(SolutionDir)Catch2;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)OpenCV-2.4.13.6\build\include;$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)SMPL\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)SMPL;$(SolutionDir)Catch2;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)OpenCV-2.4.13.6\build\include;$(SolutionDir)FreeImage-3170\Dist\x64\;C:\Program Files\RenderDoc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)OpenCV-2.4.13.6\build\x64\vc14\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -83,7 +83,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)SMPL;$(SolutionDir)Catch2;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)OpenCV-2.4.13.6\build\include;$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)SMPL\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)SMPL;$(SolutionDir)Catch2;$(SolutionDir)eigen-eigen-5a0156e40feb;$(SolutionDir)OpenCV-2.4.13.6\build\include;$(SolutionDir)FreeImage-3170\Dist\x64\;C:\Program Files\RenderDoc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)FreeImage-3170\Dist\x64\;$(SolutionDir)OpenCV-2.4.13.6\build\x64\vc14\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -156,12 +156,13 @@
   <ItemGroup>
     <ClCompile Include="TestEigen.cpp" />
     <ClCompile Include="TestEulerAngles.cpp" />
-    <ClCompile Include="TestExtrinscics.cpp" />
+    <ClCompile Include="TestExtrinsics.cpp" />
     <ClCompile Include="TestKinematicChain.cpp" />
     <ClCompile Include="TestReconstruction.cpp" />
     <ClCompile Include="TestPoseReconstruction2D.cpp" />
     <ClCompile Include="TestPoseReconstruction3D.cpp" />
     <ClCompile Include="TestShapeReconstruction.cpp" />
+    <ClCompile Include="TestSilhouetteReconstruction.cpp" />
     <ClCompile Include="TestSkinningDerivatives.cpp" />
     <ClCompile Include="UnitTests.cpp" />
   </ItemGroup>

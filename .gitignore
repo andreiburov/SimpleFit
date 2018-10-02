@@ -19,6 +19,7 @@ Main/Photos/
 ReconstructionTemp/
 Utilities/Video/
 UnitTests/Frames0_joints/
+UnitTests/Captures/
 *.png
 *.avi
 
@@ -98,6 +99,7 @@ StyleCopReport.xml
 !smpl.obj
 *.pch
 *.pdb
+*.db
 *.cso
 *.pgc
 *.pgd
