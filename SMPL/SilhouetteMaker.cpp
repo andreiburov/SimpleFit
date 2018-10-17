@@ -4,7 +4,7 @@ namespace smpl
 {
 	SilhouetteMaker::SilhouetteMaker(const Body& body) : device_(d3d_context.device), device_context_(d3d_context.device_context)
 	{
-		if (_DEBUG)
+#ifdef _DEBUG
 		{
 			if (HMODULE mod = LoadLibrary(L"renderdoc.dll"))
 			{
@@ -20,6 +20,7 @@ namespace smpl
 				std::cout << "Start Frame Capture" << std::endl;
 			}
 		}
+#endif
 
 		const D3D11_INPUT_ELEMENT_DESC vertex_layout_desc[] =
 		{
@@ -202,7 +203,7 @@ namespace smpl
 			device_context_->Unmap(silhouette_staging_texture_, 0);
 		}
 
-		if (_DEBUG)
+#ifdef _DEBUG
 		{	
 			if (rdoc_api_)
 			{
@@ -210,6 +211,7 @@ namespace smpl
 				std::cout << "End Frame Capture" << std::endl;
 			}
 		}
+#endif
 
 		for (int j = 0; j < IMAGE_HEIGHT; j++)
 		{

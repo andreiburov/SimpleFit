@@ -33,7 +33,7 @@ namespace smpl
 			return m[i];
 		}
 
-		bool IsDefined() { return !is_defined; }
+		bool IsDefined() const { return is_defined; }
 	};
 
 	bool IsBlack(const RGBTRIPLE& rgb)
@@ -57,8 +57,10 @@ namespace smpl
 			return false;
 	}
 
-	Point<int> Bresenham(Image& input_clean, Image& model_clean, const Point<int>& p0, const Point<int>& p1)
+	Point<int> Bresenham(Image& input_clean, Image& model_clean, const Point<int>& p0, const Point<int>& p1, bool painted)
 	{
+		if (!p1.IsDefined()) return Point<int>();
+
 		// ensure integer coordinates
 		int x0 = p0[0];
 		int y0 = p0[1];
@@ -81,12 +83,12 @@ namespace smpl
 		int nPixels = max(dx, -dy);
 		for (int i = 0; i < nPixels; ++i)
 		{
-			model_clean[y][x] = BLUE;
+			if (painted) model_clean[y][x] = BLUE;
 
 			// if pixel is set break
 			RGBTRIPLE& check = input_clean[y][x];
-			std::cout << check.rgbtRed << " " << check.rgbtGreen << " " << check.rgbtBlue << std::endl;
-			if (IsWhite(input_clean[y][x])) return Point<int>(x, y);
+			//std::cout << check.rgbtRed << " " << check.rgbtGreen << " " << check.rgbtBlue << std::endl;
+			if (IsBlack(input_clean[y][x])) return Point<int>(x, y);
 			if (x < 0 || y < 0 || x >= IMAGE_WIDTH || y >= IMAGE_HEIGHT) return Point<int>();
 			// update error
 			e2 = 2 * err;
@@ -104,8 +106,8 @@ namespace smpl
 		Point<int> x1(point[0] + max_dist * normal[0], point[1] + max_dist * normal[1]);
 		Point<int> x2(point[0] - max_dist * normal[0], point[1] - max_dist * normal[1]);
 
-		Point<int> c1 = Bresenham(input_clean, model_clean, point, x1);
-		Point<int> c2 = Bresenham(input_clean, model_clean, point, x2);
+		Point<int> c1 = Bresenham(input_clean, model_clean, point, x1, false);
+		Point<int> c2 = Bresenham(input_clean, model_clean, point, x2, false);
 
 		int l1_2 = -1;
 		if (c1.IsDefined()) l1_2 = (point[0] - c1[0]) * (point[0] - c1[0]) + (point[1] - c1[1]) * (point[1] - c1[1]);
@@ -142,50 +144,12 @@ namespace smpl
 		}
 	}
 
-	//void SilhouetteOptimizer::FindCorrespondances(Image& input, Image& model)
-	//{
-	//	Image input_clean, model_clean;
-	//	std::vector<Point<int> > model_border;
-	//	std::vector<Point<int> > input_border;
-	//	std::vector<int> correspondance_l2;
-
-	//	// Create the clean silhouette from the input
-	//	for (int j = 0; j < IMAGE_HEIGHT; j++)
-	//	{
-	//		for (int i = 0; i < IMAGE_WIDTH; i++)
-	//		{
-	//			if (!IsBlack(input[j][i]))
-	//				if (IsBorderingPixelBlack(input, i, j))	input_clean[j][i] = WHITE;
-	//				else input_clean[j][i] = BLACK;
-
-	//			if (!IsBlack(model[j][i]))
-	//				if (IsBorderingPixelBlack(model, i, j))
-	//				{
-	//					model_clean[j][i] = WHITE;
-	//					model_border.push_back(Point<int>(i, j));
-	//				}
-	//				else model_clean[j][i] = BLACK;
-	//		}
-	//	}
-
-	//	input_clean.SavePNG("input_clean.png");
-	//	model_clean.SavePNG("model_clean.png");
-
-	//	for (auto& point : model_border)
-	//	{
-	//		float red = model[point.y][point.x].rgbtRed / 255.f;
-	//		float green = model[point.y][point.x].rgbtGreen / 255.f;
-	//		Point<float> normal(red*2.f - 1.f, 1.f - green * 2.f);
-	//		AddCorrespondence(input_clean, model_clean, point, normal, MAX_DIST, input_border, correspondance_l2);
-	//	}
-
-	//	model_clean.SavePNG("correspondances.png");
-	//}
-
-
 	void SilhouetteOptimizer::FindCorrespondances(Image& input, Image& model)
 	{
-		Image clean, result;
+		Image input_clean, model_clean;
+		std::vector<Point<int> > model_border;
+		std::vector<Point<int> > input_border;
+		std::vector<int> correspondance_l2;
 
 		// Create the clean silhouette from the input
 		for (int j = 0; j < IMAGE_HEIGHT; j++)
@@ -193,85 +157,124 @@ namespace smpl
 			for (int i = 0; i < IMAGE_WIDTH; i++)
 			{
 				if (!IsBlack(input[j][i]))
-				{
-					result[j][i] = WHITE;
-					clean[j][i] = WHITE;
-				}
+					input_clean[j][i] = WHITE;
+
+				if (!IsBlack(model[j][i]))
+					if (IsBorderingPixelBlack(model, i, j))
+					{
+						model_clean[j][i] = WHITE;
+						model_border.push_back(Point<int>(i, j));
+					}
+					else model_clean[j][i] = BLACK;
 			}
 		}
 
-		result.SavePNG("clean_silhouette.png");
+		input_clean.SavePNG("input_clean.png");
+		model_clean.SavePNG("model_clean.png");
 
-		// Bresenham marching for every border pixel
-		int marching_counter = 0;
-		for (int j = 0; j < IMAGE_HEIGHT; j++)
+		for (auto& point : model_border)
 		{
-			for (int i = 0; i < IMAGE_WIDTH; i++)
-			{
-				if (IsBlack(model[j][i])) continue;
-				if (!IsBorderingPixelBlack(model, i, j)) continue;
-				
-				// working on the boundary
-				//result[j][i] = RED;
-
-
-				int x0 = i; int y0 = j;
-				float red = model[j][i].rgbtRed / 255.f;
-				float green = model[j][i].rgbtGreen / 255.f;
-				float deltax = red * 2.f - 1.f;
-				float deltay = 1.f - green * 2.f;
-				int sign = deltay / abs(deltay); // deltay != 0
-				float deltaerr = abs(deltay / deltax);
-				float error = 0.f;
-
-				// first pixel
-				bool is_previous_black = (IsBlack(clean[j][i])) ? true : false;
-				int y = y0;
-				
-				result[j][i] = RED;
-				error = error + deltaerr;
-				if (error >= 0.5f)
-				{
-					y = y + sign;
-					error = error - 1.f;
-				}
-				
-				for (int x = x0 + 1; ; x += sign)
-				{
-					if (x >= IMAGE_WIDTH || x < 0 || y >= IMAGE_HEIGHT || y < 0)
-					{
-						++marching_counter;
-						break;
-					}
-
-					result[y][x] = BLUE;
-					
-					if ((IsBlack(clean[y0][x0]) && !is_previous_black) ||
-						(!IsBlack(clean[y0][x0]) && is_previous_black))
-					{
-						++marching_counter;
-						break;
-					}
-
-					is_previous_black = (IsBlack(clean[y0][x0])) ? 1 : 0;
-					error = error + deltaerr;
-					if (error >= 0.5f)
-					{
-						y = y + sign;
-						error = error - 1.f;
-					}
-				}
-
-				if (marching_counter >= 1)
-				{
-					result.SavePNG("correspondances.png");
-					return;
-				}
-			}
+			float red = model[point.y][point.x].rgbtRed / 255.f;
+			float green = model[point.y][point.x].rgbtGreen / 255.f;
+			Point<float> normal(red*2.f - 1.f, 1.f - green * 2.f);
+			AddCorrespondence(input_clean, model_clean, point, normal, MAX_DIST, input_border, correspondance_l2);
 		}
 
+		for (int i = 0; i < model_border.size(); i++)
+		{
+			Bresenham(input_clean, model_clean, model_border[i], input_border[i], true);
+		}
 
-
-		result.SavePNG("correspondances.png");
+		model_clean.SavePNG("correspondances.png");
 	}
+
+
+	//void SilhouetteOptimizer::FindCorrespondances(Image& input, Image& model)
+	//{
+	//	Image clean, result;
+
+	//	// Create the clean silhouette from the input
+	//	for (int j = 0; j < IMAGE_HEIGHT; j++)
+	//	{
+	//		for (int i = 0; i < IMAGE_WIDTH; i++)
+	//		{
+	//			if (!IsBlack(input[j][i]))
+	//			{
+	//				result[j][i] = WHITE;
+	//				clean[j][i] = WHITE;
+	//			}
+	//		}
+	//	}
+
+	//	result.SavePNG("clean_silhouette.png");
+
+	//	// Bresenham marching for every border pixel
+	//	int marching_counter = 0;
+	//	for (int j = 0; j < IMAGE_HEIGHT; j++)
+	//	{
+	//		for (int i = 0; i < IMAGE_WIDTH; i++)
+	//		{
+	//			if (IsBlack(model[j][i])) continue;
+	//			if (!IsBorderingPixelBlack(model, i, j)) continue;
+	//			
+	//			// working on the boundary
+	//			//result[j][i] = RED;
+
+	//			int x0 = i; int y0 = j;
+	//			float red = model[j][i].rgbtRed / 255.f;
+	//			float green = model[j][i].rgbtGreen / 255.f;
+	//			float deltax = (red * 2.f - 1.f);
+	//			float deltay = (1.f - green * 2.f);
+	//			int sign = deltay / abs(deltay); // deltay != 0
+	//			float deltaerr = abs(deltay / deltax);
+	//			float error = 0.f;
+
+	//			// first pixel
+	//			bool is_previous_black = (IsBlack(clean[j][i])) ? true : false;
+	//			int y = y0;
+	//			
+	//			result[j][i] = RED;
+	//			error = error + deltaerr;
+	//			if (error >= 0.5f)
+	//			{
+	//				y = y + sign;
+	//				error = error - 1.f;
+	//			}
+	//			
+	//			for (int x = x0 + 1; ; x += sign)
+	//			{
+	//				if (x >= IMAGE_WIDTH || x < 0 || y >= IMAGE_HEIGHT || y < 0)
+	//				{
+	//					++marching_counter;
+	//					break;
+	//				}
+
+	//				result[y][x] = BLUE;
+	//				
+	//				if ((IsBlack(clean[y][x]) && !is_previous_black) ||
+	//					(!IsBlack(clean[y][x]) && is_previous_black))
+	//				{
+	//					++marching_counter;
+	//					break;
+	//				}
+
+	//				is_previous_black = (IsBlack(clean[y][x])) ? 1 : 0;
+	//				error = error + deltaerr;
+	//				if (error >= 0.5f)
+	//				{
+	//					y = y + sign;
+	//					error = error - 1.f;
+	//				}
+	//			}
+
+	//			if (marching_counter >= 1)
+	//			{
+	//				result.SavePNG("correspondances.png");
+	//				return;
+	//			}
+	//		}
+	//	}
+
+	//	//result.SavePNG("correspondances.png");
+	//}
 }

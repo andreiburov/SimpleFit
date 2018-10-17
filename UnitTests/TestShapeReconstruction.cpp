@@ -8,7 +8,7 @@ using namespace smpl;
 
 namespace shape_reconstruction
 {
-	ShapeCoefficients shape;
+	/*ShapeCoefficients shape;
 	PoseEulerCoefficients pose;
 	Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 	Eigen::Vector3f scaling(1.f, 1.f, 1.f);
@@ -112,5 +112,5 @@ namespace shape_reconstruction
 		
 		Eigen::Vector3f translation(-0.0401437f, 0.342779f, -3.93008f);
 		TestRealShapeReconstruction2D("Frames0/1.png", tracked_joints, translation);
-	}
+	}*/
 }

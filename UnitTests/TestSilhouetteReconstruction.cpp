@@ -88,13 +88,8 @@ namespace silhouette_reconstruction
 		Image input("input.png");
 		Image model("model.png");
 
-		BYTE a = 0U;
-		BYTE b = 255U;
-
-
-
-		//SilhouetteOptimizer silhouette_optimizer;
-		//silhouette_optimizer.FindCorrespondances(input, model);
+		SilhouetteOptimizer silhouette_optimizer;
+		silhouette_optimizer.FindCorrespondances(input, model);
 
 		// Find correspondances of the silhouette boundaries
 		// - calculate normals of the body

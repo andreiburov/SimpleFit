@@ -4,7 +4,9 @@
 #include <iostream>
 #include <algorithm>
 #include <Eigen/Eigen>
+#ifdef _DEBUG
 #include <renderdoc_app.h>
+#endif
 
 namespace smpl
 {
