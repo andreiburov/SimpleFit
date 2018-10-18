@@ -106,7 +106,7 @@ namespace smpl
 			textureDesc.Height = IMAGE_HEIGHT;
 			textureDesc.MipLevels = 1;
 			textureDesc.ArraySize = 1;
-			textureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+			textureDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM;
 			textureDesc.SampleDesc.Count = 1;
 			textureDesc.MiscFlags = 0;
 			textureDesc.Usage = D3D11_USAGE_DEFAULT;

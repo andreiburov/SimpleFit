@@ -51,7 +51,7 @@ Eigen::Matrix4f CreateView()
 
 namespace silhouette_reconstruction
 {
-	TEST_CASE("Silhouette2")
+	TEST_CASE("Silhouette")
 	{
 		ShapeCoefficients shape;
 		PoseEulerCoefficients pose;
@@ -83,7 +83,7 @@ namespace silhouette_reconstruction
 		system("pause");
 	}
 
-	TEST_CASE("Silhouette")
+	TEST_CASE("Silhouette2")
 	{
 		Image input("input.png");
 		Image model("model.png");

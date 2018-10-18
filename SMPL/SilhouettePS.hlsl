@@ -28,9 +28,11 @@ float4 main(PixelShaderInput input) : SV_TARGET
 	output.rgb = input.norView / 2 + 0.5; */
 
 	/* border normals  */
+	const float VERTEX_COUNT = 6890.f;
 	
 	float2 normal = normalize(input.norView.rg) / 2 + 0.5;
-	float4 output = float4(normal.x, normal.y, 1, 1);
+	//float4 output = float4(normal.x, normal.y, 1, 1);
+	float4 output = float4(input.id[0]/VERTEX_COUNT, input.id[1]/VERTEX_COUNT, input.id[2]/VERTEX_COUNT, 1);
 
 	return output;
 }

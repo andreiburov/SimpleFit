@@ -174,8 +174,8 @@ namespace smpl
 
 		for (auto& point : model_border)
 		{
-			float red = model[point.y][point.x].rgbtRed / 255.f;
-			float green = model[point.y][point.x].rgbtGreen / 255.f;
+			float red = model[point.y][point.x].rgbtRed / (float)((1 << 16) - 1); //255.f;
+			float green = model[point.y][point.x].rgbtGreen / (float)((1 << 16) - 1); //255.f;
 			Point<float> normal(red*2.f - 1.f, 1.f - green * 2.f);
 			AddCorrespondence(input_clean, model_clean, point, normal, MAX_DIST, input_border, correspondance_l2);
 		}
