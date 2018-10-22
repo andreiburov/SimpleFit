@@ -71,8 +71,8 @@ namespace smpl {
 			Configuration(const std::string& configuration_path)
 			{
 				ReadObjFile(configuration_path + std::string("/smpl_template.obj"), vertices, indices, skins);
-				ReadFloat3FromBinaryFile(configuration_path + std::string("/smpl_posedirs.bin"), posedirs, POSEDIRS_PER_VERTEX);
-				ReadFloat3FromBinaryFile(configuration_path + std::string("/smpl_shapedirs.bin"), shapedirs, SHAPEDIRS_PER_VERTEX);
+				ReadFloat3FromBinary(configuration_path + std::string("/smpl_posedirs.bin"), posedirs, POSEDIRS_PER_VERTEX);
+				ReadFloat3FromBinary(configuration_path + std::string("/smpl_shapedirs.bin"), shapedirs, SHAPEDIRS_PER_VERTEX);
 				ReadSparseMatrixFile(configuration_path + std::string("/smpl_regressor.txt"), joint_regressor);
 			}
 
@@ -93,7 +93,13 @@ namespace smpl {
 		
 		Body operator()(const ShapeCoefficients& betas, const PoseAxisAngleCoefficients& thetas) const;
 
-		Body operator()(const ShapeCoefficients& betas, const PoseEulerCoefficients& thetas) const;
+		Body operator()(const ShapeCoefficients& betas,
+			const PoseEulerCoefficients& thetas) const;
+
+		Body operator()(const ShapeCoefficients& betas, 
+			const PoseEulerCoefficients& thetas, bool with_normals) const;
+
+		void CalculateNormals(Body& body) const;
 
 		const std::vector<float3>& GetShapeDirs() const
 		{

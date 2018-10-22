@@ -49,4 +49,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Settings\UnitTests.runsettings" />
+  </ItemGroup>
 </Project>

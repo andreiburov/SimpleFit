@@ -1385,7 +1385,7 @@ namespace smpl
 			}
 		}
 
-		count += checked_joint_sets_coco_.size() * iterations_;
+		count += static_cast<uint>(checked_joint_sets_coco_.size()) * iterations_;
 	}
 
 	void Optimizer::Reconstruct(const std::string& image_filename, Eigen::Vector3f& translation,

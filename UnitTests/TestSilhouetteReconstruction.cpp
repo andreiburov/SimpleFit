@@ -1,3 +1,6 @@
+#include <direct.h>  
+#include <stdlib.h>
+#include <thread>
 #include <catch.hpp>
 #include <EulerAngles.h>
 #include <SMPL.h>
@@ -49,10 +52,44 @@ Eigen::Matrix4f CreateView()
 	return view;
 }
 
+void AttachToProcess()
+{
+	int attach = 1; 
+	while (attach) 
+	{ 
+ 		std::this_thread::sleep_for(std::chrono::seconds(1)); 
+	}
+}
+
 namespace silhouette_reconstruction
 {
-	TEST_CASE("Silhouette")
+	TEST_CASE("Hello")
 	{
+		AttachToProcess();
+
+		std::cout << "Hello World\n";
+	}
+
+	TEST_CASE("Show Working Directory")
+	{
+		char* buffer;
+
+		if ((buffer = _getcwd(NULL, 0)) == NULL)
+			perror("_getcwd error");
+		else
+		{
+			std::string path(buffer);
+			MessageBoxA(nullptr, path.c_str(), "Info", MB_OK);
+			free(buffer);
+		}
+	}
+		
+	TEST_CASE("Create Silhouette")
+	{
+//#ifdef _DEBUG
+//		AttachToProcess();
+//#endif
+
 		ShapeCoefficients shape;
 		PoseEulerCoefficients pose;
 		//shape << std::string("-1 -5");
@@ -67,11 +104,14 @@ namespace silhouette_reconstruction
 		float _far = 10.f;
 
 		Eigen::Matrix4f projection(
-			CreateNDC(0, IMAGE_WIDTH, 0, IMAGE_HEIGHT, _near, _far)*
+			CreateNDC(0.f, static_cast<float>(IMAGE_WIDTH), 0.f, static_cast<float>(IMAGE_HEIGHT), _near, _far)*
 			CreateProjection(project.GetIntrinsics(), _near, _far));
 
-		SilhouetteMaker silhouette_maker(generate(shape, pose));	
-		Image input = silhouette_maker(generate(shape, pose), view, projection);
+		SilhouetteMaker silhouette_maker(generate(shape, pose, true));
+		Image model = silhouette_maker(generate(shape, pose, true), view, projection);
+		model.SavePNG("model.png");
+
+		//input
 
 		// Find correspondances of the silhouette boundaries
 		// - calculate normals of the body
@@ -80,16 +120,22 @@ namespace silhouette_reconstruction
 		// - do bresenham marching to find the correspondances
 
 		// Run the reconstruction using the energy defined as a sum of quadratic differences between the correspondances
-		system("pause");
+		//system("pause");
 	}
 
-	TEST_CASE("Silhouette2")
+	TEST_CASE("Find Correspondences")
 	{
+//#ifdef _DEBUG
+//		AttachToProcess();
+//#endif
 		Image input("input.png");
 		Image model("model.png");
+		std::vector<float4> normals, vertex_indices, barycentric;
+
+		ReadFloatVectorFromBinary("normals.bin", normals);
 
 		SilhouetteOptimizer silhouette_optimizer;
-		silhouette_optimizer.FindCorrespondances(input, model);
+		silhouette_optimizer.FindCorrespondences(input, model, normals);
 
 		// Find correspondances of the silhouette boundaries
 		// - calculate normals of the body
@@ -98,6 +144,5 @@ namespace silhouette_reconstruction
 		// - do bresenham marching to find the correspondances
 
 		// Run the reconstruction using the energy defined as a sum of quadratic differences between the correspondances
-		system("pause");
 	}
 }

@@ -31,8 +31,11 @@ namespace smpl
 
 		void SetMatrices(const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection);
 
-		ID3D11Device* device_ = nullptr;
-		ID3D11DeviceContext* device_context_ = nullptr;
+		// silhouette, normals, vertex indices, barycentric coordinates
+		static const int		render_targets_number_ = 4;
+
+		ID3D11Device*			device_ = nullptr;
+		ID3D11DeviceContext*	device_context_ = nullptr;
 
 		ID3D11VertexShader*		vertex_shader_ = nullptr;
 		ID3D11GeometryShader*	geometry_shader_ = nullptr;
@@ -46,9 +49,9 @@ namespace smpl
 		ID3D11Buffer*			camera_constant_buffer_ = nullptr;
 		Matrices				matrices_;
 
-		ID3D11Texture2D*		silhouette_texture_;
-		ID3D11Texture2D*		silhouette_staging_texture_;
-		ID3D11RenderTargetView* render_target_view_;
+		ID3D11Texture2D*		render_target_textures_[render_targets_number_];
+		ID3D11Texture2D*		render_target_staging_textures_[render_targets_number_];
+		ID3D11RenderTargetView* render_target_views_[render_targets_number_];
 
 #ifdef _DEBUG
 		RENDERDOC_API_1_1_2*	rdoc_api_ = nullptr;

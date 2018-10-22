@@ -244,6 +244,7 @@ namespace smpl
 	{
 		std::vector<float3> vertices;
 		std::vector<float3> deformed_template;
+		std::vector<float6> vertices_normals;
 		std::vector<uint> indices;
 
 		Body()
@@ -260,6 +261,7 @@ namespace smpl
 			vertices = other.vertices;
 			indices = other.indices;
 			deformed_template = other.deformed_template;
+			vertices_normals = other.vertices_normals;
 		}
 
 		Body(Body&& other)
@@ -267,12 +269,15 @@ namespace smpl
 			vertices = std::move(other.vertices);
 			indices = std::move(other.indices);
 			deformed_template = std::move(other.deformed_template);
+			vertices_normals = std::move(other.vertices_normals);
+
 		}
 
 		Body& operator=(Body other)
 		{
 			vertices.swap(other.vertices);
 			indices.swap(other.indices);
+			deformed_template.swap(other.deformed_template);
 			return *this;
 		}
 

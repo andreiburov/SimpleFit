@@ -32,7 +32,7 @@ namespace smpl
 					pp++;
 				}
 
-				gpu_matrix.indices.push_back(it.col());
+				gpu_matrix.indices.push_back(static_cast<uint>(it.col()));
 				gpu_matrix.values.push_back(it.value());
 				i++;
 			}
@@ -131,7 +131,7 @@ namespace smpl
 		}
 	}
 
-	void ReadFloat3FromBinaryFile(const std::string& filename, std::vector<float3>& array, size_t arraySize)
+	void ReadFloat3FromBinary(const std::string& filename, std::vector<float3>& array, size_t arraySize)
 	{
 		FILE* binaryFile = nullptr;
 		fopen_s(&binaryFile, filename.c_str(), "rb");

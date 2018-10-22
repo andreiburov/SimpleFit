@@ -2,17 +2,33 @@
 
 namespace smpl
 {
-	RGBTRIPLE WHITE = { 255, 255, 255 };
-	RGBTRIPLE BLUE = { 255, 0, 0 };
-	RGBTRIPLE GREEN = { 0, 255, 0 };
-	RGBTRIPLE RED = { 0, 0, 255 };
-	RGBTRIPLE BLACK = { 0, 0, 0 };
-	RGBTRIPLE YELLOW = { 0, 255, 255 };
+	FreeImageLibrary free_image_library;
+
+#ifdef USE_24_BITS_PER_PIXEL
+	PIXEL WHITE = { 255, 255, 255 };
+	PIXEL BLUE = { 255, 0, 0 };
+	PIXEL GREEN = { 0, 255, 0 };
+	PIXEL RED = { 0, 0, 255 };
+	PIXEL BLACK = { 0, 0, 0 };
+	PIXEL YELLOW = { 0, 255, 255 };
+
+	const int BPP = 24;
+#endif
+#ifdef USE_32_BITS_PER_PIXEL
+	PIXEL WHITE = { 255, 255, 255, 0 };
+	PIXEL BLUE = { 255, 0, 0, 0 };
+	PIXEL GREEN = { 0, 255, 0, 0 };
+	PIXEL RED = { 0, 0, 255, 0 };
+	PIXEL BLACK = { 0, 0, 0, 0 };
+	PIXEL YELLOW = { 0, 255, 255, 0 };
+
+	const int BPP = 32;
+#endif
 
 	Image::Image()
-		: width_(IMAGE_WIDTH), height_(IMAGE_HEIGHT), bpp_(24)
+		: width_(IMAGE_WIDTH), height_(IMAGE_HEIGHT), bpp_(BPP)
 	{
-		FreeImage_Initialise();
+		
 		bitmap_ = FreeImage_Allocate(width_, height_, bpp_);
 
 		if (!bitmap_)
@@ -23,9 +39,8 @@ namespace smpl
 	}
 
 	Image::Image(const int width, const int height)
-		: width_(width), height_(height), bpp_(24)
+		: width_(width), height_(height), bpp_(BPP)
 	{
-		FreeImage_Initialise();
 		bitmap_ = FreeImage_Allocate(width_, height_, bpp_);
 
 		if (!bitmap_)
@@ -36,9 +51,8 @@ namespace smpl
 	}
 
 	Image::Image(const char* filename, const int width, const int height)
-		: width_(width), height_(height), bpp_(24)
+		: width_(width), height_(height), bpp_(BPP)
 	{
-		FreeImage_Initialise();
 		bitmap_ = FreeImage_Load(FIF_PNG, filename, PNG_DEFAULT);
 
 		if (width_ != FreeImage_GetWidth(bitmap_))
@@ -61,31 +75,51 @@ namespace smpl
 	}
 
 	Image::Image(const char* filename)
-		: width_(IMAGE_WIDTH), height_(IMAGE_HEIGHT), bpp_(24)
 	{
-		FreeImage_Initialise();
 		bitmap_ = FreeImage_Load(FIF_PNG, filename, PNG_DEFAULT);
-
-		if (width_ != FreeImage_GetWidth(bitmap_))
-		{
-			std::cerr << "Overlay width does not match the image width.\n";
-			exit(1);
-		}
-
-		if (height_ != FreeImage_GetHeight(bitmap_))
-		{
-			std::cerr << "Overlay height does not match the image height.\n";
-			exit(1);
-		}
 
 		if (!bitmap_)
 		{
-			std::cerr << "Could not allocate memory for the image.\n";
-			exit(1);
+			MessageBoxA(nullptr, "Not allocated memory for the image", "Error", MB_OK);
 		}
+
+		width_ = FreeImage_GetWidth(bitmap_);
+		height_ = FreeImage_GetHeight(bitmap_);
+		bpp_ = FreeImage_GetBPP(bitmap_);
 	}
 
-	RGBTRIPLE* Image::operator[](int i)
+	Image::Image(const Image& other) : 
+		width_(other.width_), height_(other.height_), bpp_(other.bpp_)
+	{
+		bitmap_ = FreeImage_Clone(other.bitmap_);
+	}
+
+	Image::~Image()
+	{
+		FreeImage_Unload(bitmap_);
+	}
+
+	Image& Image::operator=(const Image& other)
+	{
+		if (this == &other) return *this;
+
+		FreeImage_Unload(bitmap_);
+		bitmap_ = FreeImage_Clone(other.bitmap_);
+		width_ = other.width_;
+		height_ = other.height_;
+		bpp_ = other.bpp_;
+
+		return *this;
+	}
+
+	Image& Image::operator=(FIBITMAP* other)
+	{
+		FreeImage_Unload(bitmap_);
+		bitmap_ = other;
+		return *this;
+	}
+
+	PIXEL* Image::operator[](int i)
 	{
 		if (i < 0)
 		{
@@ -98,13 +132,13 @@ namespace smpl
 			i = height_ - 1;
 		}
 
-		RGBTRIPLE* scan_line = (RGBTRIPLE*)FreeImage_GetScanLine(bitmap_, height_ - i - 1);
+		PIXEL* scan_line = (PIXEL*)FreeImage_GetScanLine(bitmap_, height_ - i - 1);
 		return scan_line;
 	}
 
 	void Image::Draw3D(Image& image, const Eigen::Matrix3f& intrinsics,
 		const Eigen::Vector3f& translation,
-		const RGBTRIPLE& color, const int brush_size, const std::vector<float3>& pointcloud)
+		const PIXEL& color, const int brush_size, const std::vector<float3>& pointcloud)
 	{
 		int w = image.GetWidth();
 		int h = image.GetHeight();
@@ -129,7 +163,7 @@ namespace smpl
 		}
 	}
 
-	void Image::Draw2D(Image& image, const RGBTRIPLE& color, const int brush_size, const std::vector<float>& points)
+	void Image::Draw2D(Image& image, const PIXEL& color, const int brush_size, const std::vector<float>& points)
 	{
 		int w = image.GetWidth();
 		int h = image.GetHeight();

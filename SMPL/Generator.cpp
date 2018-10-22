@@ -139,7 +139,14 @@ namespace smpl
 		return body;
 	}
 
-	Body Generator::operator()(const ShapeCoefficients& betas, const PoseEulerCoefficients& thetas) const
+	Body Generator::operator()(const ShapeCoefficients& betas,
+		const PoseEulerCoefficients& thetas) const
+	{
+		return operator()(betas, thetas, false);
+	}
+
+	Body Generator::operator()(const ShapeCoefficients& betas, 
+		const PoseEulerCoefficients& thetas, bool with_normals) const
 	{
 		Body body;
 		body.vertices = vertices_;
@@ -151,9 +158,39 @@ namespace smpl
 
 		// for interspection
 		body.deformed_template = body.vertices;
-
 		skin_morph_(thetas, joints, body.vertices);
 
+		if (with_normals)
+		{
+			CalculateNormals(body);
+		}
+
 		return body;
+	}
+
+	void Generator::CalculateNormals(Body& body) const
+	{
+		body.vertices_normals.reserve(VERTEX_COUNT);
+		std::vector<Eigen::Vector3f> normals(VERTEX_COUNT, Eigen::Vector3f(0.f, 0.f, 0.f));
+
+		for (uint i = 0; i < FACE_COUNT * 3; i += 3)
+		{
+			uint id0 = indices_[i];
+			uint id1 = indices_[i+1];
+			uint id2 = indices_[i+2];
+
+			// not normalized, the value is proportional to spanned triangle
+			Eigen::Vector3f face_normal = (vertices_[id1].ToEigen() - vertices_[id0].ToEigen())
+				.cross(vertices_[id2].ToEigen() - vertices_[id0].ToEigen());
+
+			normals[id0] += face_normal;
+			normals[id1] += face_normal;
+			normals[id2] += face_normal;
+		}
+
+		for (uint i = 0; i < VERTEX_COUNT; i++)
+		{
+			body.vertices_normals.push_back(float6(body.vertices[i], float3(normals[i].normalized())));
+		}
 	}
 }

@@ -12,13 +12,13 @@ namespace smpl
 {
 	#define SAFE_RELEASE(p) do { if (p) { (p)->Release(); (p) = nullptr; } } while(0)
 
-	#define VALIDATE(x, wstr) \
+	#define VALIDATE(x, msg) \
 	do { HRESULT hr = (x); if( !SUCCEEDED(hr) ) \
-	{ std::wcerr << "[ERROR] " << wstr << "\n"; } } while(0)
+	{ std::cerr << "[ERROR] at " << __FILE__ << ":" << __LINE__ << " - " << msg << "\n"; } } while(0)
 
-	#define V_RETURN(x, wstr) \
+	#define V_RETURN(x, msg) \
 	do { HRESULT hr = (x); if( !SUCCEEDED(hr) ) \
-	{ std::wcerr << "[ERROR] " << wstr << "\n"; return hr; } } while(0)
+	{ std::cerr << "[ERROR] at " << __FILE__ << ":" << __LINE__ << " - " << msg << "\n"; return hr; } } while(0)
 
 	union float2
 	{
@@ -28,7 +28,7 @@ namespace smpl
 		float2(float x, float y) : x(x), y(y) {};
 		float2(const Eigen::Vector2f& v) : x(v.x()), y(v.y()) {};
 		Eigen::Vector2f ToEigen() const { return Eigen::Vector2f(x, y); }
-		float operator [](int i) const { return data[i]; }
+		float operator [](int i) const { return data[i]; } 
 		float& operator [](int i) { return data[i]; }
 	};
 
@@ -60,11 +60,26 @@ namespace smpl
 	union float4
 	{
 		struct { float x; float y; float z; float w; };
+		struct { float r; float g; float b; float a; };
 		float data[4];
 		float4() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {};
 		float4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {};
+		float4(const float4& other) : x(other[0]), y(other[1]), z(other[2]), w(other[3]) {};
 		float4(const Eigen::Vector4f& v) : x(v.x()), y(v.y()), z(v.z()), w(v.w()) {};
 		Eigen::Vector4f ToEigen() const { return Eigen::Vector4f(x, y, z, w); }
+		float operator [](int i) const { return data[i]; }
+		float& operator [](int i) { return data[i]; }
+	};
+
+	union float6
+	{
+		struct { float x; float y; float z; float nx; float ny; float nz; };
+		float data[6];
+		float6() : x(0.0f), y(0.0f), z(0.0f), nx(0.0f), ny(0.0f), nz(0.0f) {};
+		float6(float x, float y, float z, float nx, float ny, float nz) 
+			: x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {};
+		float6(float3 first, float3 second)
+			: x(first.x), y(first.y), z(first.z), nx(second.x), ny(second.y), nz(second.z) {};
 		float operator [](int i) const { return data[i]; }
 		float& operator [](int i) { return data[i]; }
 	};

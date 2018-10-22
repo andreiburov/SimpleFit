@@ -24,29 +24,30 @@ namespace smpl
 
 		const D3D11_INPUT_ELEMENT_DESC vertex_layout_desc[] =
 		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 		};
 
 		{
 			std::vector<byte> vertex_shader = ReadShaderFromCSO("SilhouetteVS.cso");
 			VALIDATE(device_->CreateVertexShader(vertex_shader.data(), vertex_shader.size(),
-				nullptr, &vertex_shader_), L"Could not create VertexShader");
+				nullptr, &vertex_shader_), "Could not create VertexShader");
 
 			VALIDATE(device_->CreateInputLayout(vertex_layout_desc, ARRAYSIZE(vertex_layout_desc),
-				vertex_shader.data(), vertex_shader.size(), &input_layout_), L"Could not create InputLayout");
+				vertex_shader.data(), vertex_shader.size(), &input_layout_), "Could not create InputLayout");
 
 			std::vector<byte> geometry_shader = ReadShaderFromCSO("SilhouetteGS.cso");
 			VALIDATE(device_->CreateGeometryShader(geometry_shader.data(), geometry_shader.size(),
-				nullptr, &geometry_shader_), L"Could not create GeometryShader");
+				nullptr, &geometry_shader_), "Could not create GeometryShader");
 
 			std::vector<byte> pixel_shader = ReadShaderFromCSO("SilhouettePS.cso");
 			VALIDATE(device_->CreatePixelShader(pixel_shader.data(), pixel_shader.size(),
-				nullptr, &pixel_shader_), L"Could not create PixelShader");
+				nullptr, &pixel_shader_), "Could not create PixelShader");
 		}
 
 		{
 			D3D11_BUFFER_DESC vertex_buffer_desc = { 0 };
-			vertex_buffer_desc.ByteWidth = sizeof(smpl::float3) * (unsigned int)smpl::VERTEX_COUNT;
+			vertex_buffer_desc.ByteWidth = sizeof(smpl::float6) * (unsigned int)smpl::VERTEX_COUNT;
 			vertex_buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
 			vertex_buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 			vertex_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -54,12 +55,12 @@ namespace smpl
 			vertex_buffer_desc.StructureByteStride = 0;
 
 			D3D11_SUBRESOURCE_DATA vertex_buffer_data;
-			vertex_buffer_data.pSysMem = body.vertices.data();
+			vertex_buffer_data.pSysMem = body.vertices_normals.data();
 			vertex_buffer_data.SysMemPitch = 0;
 			vertex_buffer_data.SysMemSlicePitch = 0;
 
 			VALIDATE(device_->CreateBuffer(&vertex_buffer_desc, &vertex_buffer_data,
-				&vertex_buffer_), L"Could not create VertexBuffer");
+				&vertex_buffer_), "Could not create VertexBuffer");
 		}
 
 		indices_count_ = (unsigned int)body.indices.size();
@@ -79,7 +80,7 @@ namespace smpl
 			index_buffer_data.SysMemSlicePitch = 0;
 
 			VALIDATE(device_->CreateBuffer(&index_buffer_desc, &index_buffer_data, &index_buffer_),
-				L"Could not create IndexBuffer");
+				"Could not create IndexBuffer");
 		}
 
 		// Create ConstantBuffer for camera matrices
@@ -93,7 +94,7 @@ namespace smpl
 			constantBufferDesc.StructureByteStride = 0;
 
 			VALIDATE(device_->CreateBuffer(&constantBufferDesc, nullptr, &camera_constant_buffer_),
-				L"Could not create CameraConstantBuffer");
+				"Could not create CameraConstantBuffer");
 		}
 
 		// Create a texture and the render target attached to it
@@ -106,20 +107,26 @@ namespace smpl
 			textureDesc.Height = IMAGE_HEIGHT;
 			textureDesc.MipLevels = 1;
 			textureDesc.ArraySize = 1;
-			textureDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM;
+			textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;//DXGI_FORMAT_R32_UINT;//DXGI_FORMAT_B8G8R8A8_UNORM;//DXGI_FORMAT_R16G16B16A16_UNORM;
 			textureDesc.SampleDesc.Count = 1;
 			textureDesc.MiscFlags = 0;
 			textureDesc.Usage = D3D11_USAGE_DEFAULT;
 			textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
 			textureDesc.CPUAccessFlags = 0;
 
-			device_->CreateTexture2D(&textureDesc, NULL, &silhouette_texture_);
+			for (int i = 0; i < render_targets_number_; i++)
+			{
+				device_->CreateTexture2D(&textureDesc, NULL, &render_target_textures_[i]);
+			}
 
 			textureDesc.Usage = D3D11_USAGE_STAGING;
 			textureDesc.BindFlags = 0;
 			textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-			device_->CreateTexture2D(&textureDesc, NULL, &silhouette_staging_texture_);
+			for (int i = 0; i < render_targets_number_; i++)
+			{
+				device_->CreateTexture2D(&textureDesc, NULL, &render_target_staging_textures_[i]);
+			}
 
 			D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
 			renderTargetViewDesc.Format = textureDesc.Format;
@@ -127,7 +134,10 @@ namespace smpl
 			renderTargetViewDesc.Texture2D.MipSlice = 0;
 
 			// Create the render target view.
-			device_->CreateRenderTargetView(silhouette_texture_, &renderTargetViewDesc, &render_target_view_);
+			for (int i = 0; i < render_targets_number_; i++) 
+			{
+				device_->CreateRenderTargetView(render_target_textures_[i], &renderTargetViewDesc, &render_target_views_[i]);
+			}
 		}
 
 		// set viewport
@@ -165,18 +175,19 @@ namespace smpl
 
 	Image SilhouetteMaker::operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
 	{
-		Image silhouette;
-
 		SetMatrices(view, projection);
 
 		const float clear_color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-		device_context_->ClearRenderTargetView(render_target_view_, clear_color);
+		for (int i = 0; i < render_targets_number_; i++)
+		{
+			device_context_->ClearRenderTargetView(render_target_views_[i], clear_color);
+		}
 
 		device_context_->UpdateSubresource(camera_constant_buffer_, 0, nullptr, &matrices_, 0, 0);
 		device_context_->IASetInputLayout(input_layout_);
 
 		// Set the vertex and index buffers, and specify the way they define geometry
-		UINT stride = sizeof(smpl::float3);
+		UINT stride = sizeof(smpl::float6);
 		UINT offset = 0;
 		device_context_->IASetVertexBuffers(0, 1, &vertex_buffer_, &stride, &offset);
 		device_context_->IASetIndexBuffer(index_buffer_, DXGI_FORMAT_R32_UINT, 0);
@@ -187,20 +198,25 @@ namespace smpl
 		device_context_->GSSetShader(geometry_shader_, nullptr, 0);
 		device_context_->GSSetConstantBuffers(0, 1, &camera_constant_buffer_);
 		device_context_->PSSetShader(pixel_shader_, nullptr, 0);
-		device_context_->OMSetRenderTargets(1, &render_target_view_, nullptr);
+		device_context_->OMSetRenderTargets(render_targets_number_, render_target_views_, nullptr);
 
 		device_context_->DrawIndexed(indices_count_, 0, 0);
 
-		device_context_->CopyResource(silhouette_staging_texture_, silhouette_texture_);
-		device_context_->Flush();
-
-		BYTE* copied_texture = new BYTE[IMAGE_HEIGHT*IMAGE_WIDTH*4];
-
-		D3D11_MAPPED_SUBRESOURCE mapped_resource;
-		if (SUCCEEDED(device_context_->Map(silhouette_staging_texture_, 0, D3D11_MAP_READ, 0, &mapped_resource)))
+		std::vector<float4> copied_textures[render_targets_number_];
+		int texture_size = IMAGE_HEIGHT * IMAGE_WIDTH;
+		for (int i = 0; i < render_targets_number_; i++)
 		{
-			memcpy(copied_texture, mapped_resource.pData, IMAGE_HEIGHT*IMAGE_WIDTH*4*sizeof(BYTE));
-			device_context_->Unmap(silhouette_staging_texture_, 0);
+			device_context_->CopyResource(render_target_staging_textures_[i], render_target_textures_[i]);
+			device_context_->Flush();
+
+			copied_textures[i].resize(texture_size);
+
+			D3D11_MAPPED_SUBRESOURCE mapped_resource;
+			if (SUCCEEDED(device_context_->Map(render_target_staging_textures_[i], 0, D3D11_MAP_READ, 0, &mapped_resource)))
+			{
+				memcpy(copied_textures[i].data(), mapped_resource.pData, texture_size*sizeof(float4));
+				device_context_->Unmap(render_target_staging_textures_[i], 0);
+			}
 		}
 
 #ifdef _DEBUG
@@ -213,20 +229,40 @@ namespace smpl
 		}
 #endif
 
+		Image silhouette;
+
+#ifdef USE_24_BITS_PER_PIXEL
 		for (int j = 0; j < IMAGE_HEIGHT; j++)
 		{
 			for (int i = 0; i < IMAGE_WIDTH; i++)
 			{
-				silhouette[j][i].rgbtBlue = copied_texture[j*IMAGE_WIDTH*4 + i*4];
-				silhouette[j][i].rgbtGreen = copied_texture[j*IMAGE_WIDTH*4 + i*4 + 1];
-				silhouette[j][i].rgbtRed = copied_texture[j*IMAGE_WIDTH*4 + i*4 + 2];
+				float4 pixel(copied_textures[0][j*IMAGE_WIDTH + i]);
+				silhouette[j][i].r() = (pixel[0] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[0] * 255 + 0.5f);
+				silhouette[j][i].g() = (pixel[1] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[1] * 255 + 0.5f);
+				silhouette[j][i].b() = (pixel[2] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[2] * 255 + 0.5f);
+
+				float4 normal(copied_textures[1][j*IMAGE_WIDTH + i]);
+				float4 vertex_indices(copied_textures[2][j*IMAGE_WIDTH + i]);
+				float4 barycentric(copied_textures[3][j*IMAGE_WIDTH + i]);
+
+				/*if (pixel[0] > 0.00001f)
+				{
+					std::cout << "x " << i << ", y " << j << std::endl;
+				}*/
 			}
 		}
+#endif
+#ifdef USE_32_BITS_PER_PIXEL
+		//memcpy(&silhouette[0][0], copied_texture, IMAGE_WIDTH*IMAGE_HEIGHT*4*sizeof(BYTE));
+		silhouette = FreeImage_ConvertFromRawBits((BYTE*)copied_textures[0].data(), IMAGE_WIDTH, IMAGE_HEIGHT,
+			IMAGE_WIDTH*4, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, TRUE);
+#endif
 
-		delete[] copied_texture;
+		DumpFloatVectorToBinary("normals.bin", copied_textures[1]);
+		DumpFloatVectorToBinary("vertex_indices.bin", copied_textures[2]);
+		DumpFloatVectorToBinary("barycentric.bin", copied_textures[3]);
 
-		silhouette.SavePNG("silhouette.png");
-		return silhouette;
+ 		return silhouette;
 	}
 
 	void SilhouetteMaker::SetMatrices(const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)

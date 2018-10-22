@@ -14,6 +14,6 @@ namespace smpl
 		{
 		}
 
-		void FindCorrespondances(Image& input, Image& model);
+		void FindCorrespondences(Image& input, Image& model, std::vector<float4>& normals);
 	};
 }
