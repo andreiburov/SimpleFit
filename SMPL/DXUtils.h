@@ -40,12 +40,22 @@ namespace smpl
 		float3(float x, float y, float z) : x(x), y(y), z(z) {};
 		float3(const Eigen::Vector3f& v) : x(v.x()), y(v.y()), z(v.z()) {};
 		Eigen::Vector3f ToEigen() const { return Eigen::Vector3f(x, y, z); }
-		float3& operator=(float3 other)
+		float3& operator=(const float3& other)
 		{
-			std::swap(x, other.x);
-			std::swap(y, other.y);
-			std::swap(z, other.z);
+			x = other.x;
+			y = other.y;
+			z = other.z;
 			return *this;
+		}
+		bool operator==(const float3& other) const
+		{
+			if (
+				x == other.x &&
+				y == other.y &&
+				z == other.z
+				)
+				return true;
+			return false;
 		}
 		float operator [](int i) const { return data[i]; }
 		float& operator [](int i) { return data[i]; }
@@ -69,6 +79,10 @@ namespace smpl
 		Eigen::Vector4f ToEigen() const { return Eigen::Vector4f(x, y, z, w); }
 		float operator [](int i) const { return data[i]; }
 		float& operator [](int i) { return data[i]; }
+		bool operator==(const float4& other) const
+		{
+			return (x == other.x && y == other.y && z == other.z && w == other.w);
+		}
 	};
 
 	union float6
@@ -80,6 +94,19 @@ namespace smpl
 			: x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {};
 		float6(float3 first, float3 second)
 			: x(first.x), y(first.y), z(first.z), nx(second.x), ny(second.y), nz(second.z) {};
+		bool operator==(const float6& other) const
+		{
+			if (
+				x == other.x &&
+				y == other.y &&
+				z == other.z &&
+				nx == other.nx &&
+				ny == other.ny &&
+				nz == other.nz
+				)
+				return true;
+			return false;
+		}
 		float operator [](int i) const { return data[i]; }
 		float& operator [](int i) { return data[i]; }
 	};
@@ -114,6 +141,8 @@ namespace smpl
 		int data[4];
 		int4() : x(0), y(0), z(0), w(0) {};
 		int4(int x, int y, int z, int w) : x(x), y(y), z(z), w(w) {};
+		int4(float4 other) : x(static_cast<float>(other.x)), y(static_cast<float>(other.y)), 
+			z(static_cast<float>(other.z)), w(static_cast<float>(other.w)) {};
 		int4(const Eigen::Vector4i& v) : x(v.x()), y(v.y()), z(v.z()), w(v.w()) {};
 		Eigen::Vector4i ToEigen() const { return Eigen::Vector4i(x, y, z, w); }
 		int operator [](int i) const { return data[i]; }

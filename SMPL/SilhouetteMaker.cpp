@@ -47,7 +47,7 @@ namespace smpl
 
 		{
 			D3D11_BUFFER_DESC vertex_buffer_desc = { 0 };
-			vertex_buffer_desc.ByteWidth = sizeof(smpl::float6) * (unsigned int)smpl::VERTEX_COUNT;
+			vertex_buffer_desc.ByteWidth = sizeof(float6) * (unsigned int)smpl::VERTEX_COUNT;
 			vertex_buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
 			vertex_buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 			vertex_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -173,7 +173,7 @@ namespace smpl
 		}
 	}
 
-	Image SilhouetteMaker::operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
+	Silhouette SilhouetteMaker::operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
 	{
 		SetMatrices(view, projection);
 
@@ -183,11 +183,21 @@ namespace smpl
 			device_context_->ClearRenderTargetView(render_target_views_[i], clear_color);
 		}
 
+		// Update the vertex buffer
+		{
+			D3D11_MAPPED_SUBRESOURCE mapped_resource;
+			if (SUCCEEDED(device_context_->Map(vertex_buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_resource)))
+			{
+				memcpy(mapped_resource.pData, body.vertices_normals.data(), body.vertices_normals.size()*sizeof(float6));
+				device_context_->Unmap(vertex_buffer_, 0);
+			}
+		}
+
 		device_context_->UpdateSubresource(camera_constant_buffer_, 0, nullptr, &matrices_, 0, 0);
 		device_context_->IASetInputLayout(input_layout_);
 
 		// Set the vertex and index buffers, and specify the way they define geometry
-		UINT stride = sizeof(smpl::float6);
+		UINT stride = sizeof(float6);
 		UINT offset = 0;
 		device_context_->IASetVertexBuffers(0, 1, &vertex_buffer_, &stride, &offset);
 		device_context_->IASetIndexBuffer(index_buffer_, DXGI_FORMAT_R32_UINT, 0);
@@ -229,7 +239,7 @@ namespace smpl
 		}
 #endif
 
-		Image silhouette;
+		Image silhouette_image;
 
 #ifdef USE_24_BITS_PER_PIXEL
 		for (int j = 0; j < IMAGE_HEIGHT; j++)
@@ -237,13 +247,13 @@ namespace smpl
 			for (int i = 0; i < IMAGE_WIDTH; i++)
 			{
 				float4 pixel(copied_textures[0][j*IMAGE_WIDTH + i]);
-				silhouette[j][i].r() = (pixel[0] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[0] * 255 + 0.5f);
-				silhouette[j][i].g() = (pixel[1] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[1] * 255 + 0.5f);
-				silhouette[j][i].b() = (pixel[2] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[2] * 255 + 0.5f);
+				silhouette_image[j][i].r() = (pixel[0] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[0] * 255 + 0.5f);
+				silhouette_image[j][i].g() = (pixel[1] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[1] * 255 + 0.5f);
+				silhouette_image[j][i].b() = (pixel[2] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[2] * 255 + 0.5f);
 
-				float4 normal(copied_textures[1][j*IMAGE_WIDTH + i]);
+				/*float4 normal(copied_textures[1][j*IMAGE_WIDTH + i]);
 				float4 vertex_indices(copied_textures[2][j*IMAGE_WIDTH + i]);
-				float4 barycentric(copied_textures[3][j*IMAGE_WIDTH + i]);
+				float4 barycentric(copied_textures[3][j*IMAGE_WIDTH + i]);*/
 
 				/*if (pixel[0] > 0.00001f)
 				{
@@ -253,15 +263,12 @@ namespace smpl
 		}
 #endif
 #ifdef USE_32_BITS_PER_PIXEL
-		//memcpy(&silhouette[0][0], copied_texture, IMAGE_WIDTH*IMAGE_HEIGHT*4*sizeof(BYTE));
-		silhouette = FreeImage_ConvertFromRawBits((BYTE*)copied_textures[0].data(), IMAGE_WIDTH, IMAGE_HEIGHT,
+		//memcpy(&silhouette_image[0][0], copied_texture, IMAGE_WIDTH*IMAGE_HEIGHT*4*sizeof(BYTE));
+		silhouette_image = FreeImage_ConvertFromRawBits((BYTE*)copied_textures[0].data(), IMAGE_WIDTH, IMAGE_HEIGHT,
 			IMAGE_WIDTH*4, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, TRUE);
 #endif
 
-		DumpFloatVectorToBinary("normals.bin", copied_textures[1]);
-		DumpFloatVectorToBinary("vertex_indices.bin", copied_textures[2]);
-		DumpFloatVectorToBinary("barycentric.bin", copied_textures[3]);
-
+		Silhouette silhouette(silhouette_image, copied_textures[1], copied_textures[2], copied_textures[3]);
  		return silhouette;
 	}
 

@@ -52,6 +52,18 @@ namespace smpl
 			return (bc() == 255U && gc() == 255U && rc() == 255U);
 		}
 
+		bool operator==(const PIXEL& rgb) const
+		{
+			if (bc() == rgb.bc() && gc() == rgb.gc() && rc() == rgb.rc())
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 		RGBTRIPLE v;
 	};
 #endif
@@ -106,9 +118,15 @@ namespace smpl
 		Image& operator=(const Image& other);
 
 		Image& operator=(FIBITMAP* other);
+
+		bool operator==(const Image& other) const;
 	
 		// first access y then access x!
 		PIXEL* operator[](int i);
+
+		PIXEL operator()(int x, int y) const;
+
+		PIXEL& operator()(int x, int y);
 
 		static void Draw3D(Image& image, const Eigen::Matrix3f& intrinsics, 
 			const Eigen::Vector3f& translation, 
@@ -123,7 +141,7 @@ namespace smpl
 
 		static void Draw2D(Image& image, const PIXEL& color, const int brush_size, const std::vector<float>& points);
 
-		void SavePNG(const std::string& filename)
+		void SavePNG(const std::string& filename) const
 		{
 			FreeImage_Save(FIF_PNG, bitmap_, filename.c_str(), 0);
 		}

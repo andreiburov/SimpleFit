@@ -7,8 +7,25 @@ namespace smpl
 	class JointRegressor
 	{
 	public:
+		struct Configuration
+		{
+			Configuration(const std::string& configuration_path)
+			{
+				ReadSparseMatrixFile(configuration_path + 
+					std::string("/smpl_regressor.txt"), smpl_regressor);
+			}
+
+			SparseMatrix smpl_regressor;
+		};
+
 		JointRegressor(const SparseMatrix& matrix, const uint& joint_count) :
-			joint_count_(joint_count), matrix_(std::move(matrix)), eigen_matrix_(matrix_.ToEigen(joint_count))
+			joint_count_(joint_count), matrix_(std::move(matrix)), 
+			eigen_matrix_(matrix_.ToEigen(joint_count))
+		{
+		}
+
+		JointRegressor(Configuration configuration) :
+			JointRegressor(configuration.smpl_regressor, JOINT_COUNT)
 		{
 		}
 

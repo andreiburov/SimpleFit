@@ -50,9 +50,16 @@ namespace smpl {
 		{
 		}
 
-		void operator()(const PoseAxisAngleCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const;
+		void operator()(const PoseAxisAngleCoefficients& thetas, 
+			const Joints& joints, std::vector<float3>& vertices) const;
 
-		void operator()(const PoseEulerCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const;
+		/*
+			Applies skinning to the vertices of an smpl body.
+			When vertices.size() is bigger than VERTEX_COUNT, the same skinning
+			is applied to stride = vertices.size() / VERTEX_COUNT number of vertices.
+		*/
+		void operator()(const PoseEulerCoefficients& thetas, 
+			const Joints& joints, std::vector<float3>& vertices) const;
 
 		const std::vector<Skin>& GetSkins() const
 		{
@@ -93,6 +100,10 @@ namespace smpl {
 		
 		Body operator()(const ShapeCoefficients& betas, const PoseAxisAngleCoefficients& thetas) const;
 
+		Body operator()() const;
+
+		Body operator()(bool with_normals) const;
+
 		Body operator()(const ShapeCoefficients& betas,
 			const PoseEulerCoefficients& thetas) const;
 
@@ -109,6 +120,16 @@ namespace smpl {
 		const std::vector<Skin>& GetSkins() const
 		{
 			return skin_morph_.GetSkins();
+		}
+
+		const JointRegressor& GetJointRegressor() const
+		{
+			return joint_regressor_;
+		}
+
+		const SkinMorph& GetSkinMorph() const
+		{
+			return skin_morph_;
 		}
 
 	private:

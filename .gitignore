@@ -22,6 +22,9 @@ UnitTests/Frames0_joints/
 UnitTests/Captures/
 *.png
 *.avi
+*.normals
+*.vertex_indices
+*.barycentrics
 
 # Linux
 *.swp

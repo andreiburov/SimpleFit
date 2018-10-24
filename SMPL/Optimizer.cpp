@@ -105,8 +105,8 @@ namespace smpl
 				Eigen::Vector2f error = Eigen::Vector2f(projection(0) - tracked_joints_[2 * i], projection(1) - tracked_joints_[2 * i + 1]);
 
 				energy += error.squaredNorm();
-				//dscaling += Eigen::Scaling(joint) * project_.derivative(transformed_joint) * error * 2.f;
-				dtranslation += project_.derivative(transformed_joint) * error * 2.f;
+				//dscaling += Eigen::Scaling(joint) * project_.Derivative(transformed_joint) * error * 2.f;
+				dtranslation += project_.Derivative(transformed_joint) * error * 2.f;
 			}
 
 			//scaling -= learning_rate * dscaling;
@@ -168,7 +168,7 @@ namespace smpl
 
 				for (uint j = 0; j < BETA_COUNT; j++)
 				{
-					dbetas[j] += 2.f * error.transpose() * project_.derivative(transformed_joint).transpose() * dshape_coco_[m*BETA_COUNT + j];
+					dbetas[j] += 2.f * error.transpose() * project_.Derivative(transformed_joint).transpose() * dshape_coco_[m*BETA_COUNT + j];
 				}
 			}
 
@@ -334,9 +334,9 @@ namespace smpl
 							}
 						}
 
-						dthetas[ALPHA(k)] += 2.f * error.transpose() * project_.derivative(transformed_joint).transpose() * djoint_alpha;
-						dthetas[BETA(k)] += 2.f * error.transpose() * project_.derivative(transformed_joint).transpose() * djoint_beta;
-						dthetas[GAMMA(k)] += 2.f * error.transpose() * project_.derivative(transformed_joint).transpose() * djoint_gamma;
+						dthetas[ALPHA(k)] += 2.f * error.transpose() * project_.Derivative(transformed_joint).transpose() * djoint_alpha;
+						dthetas[BETA(k)] += 2.f * error.transpose() * project_.Derivative(transformed_joint).transpose() * djoint_beta;
+						dthetas[GAMMA(k)] += 2.f * error.transpose() * project_.Derivative(transformed_joint).transpose() * djoint_gamma;
 					}
 				}
 
@@ -577,7 +577,7 @@ namespace smpl
 			Eigen::MatrixXf dtranslation = Eigen::MatrixXf::Zero(residuals, 3);
 			for (auto& m : coarse_joints)
 			{
-				dtranslation.block<2, 3>(2 * m, 0) = project_.derivative(transformed_joint[m]).transpose();
+				dtranslation.block<2, 3>(2 * m, 0) = project_.Derivative(transformed_joint[m]).transpose();
 			}
 
 			Eigen::MatrixXf dtheta0 = Eigen::MatrixXf::Zero(residuals, 3);
@@ -633,9 +633,9 @@ namespace smpl
 						}
 					}
 
-					dtheta0.block<2, 1>(2 * m, ALPHA(0)) += project_.derivative(transformed_joint[m]).transpose() * djoint_alpha;
-					dtheta0.block<2, 1>(2 * m, BETA(0)) += project_.derivative(transformed_joint[m]).transpose() * djoint_beta;
-					dtheta0.block<2, 1>(2 * m, GAMMA(0)) += project_.derivative(transformed_joint[m]).transpose() * djoint_gamma;
+					dtheta0.block<2, 1>(2 * m, ALPHA(0)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_alpha;
+					dtheta0.block<2, 1>(2 * m, BETA(0)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_beta;
+					dtheta0.block<2, 1>(2 * m, GAMMA(0)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_gamma;
 				}
 				delete dskinning;
 			}
@@ -643,7 +643,7 @@ namespace smpl
 			Eigen::MatrixXf dbetas = Eigen::MatrixXf::Zero(residuals, 1);
 			for (auto& m : coarse_joints)
 			{
-				dbetas.block<2, 1>(2 * m, 0) = project_.derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT];
+				dbetas.block<2, 1>(2 * m, 0) = project_.Derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT];
 			}
 			// beta0
 			dbetas(COCO_JOINT_COUNT * 2, 0) = shape_prior_weight;
@@ -771,13 +771,13 @@ namespace smpl
 			Eigen::MatrixXf dtranslation = Eigen::MatrixXf::Zero(residuals, 3);
 			for (auto& m : coarse_joints)
 			{
-				dtranslation.block<2, 3>(2 * m, 0) = project_.derivative(transformed_joint[m]).transpose();
+				dtranslation.block<2, 3>(2 * m, 0) = project_.Derivative(transformed_joint[m]).transpose();
 			}
 
 			Eigen::MatrixXf dbetas = Eigen::MatrixXf::Zero(residuals, 1);
 			for (auto& m : coarse_joints)
 			{
-				dbetas.block<2, 1>(2 * m, 0) = project_.derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT];
+				dbetas.block<2, 1>(2 * m, 0) = project_.Derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT];
 			}
 			// beta0
 			dbetas(COCO_JOINT_COUNT * 2, 0) = shape_prior_weight;
@@ -835,9 +835,9 @@ namespace smpl
 						}
 					}
 
-					dtheta0.block<2, 1>(2 * m, ALPHA(0)) += project_.derivative(transformed_joint[m]).transpose() * djoint_alpha;
-					dtheta0.block<2, 1>(2 * m, BETA(0)) += project_.derivative(transformed_joint[m]).transpose() * djoint_beta;
-					dtheta0.block<2, 1>(2 * m, GAMMA(0)) += project_.derivative(transformed_joint[m]).transpose() * djoint_gamma;
+					dtheta0.block<2, 1>(2 * m, ALPHA(0)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_alpha;
+					dtheta0.block<2, 1>(2 * m, BETA(0)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_beta;
+					dtheta0.block<2, 1>(2 * m, GAMMA(0)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_gamma;
 				}
 				delete dskinning;
 
@@ -1039,7 +1039,7 @@ namespace smpl
 			{
 				for (uint j = 0; j < BETA_COUNT; j++) // over columns
 				{
-					dbetas.block<2, 1>(2 * m, j) = project_.derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT + j];
+					dbetas.block<2, 1>(2 * m, j) = project_.Derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT + j];
 				}
 			}
 			for (uint j = 0; j < BETA_COUNT; j++)
@@ -1103,9 +1103,9 @@ namespace smpl
 							}
 						}
 
-						dthetas.block<2, 1>(2 * m, ALPHA(k)) += project_.derivative(transformed_joint[m]).transpose() * djoint_alpha;
-						dthetas.block<2, 1>(2 * m, BETA(k)) += project_.derivative(transformed_joint[m]).transpose() * djoint_beta;
-						dthetas.block<2, 1>(2 * m, GAMMA(k)) += project_.derivative(transformed_joint[m]).transpose() * djoint_gamma;
+						dthetas.block<2, 1>(2 * m, ALPHA(k)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_alpha;
+						dthetas.block<2, 1>(2 * m, BETA(k)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_beta;
+						dthetas.block<2, 1>(2 * m, GAMMA(k)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_gamma;
 					}
 				}
 				delete dskinning;
@@ -1249,7 +1249,7 @@ namespace smpl
 				{
 					for (uint j = 0; j < BETA_COUNT; j++) // over columns
 					{
-						dbetas.block<2, 1>(2 * m, j) = project_.derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT + j];
+						dbetas.block<2, 1>(2 * m, j) = project_.Derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT + j];
 					}
 				}
 				for (uint j = 0; j < BETA_COUNT; j++)
@@ -1313,9 +1313,9 @@ namespace smpl
 								}
 							}
 
-							dthetas.block<2, 1>(2 * m, ALPHA(k)) += project_.derivative(transformed_joint[m]).transpose() * djoint_alpha;
-							dthetas.block<2, 1>(2 * m, BETA(k)) += project_.derivative(transformed_joint[m]).transpose() * djoint_beta;
-							dthetas.block<2, 1>(2 * m, GAMMA(k)) += project_.derivative(transformed_joint[m]).transpose() * djoint_gamma;
+							dthetas.block<2, 1>(2 * m, ALPHA(k)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_alpha;
+							dthetas.block<2, 1>(2 * m, BETA(k)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_beta;
+							dthetas.block<2, 1>(2 * m, GAMMA(k)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_gamma;
 						}
 					}
 					delete dskinning;
@@ -1594,7 +1594,7 @@ namespace smpl
 		Eigen::MatrixXf dtranslation = Eigen::MatrixXf::Zero(RESIDUALS, 3);
 		for (auto& m : checked_joint_sets_coco_[active_set])
 		{
-			dtranslation.block<2, 3>(2*m,0) = project_.derivative(transformed_joint[m]).transpose();
+			dtranslation.block<2, 3>(2*m,0) = project_.Derivative(transformed_joint[m]).transpose();
 		}
 
 		Eigen::MatrixXf dbetas = Eigen::MatrixXf::Zero(RESIDUALS, BETA_COUNT);
@@ -1602,7 +1602,7 @@ namespace smpl
 		{
 			for (uint j = 0; j < BETA_COUNT; j++) // over columns
 			{
-				dbetas.block<2,1>(2*m,j) = project_.derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT + j];
+				dbetas.block<2,1>(2*m,j) = project_.Derivative(transformed_joint[m]).transpose() * dshape_coco_[m*BETA_COUNT + j];
 			}
 		}
 		for (uint j = 0; j < BETA_COUNT; j++)
@@ -1666,9 +1666,9 @@ namespace smpl
 					}
 				}
 
-				dthetas.block<2,1>(m, ALPHA(k)) += project_.derivative(transformed_joint[m]).transpose() * djoint_alpha;
-				dthetas.block<2,1>(m, BETA(k)) += project_.derivative(transformed_joint[m]).transpose() * djoint_beta;
-				dthetas.block<2,1>(m, GAMMA(k)) += project_.derivative(transformed_joint[m]).transpose() * djoint_gamma;
+				dthetas.block<2,1>(m, ALPHA(k)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_alpha;
+				dthetas.block<2,1>(m, BETA(k)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_beta;
+				dthetas.block<2,1>(m, GAMMA(k)) += project_.Derivative(transformed_joint[m]).transpose() * djoint_gamma;
 			}
 		}
 		

@@ -246,6 +246,7 @@ namespace smpl
 		std::vector<float3> deformed_template;
 		std::vector<float6> vertices_normals;
 		std::vector<uint> indices;
+		Joints joints;
 
 		Body()
 		{
@@ -262,6 +263,7 @@ namespace smpl
 			indices = other.indices;
 			deformed_template = other.deformed_template;
 			vertices_normals = other.vertices_normals;
+			joints = other.joints;
 		}
 
 		Body(Body&& other)
@@ -270,7 +272,7 @@ namespace smpl
 			indices = std::move(other.indices);
 			deformed_template = std::move(other.deformed_template);
 			vertices_normals = std::move(other.vertices_normals);
-
+			joints = std::move(other.joints);
 		}
 
 		Body& operator=(Body other)
@@ -278,7 +280,35 @@ namespace smpl
 			vertices.swap(other.vertices);
 			indices.swap(other.indices);
 			deformed_template.swap(other.deformed_template);
+			vertices_normals.swap(other.vertices_normals);
+			joints.swap(other.joints);
 			return *this;
+		}
+
+		bool operator==(const Body& other) const
+		{
+			if (
+				vertices == other.vertices &&
+				indices == other.indices &&
+				deformed_template == other.deformed_template &&
+				vertices_normals == other.vertices_normals &&
+				joints == other.joints
+				)
+				return true;
+			else
+				return false;
+		}
+
+		bool IsEqual(const Body& other, float eps) const
+		{
+			for (uint i = 0; i < VERTEX_COUNT; i++)
+			{
+				if (
+					(vertices[i].ToEigen() - other.vertices[i].ToEigen()).norm() > eps
+					)
+					return false;
+				return true;
+			}
 		}
 
 		/*void Draw(Image& image, const Eigen::Matrix3f& intrinsics, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation) const
@@ -325,5 +355,43 @@ namespace smpl
 				}
 			}
 		}
+	};
+
+	template <typename T>
+	struct Point
+	{
+		union
+		{
+			struct { T x; T y; };
+			T m[2];
+		};
+
+		bool is_defined;
+
+		Point(T x, T y) : x(x), y(y), is_defined(true) {}
+		Point() : is_defined(false) {}
+
+		const T& operator[](int i) const
+		{
+			if (i < 0 && i > 1) throw std::out_of_range("Point has only two components");
+			return m[i];
+		}
+
+		T& operator[](int i)
+		{
+			if (i < 0 && i > 1) throw std::out_of_range("Point has only two components");
+			return m[i];
+		}
+
+		Point normalized() const
+		{
+			Point point;
+			float norm = sqrt(static_cast<float>(x * x + y * y));
+			point.x = x / norm;
+			point.y = y / norm;
+			return point;
+		}
+
+		bool IsDefined() const { return is_defined; }
 	};
 }

@@ -7,56 +7,18 @@ namespace smpl
 {
 	const int MAX_DIST = 30;
 
-	template <typename T> 
-	struct Point
+	bool IsBorderingPixelBlack(const Image& image, int i, int j)
 	{
-		union
-		{
-			struct { T x; T y; };
-			T m[2];
-		};
-
-		bool is_defined;
-
-		Point(T x, T y) : x(x), y(y), is_defined(true) {}
-		Point() : is_defined(false) {}
-
-		const T& operator[](int i) const
-		{
-			if (i < 0 && i > 1) throw std::out_of_range("Point has only two components");
-			return m[i];
-		}
-
-		T& operator[](int i)
-		{
-			if (i < 0 && i > 1) throw std::out_of_range("Point has only two components");
-			return m[i];
-		}
-
-		Point normalized() const
-		{
-			Point point;
-			float norm = sqrt(static_cast<float>(x * x + y * y));
-			point.x = x / norm;
-			point.y = y / norm;
-			return point;
-		}
-
-		bool IsDefined() const { return is_defined; }
-	};
-
-	bool IsBorderingPixelBlack(Image& image, int i, int j)
-	{
-		if (image[j][max(0, i - 1)].IsBlack() ||
-			image[j][min(IMAGE_WIDTH-1, i + 1)].IsBlack() ||
-			image[max(0, j - 1)][i].IsBlack() ||
-			image[min(IMAGE_HEIGHT-1, j + 1)][i].IsBlack())
+		if (image(max(0, i - 1), j).IsBlack() ||
+			image(min(IMAGE_WIDTH - 1, i + 1), j).IsBlack() ||
+			image(i, max(0, j - 1)).IsBlack() ||
+			image(i, min(IMAGE_HEIGHT - 1, j + 1)).IsBlack())
 			return true;
 		else
 			return false;
 	}
 
-	Point<int> Bresenham(Image& input_clean, Image& model_clean, const Point<int>& p0, 
+	Point<int> Bresenham(const Image& input, Image& model, const Point<int>& p0,
 		const Point<int>& p1, bool painted)
 	{
 		if (!p1.IsDefined()) return Point<int>();
@@ -83,12 +45,9 @@ namespace smpl
 		int nPixels = static_cast<int>(max(dx, -dy));
 		for (int i = 0; i < nPixels; ++i)
 		{
-			if (painted) model_clean[y][x] = BLUE;
+			if (painted) model(x, y) = BLUE;
 
-			// if pixel is set break
-			PIXEL& check = input_clean[y][x];
-			//std::cout << check.r() << " " << check.g() << " " << check.b() << std::endl;
-			if (input_clean[y][x].IsBlack()) return Point<int>(x, y);
+			if (input(x, y).IsBlack()) return Point<int>(x, y);
 			if (x < 0 || y < 0 || x >= IMAGE_WIDTH || y >= IMAGE_HEIGHT) return Point<int>();
 			// update error
 			e2 = 2 * err;
@@ -100,90 +59,251 @@ namespace smpl
 		return Point<int>();
 	}
 
-	void AddCorrespondence(Image& input_clean, Image& model_clean, const Point<int>& point, const Point<float>& normal,
-		int max_dist, std::vector<Point<int> >& input_border, std::vector<int>& l2_distance_squared)
+	void AddCorrespondence(const Image& input, Image& model, const Point<int>& point, const Point<float>& normal,
+		int max_dist, std::vector<Point<int> >& model_correspondence, std::vector<Point<int> >& input_correspondence,
+		std::vector<Point<float> >& distance)
 	{
 		Point<int> x1(static_cast<int>(point[0] + max_dist * normal[0]), static_cast<int>(point[1] + max_dist * normal[1]));
 		Point<int> x2(static_cast<int>(point[0] - max_dist * normal[0]), static_cast<int>(point[1] - max_dist * normal[1]));
 
-		Point<int> c1 = Bresenham(input_clean, model_clean, point, x1, false);
-		Point<int> c2 = Bresenham(input_clean, model_clean, point, x2, false);
+		Point<int> c1 = Bresenham(input, model, point, x1, false);
+		Point<int> c2 = Bresenham(input, model, point, x2, false);
+		Point<float> d1, d2; // distance to x1,x2
 
 		int l1_2 = -1;
-		if (c1.IsDefined()) l1_2 = (point[0] - c1[0]) * (point[0] - c1[0]) + (point[1] - c1[1]) * (point[1] - c1[1]);
+		if (c1.IsDefined())
+		{
+			l1_2 = (point[0] - c1[0]) * (point[0] - c1[0]) + (point[1] - c1[1]) * (point[1] - c1[1]);
+			d1 = Point<float>(abs(point[0] - c1[0]), abs(point[1] - c1[1]));
+		}
 		int l2_2 = -1;
-		if (c2.IsDefined()) l2_2 = (point[0] - c2[0]) * (point[0] - c2[0]) + (point[1] - c2[1]) * (point[1] - c2[1]);
+		if (c2.IsDefined())
+		{
+			l2_2 = (point[0] - c2[0]) * (point[0] - c2[0]) + (point[1] - c2[1]) * (point[1] - c2[1]);
+			d2 = Point<float>(abs(point[0] - c2[0]), abs(point[1] - c2[1]));
+		}
 
 		if (l1_2 > 0 && l2_2 > 0)
 		{
 			if (l1_2 > l2_2)
 			{
-				input_border.push_back(c2);
-				l2_distance_squared.push_back(l2_2);
+				model_correspondence.push_back(point);
+				input_correspondence.push_back(c2);
+				distance.push_back(d2);
 			}
 			else
 			{
-				input_border.push_back(c1);
-				l2_distance_squared.push_back(l1_2);
+				model_correspondence.push_back(point);
+				input_correspondence.push_back(c1);
+				distance.push_back(d1);
 			}
 		}
 		else if (l1_2 > 0)
 		{
-			input_border.push_back(c1);
-			l2_distance_squared.push_back(l1_2);
+			model_correspondence.push_back(point);
+			input_correspondence.push_back(c1);
+			distance.push_back(d1);
 		}
 		else if (l2_2 > 0)
 		{
-			input_border.push_back(c2);
-			l2_distance_squared.push_back(l2_2);
-		}
-		else
-		{
-			input_border.push_back(Point<int>());
-			l2_distance_squared.push_back(-1);
+			model_correspondence.push_back(point);
+			input_correspondence.push_back(c2);
+			distance.push_back(d2);
 		}
 	}
 
-	void SilhouetteOptimizer::FindCorrespondences(Image& input, Image& model, std::vector<float4>& normals)
+	Correspondences SilhouetteOptimizer::FindCorrespondences(const Image& input, const Image& model, const std::vector<float4>& normals)
 	{
-		Image input_clean, model_clean;
-		std::vector<Point<int> > model_border;
-		std::vector<Point<int> > input_border;
-		std::vector<int> l2_distance_squared;
+		Image correspondences(model);
+		std::vector<Point<int> > model_border; // model border detected visually
+
+		std::vector<Point<int> > model_correspondence; // model border with input correspondence
+		std::vector<Point<int> > input_correspondence;
+		std::vector<Point<float> > distance;
 
 		// Create the clean silhouette from the input
 		for (int j = 0; j < IMAGE_HEIGHT; j++)
 		{
 			for (int i = 0; i < IMAGE_WIDTH; i++)
 			{
-				if (!input[j][i].IsBlack())
-					input_clean[j][i] = WHITE;
+				/*if (!input[j][i].IsBlack())
+					input_clean[j][i] = WHITE;*/
 
-				if (!model[j][i].IsBlack())
+				if (!model(i, j).IsBlack())
 					if (IsBorderingPixelBlack(model, i, j))
 					{
-						model_clean[j][i] = WHITE;
+						correspondences(i, j) = WHITE;
 						model_border.push_back(Point<int>(i, j));
 					}
-					else model_clean[j][i] = BLACK;
+					else correspondences(i, j) = BLACK;
 			}
 		}
-
-		input_clean.SavePNG("input_clean.png");
-		model_clean.SavePNG("model_clean.png");
 
 		for (auto& point : model_border)
 		{
 			float4 normal4 = normals[point.y*IMAGE_WIDTH + point.x];
 			Point<float> normal = Point<float>(normal4.x, -normal4.y).normalized();
-			AddCorrespondence(input_clean, model_clean, point, normal, MAX_DIST, input_border, l2_distance_squared);
+			AddCorrespondence(input, correspondences, point, normal, MAX_DIST, model_correspondence, input_correspondence, distance);
 		}
 
-		for (int i = 0; i < model_border.size(); i++)
+		// Draw correspondences
+		for (int i = 0; i < model_correspondence.size(); i++)
 		{
-			Bresenham(input_clean, model_clean, model_border[i], input_border[i], true);
+			Bresenham(input, correspondences, model_correspondence[i], input_correspondence[i], true);
 		}
 
-		model_clean.SavePNG("correspondences.png");
+		Correspondences result(correspondences, model_correspondence, input_correspondence, distance);
+		return result;
+	}
+
+	Silhouette SilhouetteOptimizer::Infer(const std::string& image_filename, Eigen::Vector3f& translation,
+		ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
+	{
+		Body body = generator_(betas, thetas, true);
+		Silhouette result = silhouette_maker_(body, CalculateView(translation),
+			projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), static_cast<float>(IMAGE_HEIGHT)));
+		return result;
+	}
+
+	void SilhouetteOptimizer::ComputeShapeJacobian(const PoseEulerCoefficients& thetas,
+		const Body& body, std::vector<float3>& dshape)
+	{
+		dshape = generator_.GetShapeDirs();
+		generator_.GetSkinMorph()(thetas, body.joints, dshape);
+	}
+
+	void SilhouetteOptimizer::ComputeSilhouetteFromShapeJacobian(
+		const Body& body, const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
+		const Silhouette& silhouette, const Correspondences& correspondences, 
+		const int residuals, Eigen::MatrixXf& jacobian)
+	{
+#pragma omp parallel for
+		for (int m = 0; m < residuals; m += 2)
+		{
+			const int x = correspondences.model_border[m / 2].x;
+			const int y = correspondences.model_border[m / 2].y;
+
+			const int4& indices = silhouette.GetVertexIndices()[y*IMAGE_WIDTH + x];
+			const float4& barycentrics = silhouette.GetBarycentrics()[y*IMAGE_WIDTH + x];
+
+			for (int j = 0; j < BETA_COUNT; j++)
+			{
+				Eigen::Vector3f v0 = body.vertices[indices[0]].ToEigen() + translation;
+				Eigen::Vector3f v1 = body.vertices[indices[1]].ToEigen() + translation;
+				Eigen::Vector3f v2 = body.vertices[indices[2]].ToEigen() + translation;
+				Eigen::Vector3f interpolated = barycentrics[0] * v0 + barycentrics[1] * v1 + barycentrics[2] * v2;
+
+				Eigen::Vector3f dv0 = dshape[indices[0] * BETA_COUNT + j].ToEigen();
+				Eigen::Vector3f dv1 = dshape[indices[1] * BETA_COUNT + j].ToEigen();
+				Eigen::Vector3f dv2 = dshape[indices[2] * BETA_COUNT + j].ToEigen();
+				Eigen::Vector3f dinterpolated = barycentrics[0] * dv0 + barycentrics[1] * dv1 + barycentrics[2] * dv2;
+
+				Eigen::Vector2f dprojection = projector_.Derivative(interpolated, dinterpolated);
+				jacobian(m, j) = dprojection.x();
+				jacobian(m + 1, j) = dprojection.y();
+			}
+		}
+	}
+
+	void SilhouetteOptimizer::Reconstruct(const std::string& image_filename, const Image& input,
+		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
+	{
+		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT); // dsmpl/dbeta
+		const int iterations_ = 40;
+		const int unknowns = BETA_COUNT;
+
+		float lambda = 2.0f;
+		float lambda_min = 0.1f;
+		float alpha = 1.8f;
+		float beta = 0.6f;
+		const float MINF = -100000.f;
+		float last_residual_error = MINF;
+
+		Eigen::VectorXf delta_old = Eigen::VectorXf::Zero(unknowns);
+
+		for (uint iteration = 0; iteration < iterations_; iteration++)
+		{
+			std::cout << "Iteration " << iteration << std::endl;
+			for (uint j = 0; j < BETA_COUNT; j++)
+				std::cout << betas[j] << " ";
+			std::cout << std::endl;
+				
+			Body body = generator_(betas, thetas, true);
+			body.Dump("body.obj");
+			Silhouette silhouette = silhouette_maker_(body, CalculateView(translation),
+				projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), static_cast<float>(IMAGE_HEIGHT)));
+			silhouette.GetImage().SavePNG("silhouette.png");
+			Correspondences correspondences = FindCorrespondences(input, silhouette.GetImage(), silhouette.GetNormals());
+			correspondences.image.SavePNG("correspondences.png");
+			ComputeShapeJacobian(thetas, body, dshape);
+
+			// should be x2 since each point has two components
+			const int residuals = correspondences.model_border.size() * 2; 
+
+			Eigen::MatrixXf jacobian = Eigen::MatrixXf::Zero(residuals, unknowns);
+			Eigen::VectorXf error = Eigen::VectorXf::Zero(residuals);
+			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
+
+			// evaluate error
+#pragma omp parallel for
+			for (int m = 0; m < residuals; m+=2)
+			{
+				error(m) = correspondences.distance[m/2].x;
+				error(m + 1) = correspondences.distance[m/2].y;
+			}
+
+			ComputeSilhouetteFromShapeJacobian(body, dshape, translation, silhouette, correspondences, residuals, jacobian);
+
+			// levenberg marquardt
+
+			Eigen::MatrixXf Jt = jacobian.transpose();
+			Eigen::MatrixXf JtJ = Jt * jacobian;
+			Eigen::VectorXf JtF = Jt * error;
+			Eigen::MatrixXf JtJ_diag = JtJ.diagonal().asDiagonal();
+
+			float current_residual_error = error.squaredNorm();
+			std::cout << "Error " << current_residual_error << std::endl;
+			if (last_residual_error == MINF || 
+				(last_residual_error >= current_residual_error && iteration + 1 != iterations_))
+			{
+				JtJ += lambda * JtJ_diag;
+
+				Eigen::ConjugateGradient<Eigen::MatrixXf, Eigen::Lower | Eigen::Upper> cg;
+				cg.compute(JtJ);
+				delta = cg.solve(JtF);
+
+				delta_old = delta;
+				last_residual_error = current_residual_error;
+
+				for (uint j = 0; j < BETA_COUNT; j++)
+					betas[j] -= delta(j);
+
+				lambda *= beta;
+				if (lambda < lambda_min) lambda = lambda_min;
+			}
+			else if (last_residual_error < current_residual_error)
+			{
+				for (uint j = 0; j < BETA_COUNT; j++)
+					betas[j] += delta_old(j);
+
+				lambda *= alpha;
+			}
+
+			last_residual_error = current_residual_error;
+		}
+	}
+
+	Eigen::Matrix4f SilhouetteOptimizer::CalculateView(Eigen::Vector3f translation) const
+	{
+		Eigen::Matrix4f view(Eigen::Matrix4f::Identity());
+		// mesh is facing from us, rotate 180 around y
+		view(0, 0) = -1;
+		view(1, 1) = 1;
+		view(2, 2) = -1;
+		// mesh should be put at distance
+		view(0, 3) = translation.x();
+		view(1, 3) = translation.y();
+		view(2, 3) = translation.z();
+		return view;
 	}
 }

@@ -119,6 +119,23 @@ namespace smpl
 		return *this;
 	}
 
+	bool Image::operator==(const Image& other) const
+	{
+		if (width_ != other.width_) return false;
+		if (height_ != other.height_) return false;
+		if (bpp_ != other.bpp_) return false;
+
+		for (int y = 0; y < height_; y++)
+		{
+			for (int x = 0; x < width_; x++)
+			{
+				if (!(operator()(x,y) == other(x,y))) return false;
+			}
+		}
+
+		return true;
+	}
+
 	PIXEL* Image::operator[](int i)
 	{
 		if (i < 0)
@@ -134,6 +151,32 @@ namespace smpl
 
 		PIXEL* scan_line = (PIXEL*)FreeImage_GetScanLine(bitmap_, height_ - i - 1);
 		return scan_line;
+	}
+
+	PIXEL Image::operator()(int x, int y) const
+	{
+		if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT)
+		{
+			MessageBoxA(NULL, "Out of bounds!", "Error", MB_OK);
+			x = 0;
+			y = 0;
+		}
+
+		PIXEL* scan_line = (PIXEL*)FreeImage_GetScanLine(bitmap_, height_ - y - 1);
+		return scan_line[x];
+	}
+
+	PIXEL& Image::operator()(int x, int y)
+	{
+		if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT)
+		{
+			MessageBoxA(NULL, "Out of bounds!", "Error", MB_OK);
+			x = 0;
+			y = 0;
+		}
+
+		PIXEL* scan_line = (PIXEL*)FreeImage_GetScanLine(bitmap_, height_ - y - 1);
+		return scan_line[x];
 	}
 
 	void Image::Draw3D(Image& image, const Eigen::Matrix3f& intrinsics,

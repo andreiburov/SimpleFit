@@ -93,10 +93,10 @@ namespace smpl
 		}
 	}
 
-	void SkinMorph::operator()(const PoseEulerCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const
+	void SkinMorph::operator()(const PoseEulerCoefficients& thetas, 
+		const Joints& joints, std::vector<float3>& vertices) const
 	{
 		Eigen::Matrix4f palette[JOINT_COUNT];
-
 		// parent initialization
 		{
 			palette[0] = EulerSkinningXYZ(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
@@ -108,6 +108,8 @@ namespace smpl
 				* EulerSkinningXYZ(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
 		}
 
+		uint stride = static_cast<uint>(vertices.size() / VERTEX_COUNT);
+
 #pragma omp parallel for
 		for (uint i = 0; i < VERTEX_COUNT; i++)
 		{
@@ -117,7 +119,11 @@ namespace smpl
 				+ skins_[i].weight.z * palette[skins_[i].joint_index.z]
 				+ skins_[i].weight.w * palette[skins_[i].joint_index.w];
 
-			vertices[i] = float3((skin * vertices[i].ToEigen().homogeneous()).head(3));
+			for (uint j = 0; j < stride; j++)
+			{
+				vertices[i*stride + j] = 
+					float3((skin * vertices[i*stride + j].ToEigen().homogeneous()).head(3));
+			}
 		}
 	}
 
@@ -128,15 +134,31 @@ namespace smpl
 		body.indices = indices_;
 
 		identity_morph_(betas, body.vertices);
-		Joints joints = joint_regressor_(body.vertices);
+		body.joints = joint_regressor_(body.vertices);
 		pose_morph_(thetas, body.vertices);
 
 		// for interspection
 		body.deformed_template = body.vertices;
 
-		skin_morph_(thetas, joints, body.vertices);
+		skin_morph_(thetas, body.joints, body.vertices);
 
 		return body;
+	}
+
+	Body Generator::operator()() const
+	{
+		ShapeCoefficients betas;
+		PoseEulerCoefficients thetas;
+		
+		return operator()(betas, thetas, false);
+	}
+
+	Body Generator::operator()(bool with_normals) const
+	{
+		ShapeCoefficients betas;
+		PoseEulerCoefficients thetas;
+
+		return operator()(betas, thetas, with_normals);
 	}
 
 	Body Generator::operator()(const ShapeCoefficients& betas,
@@ -153,12 +175,12 @@ namespace smpl
 		body.indices = indices_;
 
 		identity_morph_(betas, body.vertices);
-		Joints joints = joint_regressor_(body.vertices);
+		body.joints = joint_regressor_(body.vertices);
 		pose_morph_(thetas, body.vertices);
 
 		// for interspection
 		body.deformed_template = body.vertices;
-		skin_morph_(thetas, joints, body.vertices);
+		skin_morph_(thetas, body.joints, body.vertices);
 
 		if (with_normals)
 		{
