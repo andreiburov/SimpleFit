@@ -35,6 +35,9 @@ namespace smpl
 		Silhouette Infer(const std::string& image_filename, Eigen::Vector3f& translation,
 			ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
+		void ComputeSilhouetteError(const Correspondences& correspondences, 
+			const int residuals, Eigen::VectorXf& error) const;
+
 		void ComputeShapeJacobian(const PoseEulerCoefficients& thetas,
 			const Body& body, std::vector<float3>& dshape);
 
@@ -49,6 +52,7 @@ namespace smpl
 	private:
 
 		Eigen::Matrix4f CalculateView(Eigen::Vector3f translation) const;
+		Eigen::Matrix3f CalculateView() const;
 
 	private:
 

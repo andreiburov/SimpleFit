@@ -115,8 +115,8 @@ namespace smpl
 			if (count % log_every_ == 0)
 			{
 				Image image(image_filename.c_str());
-				Image::Draw3D(image, project_.GetIntrinsics(), translation, WHITE, body.vertices);
-				Image::Draw3D(image, project_.GetIntrinsics(), translation, BLUE, 2, Joints2Vector(joints));
+				Image::Draw3D(image, project_, translation, WHITE, body.vertices);
+				Image::Draw3D(image, project_, translation, BLUE, 2, Joints2Vector(joints));
 				Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 				image.SavePNG(std::string("ExtrinscisTemp/").append(std::to_string(count)).append(".png").c_str());
 				std::cout << "Iteration: " << count << std::endl;
@@ -180,8 +180,8 @@ namespace smpl
 			if (count % log_every_ == 0)
 			{
 				Image image(image_filename.c_str());
-				Image::Draw3D(image, project_.GetIntrinsics(), translation, WHITE, body.vertices);
-				Image::Draw3D(image, project_.GetIntrinsics(), translation, BLUE, 2, Joints2Vector(joints));
+				Image::Draw3D(image, project_, translation, WHITE, body.vertices);
+				Image::Draw3D(image, project_, translation, BLUE, 2, Joints2Vector(joints));
 				Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 				image.SavePNG(std::string("ShapeReconstructionTemp/").append(std::to_string(count)).append(".png"));
 	
@@ -350,8 +350,8 @@ namespace smpl
 				if (count % log_every_ == 0)
 				{
 					Image image(image_filename.c_str());
-					Image::Draw3D(image, project_.GetIntrinsics(), translation, WHITE, body.vertices);
-					Image::Draw3D(image, project_.GetIntrinsics(), translation, BLUE, 2, Joints2Vector(reconstruction_joints));
+					Image::Draw3D(image, project_, translation, WHITE, body.vertices);
+					Image::Draw3D(image, project_, translation, BLUE, 2, Joints2Vector(reconstruction_joints));
 
 					std::vector<float3> checked_joint_coordinates;
 					checked_joint_coordinates.reserve(10);
@@ -359,7 +359,7 @@ namespace smpl
 					{
 						checked_joint_coordinates.push_back(float3(reconstruction_joints.col(m)));
 					}
-					Image::Draw3D(image, project_.GetIntrinsics(), translation, RED, 2, checked_joint_coordinates);
+					Image::Draw3D(image, project_, translation, RED, 2, checked_joint_coordinates);
 
 					std::vector<float3> movable_joint_coordinates;
 					movable_joint_coordinates.reserve(10);
@@ -367,7 +367,7 @@ namespace smpl
 					{
 						movable_joint_coordinates.push_back(float3(smpl_joints.col(m)));
 					}
-					Image::Draw3D(image, project_.GetIntrinsics(), translation, GREEN, 2, movable_joint_coordinates);
+					Image::Draw3D(image, project_, translation, GREEN, 2, movable_joint_coordinates);
 					Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 					
 					image.SavePNG(std::string("PoseReconstructionTemp2D/").append(std::to_string(count)).append(".png"));
@@ -1704,8 +1704,8 @@ namespace smpl
 		const Eigen::Vector3f& translation, int active_set, int count) const
 	{
 		Image image(image_filename.c_str());
-		Image::Draw3D(image, project_.GetIntrinsics(), translation, WHITE, body.vertices);
-		Image::Draw3D(image, project_.GetIntrinsics(), translation, BLUE, 2, Joints2Vector(reconstruction_joints));
+		Image::Draw3D(image, project_, translation, WHITE, body.vertices);
+		Image::Draw3D(image, project_, translation, BLUE, 2, Joints2Vector(reconstruction_joints));
 
 		std::vector<float3> checked_joint_coordinates;
 		checked_joint_coordinates.reserve(10);
@@ -1713,7 +1713,7 @@ namespace smpl
 		{
 			checked_joint_coordinates.push_back(float3(reconstruction_joints.col(m)));
 		}
-		Image::Draw3D(image, project_.GetIntrinsics(), translation, RED, 2, checked_joint_coordinates);
+		Image::Draw3D(image, project_, translation, RED, 2, checked_joint_coordinates);
 
 		std::vector<float3> movable_joint_coordinates;
 		movable_joint_coordinates.reserve(10);
@@ -1721,7 +1721,7 @@ namespace smpl
 		{
 			movable_joint_coordinates.push_back(float3(smpl_joints.col(m)));
 		}
-		Image::Draw3D(image, project_.GetIntrinsics(), translation, GREEN, 2, movable_joint_coordinates);
+		Image::Draw3D(image, project_, translation, GREEN, 2, movable_joint_coordinates);
 		Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 
 		image.SavePNG(std::string("ReconstructionTemp/").append(std::to_string(count)).append(".png"));

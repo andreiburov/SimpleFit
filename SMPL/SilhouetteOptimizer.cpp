@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <cmath>
+#include "LevenbergMarquardt.h"
 
 namespace smpl
 {
@@ -66,6 +67,7 @@ namespace smpl
 		Point<int> x1(static_cast<int>(point[0] + max_dist * normal[0]), static_cast<int>(point[1] + max_dist * normal[1]));
 		Point<int> x2(static_cast<int>(point[0] - max_dist * normal[0]), static_cast<int>(point[1] - max_dist * normal[1]));
 
+		// input correspondences
 		Point<int> c1 = Bresenham(input, model, point, x1, false);
 		Point<int> c2 = Bresenham(input, model, point, x2, false);
 		Point<float> d1, d2; // distance to x1,x2
@@ -74,13 +76,13 @@ namespace smpl
 		if (c1.IsDefined())
 		{
 			l1_2 = (point[0] - c1[0]) * (point[0] - c1[0]) + (point[1] - c1[1]) * (point[1] - c1[1]);
-			d1 = Point<float>(abs(point[0] - c1[0]), abs(point[1] - c1[1]));
+			d1 = Point<float>(point[0] - c1[0], point[1] - c1[1]);
 		}
 		int l2_2 = -1;
 		if (c2.IsDefined())
 		{
 			l2_2 = (point[0] - c2[0]) * (point[0] - c2[0]) + (point[1] - c2[1]) * (point[1] - c2[1]);
-			d2 = Point<float>(abs(point[0] - c2[0]), abs(point[1] - c2[1]));
+			d2 = Point<float>(point[0] - c2[0], point[1] - c2[1]);
 		}
 
 		if (l1_2 > 0 && l2_2 > 0)
@@ -165,6 +167,17 @@ namespace smpl
 		return result;
 	}
 
+	void SilhouetteOptimizer::ComputeSilhouetteError(const Correspondences& correspondences,
+		const int residuals, Eigen::VectorXf& error) const
+	{
+#pragma omp parallel for
+		for (int m = 0; m < residuals; m += 2)
+		{
+			error(m) = correspondences.distance[m / 2].x;
+			error(m + 1) = correspondences.distance[m / 2].y;
+		}
+	}
+
 	void SilhouetteOptimizer::ComputeShapeJacobian(const PoseEulerCoefficients& thetas,
 		const Body& body, std::vector<float3>& dshape)
 	{
@@ -177,6 +190,8 @@ namespace smpl
 		const Silhouette& silhouette, const Correspondences& correspondences, 
 		const int residuals, Eigen::MatrixXf& jacobian)
 	{
+		Eigen::Matrix3f view = CalculateView();
+
 #pragma omp parallel for
 		for (int m = 0; m < residuals; m += 2)
 		{
@@ -188,19 +203,22 @@ namespace smpl
 
 			for (int j = 0; j < BETA_COUNT; j++)
 			{
-				Eigen::Vector3f v0 = body.vertices[indices[0]].ToEigen() + translation;
-				Eigen::Vector3f v1 = body.vertices[indices[1]].ToEigen() + translation;
-				Eigen::Vector3f v2 = body.vertices[indices[2]].ToEigen() + translation;
-				Eigen::Vector3f interpolated = barycentrics[0] * v0 + barycentrics[1] * v1 + barycentrics[2] * v2;
+				Eigen::Vector3f v0 = view * body.vertices[indices[0]].ToEigen() + translation;
+				Eigen::Vector3f v1 = view * body.vertices[indices[1]].ToEigen() + translation;
+				Eigen::Vector3f v2 = view * body.vertices[indices[2]].ToEigen() + translation;
+				Eigen::Vector3f interpolated = barycentrics[0] * v0 +
+					barycentrics[1] * v1 + barycentrics[2] * v2;
 
-				Eigen::Vector3f dv0 = dshape[indices[0] * BETA_COUNT + j].ToEigen();
-				Eigen::Vector3f dv1 = dshape[indices[1] * BETA_COUNT + j].ToEigen();
-				Eigen::Vector3f dv2 = dshape[indices[2] * BETA_COUNT + j].ToEigen();
-				Eigen::Vector3f dinterpolated = barycentrics[0] * dv0 + barycentrics[1] * dv1 + barycentrics[2] * dv2;
+				Eigen::Vector3f dv0 = view * dshape[indices[0] * BETA_COUNT + j].ToEigen();
+				Eigen::Vector3f dv1 = view * dshape[indices[1] * BETA_COUNT + j].ToEigen();
+				Eigen::Vector3f dv2 = view * dshape[indices[2] * BETA_COUNT + j].ToEigen();
+				Eigen::Vector3f dinterpolated = barycentrics[0] * dv0 +
+					barycentrics[1] * dv1 + barycentrics[2] * dv2;
 
 				Eigen::Vector2f dprojection = projector_.Derivative(interpolated, dinterpolated);
 				jacobian(m, j) = dprojection.x();
-				jacobian(m + 1, j) = dprojection.y();
+				// Flip the sign of y transforming from DirectX Image Space to FreeImage Image Space
+				jacobian(m + 1, j) = -dprojection.y();
 			}
 		}
 	}
@@ -209,33 +227,30 @@ namespace smpl
 		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT); // dsmpl/dbeta
-		const int iterations_ = 40;
+		const int iterations_ = 20;
 		const int unknowns = BETA_COUNT;
 
-		float lambda = 2.0f;
-		float lambda_min = 0.1f;
-		float alpha = 1.8f;
-		float beta = 0.6f;
-		const float MINF = -100000.f;
-		float last_residual_error = MINF;
-
-		Eigen::VectorXf delta_old = Eigen::VectorXf::Zero(unknowns);
+		LevenbergMarquardt lm_solver(unknowns);
 
 		for (uint iteration = 0; iteration < iterations_; iteration++)
 		{
 			std::cout << "Iteration " << iteration << std::endl;
+			std::cout << "Beta" << std::endl;
 			for (uint j = 0; j < BETA_COUNT; j++)
 				std::cout << betas[j] << " ";
 			std::cout << std::endl;
 				
 			Body body = generator_(betas, thetas, true);
-			body.Dump("body.obj");
 			Silhouette silhouette = silhouette_maker_(body, CalculateView(translation),
-				projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), static_cast<float>(IMAGE_HEIGHT)));
-			silhouette.GetImage().SavePNG("silhouette.png");
+				projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), 
+					static_cast<float>(IMAGE_HEIGHT)));
+			silhouette.GetImage().SavePNG(
+				std::string("SilhouetteSyntheticShapeImages/silhouette") + 
+				std::to_string(iteration) + std::string(".png"));
 			Correspondences correspondences = FindCorrespondences(input, silhouette.GetImage(), silhouette.GetNormals());
-			correspondences.image.SavePNG("correspondences.png");
-			ComputeShapeJacobian(thetas, body, dshape);
+			correspondences.image.SavePNG(
+				std::string("SilhouetteSyntheticShapeImages/correspondences") +
+				std::to_string(iteration) + std::string(".png"));
 
 			// should be x2 since each point has two components
 			const int residuals = correspondences.model_border.size() * 2; 
@@ -244,52 +259,20 @@ namespace smpl
 			Eigen::VectorXf error = Eigen::VectorXf::Zero(residuals);
 			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
 
-			// evaluate error
-#pragma omp parallel for
-			for (int m = 0; m < residuals; m+=2)
-			{
-				error(m) = correspondences.distance[m/2].x;
-				error(m + 1) = correspondences.distance[m/2].y;
-			}
+			ComputeSilhouetteError(correspondences, residuals, error);
 
-			ComputeSilhouetteFromShapeJacobian(body, dshape, translation, silhouette, correspondences, residuals, jacobian);
+			ComputeShapeJacobian(thetas, body, dshape);
+			ComputeSilhouetteFromShapeJacobian(body, dshape, translation, silhouette, 
+				correspondences, residuals, jacobian);
 
 			// levenberg marquardt
-
-			Eigen::MatrixXf Jt = jacobian.transpose();
-			Eigen::MatrixXf JtJ = Jt * jacobian;
-			Eigen::VectorXf JtF = Jt * error;
-			Eigen::MatrixXf JtJ_diag = JtJ.diagonal().asDiagonal();
-
-			float current_residual_error = error.squaredNorm();
-			std::cout << "Error " << current_residual_error << std::endl;
-			if (last_residual_error == MINF || 
-				(last_residual_error >= current_residual_error && iteration + 1 != iterations_))
-			{
-				JtJ += lambda * JtJ_diag;
-
-				Eigen::ConjugateGradient<Eigen::MatrixXf, Eigen::Lower | Eigen::Upper> cg;
-				cg.compute(JtJ);
-				delta = cg.solve(JtF);
-
-				delta_old = delta;
-				last_residual_error = current_residual_error;
-
-				for (uint j = 0; j < BETA_COUNT; j++)
-					betas[j] -= delta(j);
-
-				lambda *= beta;
-				if (lambda < lambda_min) lambda = lambda_min;
-			}
-			else if (last_residual_error < current_residual_error)
-			{
-				for (uint j = 0; j < BETA_COUNT; j++)
-					betas[j] += delta_old(j);
-
-				lambda *= alpha;
-			}
-
-			last_residual_error = current_residual_error;
+			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			if (minimized)
+				for (int i = 0; i < BETA_COUNT; i++)
+					betas[i] -= delta(i);
+			else
+				for (int i = 0; i < BETA_COUNT; i++)
+					betas[i] += delta(i);
 		}
 	}
 
@@ -304,6 +287,16 @@ namespace smpl
 		view(0, 3) = translation.x();
 		view(1, 3) = translation.y();
 		view(2, 3) = translation.z();
+		return view;
+	}
+
+	Eigen::Matrix3f SilhouetteOptimizer::CalculateView() const
+	{
+		Eigen::Matrix3f view(Eigen::Matrix3f::Identity());
+		// mesh is facing from us, rotate 180 around y
+		view(0, 0) = -1;
+		view(1, 1) = 1;
+		view(2, 2) = -1;
 		return view;
 	}
 }

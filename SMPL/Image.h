@@ -6,6 +6,7 @@
 #include <Eigen/Eigen>
 #include <vector>
 #include "Definitions.h"
+#include "Projector.h"
 
 #define USE_24_BITS_PER_PIXEL
 #ifndef USE_24_BITS_PER_PIXEL
@@ -128,15 +129,25 @@ namespace smpl
 
 		PIXEL& operator()(int x, int y);
 
-		static void Draw3D(Image& image, const Eigen::Matrix3f& intrinsics, 
-			const Eigen::Vector3f& translation, 
-			const PIXEL& color,	const int brush_size, const std::vector<float3>& pointcloud);
+		static void Draw3D(Image& image, const Projector& projector, const Eigen::Vector3f& translation,
+			const PIXEL& color, const int brush_size, const std::vector<float3>& pointcloud);
 
-		static void Draw3D(Image& image, const Eigen::Matrix3f& intrinsics,
-			const Eigen::Vector3f& translation,
+		static void Draw3D(Image& image, const Projector& projector,
+			const PIXEL& color, const int brush_size, const std::vector<float3>& pointcloud)
+		{
+			Draw3D(image, projector, Eigen::Vector3f(0.f,0.f,0.f), color, brush_size, pointcloud);
+		}
+
+		static void Draw3D(Image& image, const Projector& projector, const Eigen::Vector3f& translation,
 			const PIXEL& color, const std::vector<float3>& pointcloud)
 		{
-			Draw3D(image, intrinsics, translation, color, 0, pointcloud);
+			Draw3D(image, projector, translation, color, 0, pointcloud);
+		}
+
+		static void Draw3D(Image& image, const Projector& projector,
+			const PIXEL& color, const std::vector<float3>& pointcloud)
+		{
+			Draw3D(image, projector, color, 0, pointcloud);
 		}
 
 		static void Draw2D(Image& image, const PIXEL& color, const int brush_size, const std::vector<float>& points);

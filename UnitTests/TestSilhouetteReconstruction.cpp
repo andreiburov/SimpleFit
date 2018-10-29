@@ -72,7 +72,7 @@ namespace silhouette_reconstruction
 {
 	TEST_CASE("Hello World")
 	{
-		INFO("Hello World");
+		WARN("Hello World");
 	}
 
 	TEST_CASE("Create Silhouette")
@@ -222,8 +222,8 @@ namespace silhouette_reconstruction
 
 			for (uint j = 0; j < BETA_COUNT; j++)
 			{
-				x -= db[j] * dsillhouette_shape(m, j);
-				y -= db[j] * dsillhouette_shape(m+1, j);
+				x += db[j] * dsillhouette_shape(m, j);
+				y += db[j] * dsillhouette_shape(m+1, j);
 			}
 
 			correspondences.model_border[m / 2].x = x;

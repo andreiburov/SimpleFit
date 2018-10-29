@@ -23,6 +23,7 @@
     <ClCompile Include="EulerAngles.cpp" />
     <ClCompile Include="Generator.cpp" />
     <ClCompile Include="Image.cpp" />
+    <ClCompile Include="LevenbergMarquardt.cpp" />
     <ClCompile Include="Projector.cpp" />
     <ClCompile Include="JointRegressor.cpp" />
     <ClCompile Include="Optimizer.cpp" />
@@ -34,6 +35,7 @@
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="EulerAngles.h" />
     <ClInclude Include="Image.h" />
+    <ClInclude Include="LevenbergMarquardt.h" />
     <ClInclude Include="Projector.h" />
     <ClInclude Include="JointRegressor.h" />
     <ClInclude Include="Optimizer.h" />

@@ -179,19 +179,18 @@ namespace smpl
 		return scan_line[x];
 	}
 
-	void Image::Draw3D(Image& image, const Eigen::Matrix3f& intrinsics,
-		const Eigen::Vector3f& translation,
+	void Image::Draw3D(Image& image, const Projector& projector, const Eigen::Vector3f& translation,
 		const PIXEL& color, const int brush_size, const std::vector<float3>& pointcloud)
 	{
 		int w = image.GetWidth();
 		int h = image.GetHeight();
 
-		for (auto& point : pointcloud)
+		for (int i = 0; i < pointcloud.size(); i++)
 		{
-			Eigen::Vector3f p = intrinsics * (point.ToEigen() + translation);
-			p /= p(2);
+			Eigen::Vector2f p = projector(pointcloud[i].ToEigen(), translation);
 			int x_c = (int)p(0);
-			int y_c = (int)p(1);
+			// flip the y, since DirectX has different image axes than FreeImage
+			int y_c = IMAGE_HEIGHT-(int)p(1); 
 
 			for (int x = x_c - brush_size; x < x_c + brush_size + 1; x++)
 			{
