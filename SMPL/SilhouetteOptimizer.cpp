@@ -6,14 +6,21 @@
 
 namespace smpl
 {
-	const int MAX_DIST = 30;
+	const int MAX_DIST = 25;
 
 	bool IsBorderingPixelBlack(const Image& image, int i, int j)
 	{
-		if (image(max(0, i - 1), j).IsBlack() ||
-			image(min(IMAGE_WIDTH - 1, i + 1), j).IsBlack() ||
+		if (image(max(0, i - 1), max(0, j - 1)).IsBlack() ||
 			image(i, max(0, j - 1)).IsBlack() ||
-			image(i, min(IMAGE_HEIGHT - 1, j + 1)).IsBlack())
+			image(min(IMAGE_WIDTH - 1, i + 1), max(0, j - 1)).IsBlack() ||
+
+			image(max(0, i - 1), j).IsBlack() ||
+			image(min(IMAGE_WIDTH - 1, i + 1), j).IsBlack() ||
+
+			image(max(0, i - 1), min(IMAGE_HEIGHT - 1, j + 1)).IsBlack() ||
+			image(i, min(IMAGE_HEIGHT - 1, j + 1)).IsBlack() ||
+			image(min(IMAGE_WIDTH - 1, i + 1), min(IMAGE_HEIGHT - 1, j + 1)).IsBlack()
+			)
 			return true;
 		else
 			return false;
@@ -48,7 +55,7 @@ namespace smpl
 		{
 			if (painted) model(x, y) = BLUE;
 
-			if (input(x, y).IsBlack()) return Point<int>(x, y);
+			if (!input(x, y).IsBlack()) return Point<int>(x, y);
 			if (x < 0 || y < 0 || x >= IMAGE_WIDTH || y >= IMAGE_HEIGHT) return Point<int>();
 			// update error
 			e2 = 2 * err;
@@ -60,8 +67,10 @@ namespace smpl
 		return Point<int>();
 	}
 
-	void AddCorrespondence(const Image& input, Image& model, const Point<int>& point, const Point<float>& normal,
-		int max_dist, std::vector<Point<int> >& model_correspondence, std::vector<Point<int> >& input_correspondence,
+	void AddCorrespondence(const Image& input, Image& model, const Point<int>& point, 
+		const Point<float>& normal,	int max_dist,
+		std::vector<Point<int> >& model_correspondence, 
+		std::vector<Point<int> >& input_correspondence,
 		std::vector<Point<float> >& distance)
 	{
 		Point<int> x1(static_cast<int>(point[0] + max_dist * normal[0]), static_cast<int>(point[1] + max_dist * normal[1]));
@@ -117,9 +126,13 @@ namespace smpl
 	Correspondences SilhouetteOptimizer::FindCorrespondences(const Image& input, const Image& model, const std::vector<float4>& normals)
 	{
 		Image correspondences(model);
-		std::vector<Point<int> > model_border; // model border detected visually
+		Image input_contour(input);
 
-		std::vector<Point<int> > model_correspondence; // model border with input correspondence
+		// model border detected visually
+		std::vector<Point<int> > model_border;
+
+		// model border with input correspondences
+		std::vector<Point<int> > model_correspondence; 
 		std::vector<Point<int> > input_correspondence;
 		std::vector<Point<float> > distance;
 
@@ -128,8 +141,12 @@ namespace smpl
 		{
 			for (int i = 0; i < IMAGE_WIDTH; i++)
 			{
-				/*if (!input[j][i].IsBlack())
-					input_clean[j][i] = WHITE;*/
+				if (!input(i, j).IsBlack())
+					if (IsBorderingPixelBlack(input, i, j))
+					{
+						input_contour(i, j) = WHITE;
+					}
+					else input_contour(i, j) = BLACK;
 
 				if (!model(i, j).IsBlack())
 					if (IsBorderingPixelBlack(model, i, j))
@@ -141,17 +158,21 @@ namespace smpl
 			}
 		}
 
+		/*input_contour.SavePNG("input_contour.png");
+		correspondences.SavePNG("model_contour.png");*/
+
 		for (auto& point : model_border)
 		{
 			float4 normal4 = normals[point.y*IMAGE_WIDTH + point.x];
 			Point<float> normal = Point<float>(normal4.x, -normal4.y).normalized();
-			AddCorrespondence(input, correspondences, point, normal, MAX_DIST, model_correspondence, input_correspondence, distance);
+			AddCorrespondence(input_contour, correspondences, point, normal,
+				MAX_DIST, model_correspondence, input_correspondence, distance);
 		}
 
 		// Draw correspondences
 		for (int i = 0; i < model_correspondence.size(); i++)
 		{
-			Bresenham(input, correspondences, model_correspondence[i], input_correspondence[i], true);
+			Bresenham(input_contour, correspondences, model_correspondence[i], input_correspondence[i], true);
 		}
 
 		Correspondences result(correspondences, model_correspondence, input_correspondence, distance);
