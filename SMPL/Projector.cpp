@@ -24,13 +24,13 @@ namespace smpl
 		return Eigen::Vector2f(t(0) / t(2), t(1) / t(2));
 	}
 
-	Eigen::Vector2f Projector::Derivative(const Eigen::Vector3f& t, const Eigen::Vector3f& dt) const
+	Eigen::Vector2f Projector::Jacobian(const Eigen::Vector3f& t, const Eigen::Vector3f& dt) const
 	{
 		float z2 = t(2)*t(2); // z squared
 		return Eigen::Vector2f(intrinsics_(0, 0) * (dt(0) / t(2) - t(0)*dt(2) / z2), intrinsics_(1, 1) * (dt(1) / t(2) - t(1)*dt(2) / z2));
 	}
 
-	Eigen::Matrix<float, 3, 2> Projector::Derivative(const Eigen::Vector3f& t) const
+	Eigen::Matrix<float, 3, 2> Projector::Jacobian(const Eigen::Vector3f& t) const
 	{
 		float z2 = t(2) * t(2);
 		float r[6] = { intrinsics_(0,0) / t(2), 0, -intrinsics_(0,0) * t(0) / z2, 0, intrinsics_(1,1) / t(2), -intrinsics_(1,1) * t(1) / z2 };

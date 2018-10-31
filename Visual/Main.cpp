@@ -63,8 +63,10 @@ void TW_CALL DumpBtnCB(void* /*clientData*/)
 void TW_CALL ResetBtnCB(void* /*clientData*/)
 {
 	ZeroMemory(&g_pose, sizeof(g_pose));
-	ZeroMemory(&g_pose_euler, sizeof(g_pose_euler));
-	ZeroMemory(&g_shape, sizeof(g_shape));
+	//ZeroMemory(&g_pose_euler, sizeof(g_pose_euler));
+	//ZeroMemory(&g_shape, sizeof(g_shape));
+	g_shape.Reset();
+	g_pose_euler.Reset();
 
 	for (int i = 0; i < smpl::THETA_COUNT; i++)
 	{
@@ -122,8 +124,6 @@ void TW_CALL SetBeta(const void *value, void * clientData)
 	g_betas_string = ss.str();
 }
 
-
-// Callback function called by AntTweakBar to get ambient occlusion state
 void TW_CALL GetBeta(void *value, void * clientData)
 {
 	int i = (int)clientData;
@@ -253,9 +253,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 			TW_TYPE_FLOAT, SetBeta, GetBeta, (void*)i, "min=-10 max=10 step=0.1");
 	}
 
-	ZeroMemory(&g_shape, sizeof(g_shape));
+	//ZeroMemory(&g_shape, sizeof(g_shape));
+	g_shape.Reset();
 	ZeroMemory(&g_pose, sizeof(g_pose));
-	ZeroMemory(&g_pose_euler, sizeof(g_pose_euler));
+	g_pose_euler.Reset();
+	//ZeroMemory(&g_pose_euler, sizeof(g_pose_euler));
 	for (UINT i = 0; i < smpl::THETA_COUNT; i++)
 	{
 		TwAddVarCB(g_bar, std::string("T").append(std::to_string(i)).append(" ").append(smpl::JOINT_FROM_INDEX[i]).c_str(),

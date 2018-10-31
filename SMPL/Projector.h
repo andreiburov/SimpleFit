@@ -33,9 +33,9 @@ namespace smpl
 
 		Eigen::Vector2f operator()(const Eigen::Vector3f& vertex, const Eigen::Vector3f& translation) const;
 		
-		Eigen::Vector2f Derivative(const Eigen::Vector3f& t, const Eigen::Vector3f& dt) const;
+		Eigen::Vector2f Jacobian(const Eigen::Vector3f& t, const Eigen::Vector3f& dt) const;
 
-		Eigen::Matrix<float, 3, 2> Derivative(const Eigen::Vector3f& t) const;
+		Eigen::Matrix<float, 3, 2> Jacobian(const Eigen::Vector3f& t) const;
 
 		const Eigen::Matrix3f& GetIntrinsics() const { return intrinsics_; }
 

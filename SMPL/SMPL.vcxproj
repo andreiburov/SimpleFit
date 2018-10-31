@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Body.cpp" />
     <ClCompile Include="Definitions.cpp" />
     <ClCompile Include="EulerAngles.cpp" />
     <ClCompile Include="Generator.cpp" />
@@ -32,6 +33,7 @@
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Body.h" />
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="EulerAngles.h" />
     <ClInclude Include="Image.h" />

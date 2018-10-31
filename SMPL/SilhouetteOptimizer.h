@@ -38,15 +38,20 @@ namespace smpl
 		void ComputeSilhouetteError(const Correspondences& correspondences, 
 			const int residuals, Eigen::VectorXf& error) const;
 
-		void ComputeShapeJacobian(const PoseEulerCoefficients& thetas,
-			const Body& body, std::vector<float3>& dshape);
-
 		void ComputeSilhouetteFromShapeJacobian(
 			const Body& body, const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
 			const Silhouette& silhouette, const Correspondences& correspondences,
-			const int residuals, Eigen::MatrixXf& jacobian);
+			const int residuals, Eigen::MatrixXf& jacobian) const;
 
-		void Reconstruct(const std::string& image_filename, const Image& input,
+		void ComputeSilhouetteFromPoseJacobian(
+			const Body& body, const std::vector<float3>& dpose, const Eigen::Vector3f& translation,
+			const Silhouette& silhouette, const Correspondences& correspondences,
+			const int residuals, Eigen::MatrixXf& jacobian) const;
+
+		void ReconstructShape(const std::string& image_filename, const Image& input,
+			Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
+
+		void ReconstructPose(const std::string& log_path, const Image& input,
 			Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
 	private:

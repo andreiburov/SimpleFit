@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <vector>
 #include <iostream>
 #include <sstream>
 #include "DXUtils.h"
@@ -9,6 +10,7 @@ namespace smpl
 {
 	const int BETA_COUNT = 10;
 	const int THETA_COUNT = 24;
+	const int THETA_COMPONENT_COUNT = THETA_COUNT * 3;
 	const int THETA_COUNT_WITHOUT_PARENT = THETA_COUNT - 1;
 	const int THETA_MATRIX_COMPONENT_COUNT = 207;
 	const int VERTEX_COUNT = 6890;
@@ -93,9 +95,6 @@ namespace smpl
 	const int COCO_EAR_RIGHT = 17;
 	const int COCO_JOINT_COUNT = 18;
 
-	const int RESIDUALS = COCO_JOINT_COUNT * 2 + BETA_COUNT + THETA_COUNT * 3;
-	const int UNKNOWNS = 3 + BETA_COUNT + THETA_COUNT * 3;
-
 	const int COCO_PARENT_INDEX[COCO_JOINT_COUNT] = {
 		COCO_SHOULDER_CENTER, // 0
 		-1, // 1
@@ -117,20 +116,42 @@ namespace smpl
 		COCO_EYE_RIGHT // 17
 	};
 
+	const int RESIDUALS = COCO_JOINT_COUNT * 2 + BETA_COUNT + THETA_COUNT * 3;
+	const int UNKNOWNS = 3 + BETA_COUNT + THETA_COUNT * 3;
+
 	struct ShapeCoefficients
 	{
-		float betas[BETA_COUNT];
+		std::vector<float> betas;
 		float operator [](int i) const { return betas[i]; }
 		float& operator [](int i) { return betas[i]; }
 
 		ShapeCoefficients()
 		{
-			ZeroMemory(&betas, BETA_COUNT * sizeof(float));
+			betas.resize(BETA_COUNT);
 		}
 
-		ShapeCoefficients(ShapeCoefficients& other)
+		ShapeCoefficients(const ShapeCoefficients& other) :
+			betas(other.betas)
 		{
-			memcpy(betas, other.betas, BETA_COUNT * sizeof(float));
+		}
+
+		ShapeCoefficients(ShapeCoefficients&& other) :
+			betas(other.betas)
+		{
+		}
+
+		ShapeCoefficients& operator=(const ShapeCoefficients& other)
+		{
+			auto temp(other);
+			betas.swap(temp.betas);
+			return *this;
+		}
+
+
+		ShapeCoefficients& operator=(ShapeCoefficients&& other)
+		{
+			betas.swap(other.betas);
+			return *this;
 		}
 
 		ShapeCoefficients& operator=(std::initializer_list<float> other)
@@ -142,6 +163,11 @@ namespace smpl
 			}
 
 			return *this;
+		}
+
+		void Reset()
+		{
+			ZeroMemory(betas.data(), BETA_COUNT * sizeof(float));
 		}
 
 		friend void operator<<(ShapeCoefficients& shape, std::string& input)
@@ -162,39 +188,24 @@ namespace smpl
 		}
 	};
 
-	struct PoseAxisAngleCoefficients
+	constexpr uint ALPHA(int idx)
 	{
-		float3 thetas[THETA_COUNT];
-		float3 operator [](int i) const { return thetas[i]; }
-		float3& operator [](int i) { return thetas[i]; }
-		
-		// access componentwise
-		float operator ()(int i) const { return thetas[i/3].data[i%3]; }
-		float& operator ()(int i) { return thetas[i/3].data[i%3]; }
+		return idx * 3;
+	}
 
-		PoseAxisAngleCoefficients()
-		{
-			ZeroMemory(&thetas, THETA_COUNT * sizeof(float) * 3);
-		}
+	constexpr uint BETA(int idx)
+	{
+		return idx * 3 + 1;
+	}
 
-		PoseAxisAngleCoefficients(PoseAxisAngleCoefficients& other)
-		{
-			memcpy(thetas, other.thetas, THETA_COUNT * sizeof(float) * 3);
-		}
-
-		friend void operator<<(PoseAxisAngleCoefficients& pose, std::string& input)
-		{
-			std::stringstream ss(input);
-			for (int i = 0; (i < THETA_COUNT * 3) && !ss.eof(); i++)
-			{
-				ss >> pose(i);
-			}
-		}
-	};
+	constexpr uint GAMMA(int idx)
+	{
+		return idx * 3 + 2;
+	}
 
 	struct PoseEulerCoefficients
 	{
-		float3 thetas[THETA_COUNT];
+		std::vector<float3> thetas;
 		float3 operator [](int i) const { return thetas[i]; }
 		float3& operator [](int i) { return thetas[i]; }
 
@@ -204,12 +215,35 @@ namespace smpl
 
 		PoseEulerCoefficients()
 		{
-			ZeroMemory(&thetas, THETA_COUNT * sizeof(float) * 3);
+			thetas.resize(THETA_COUNT, float3());
 		}
 
-		PoseEulerCoefficients(PoseEulerCoefficients& other)
+		PoseEulerCoefficients(const PoseEulerCoefficients& other) :
+			thetas(other.thetas)
 		{
-			memcpy(thetas, other.thetas, THETA_COUNT * sizeof(float) * 3);
+		}
+
+		PoseEulerCoefficients(PoseEulerCoefficients&& other) :
+			thetas(other.thetas)
+		{
+		}
+
+		PoseEulerCoefficients& operator=(const PoseEulerCoefficients& other)
+		{
+			auto temp(other);
+			thetas.swap(temp.thetas);
+			return *this;
+		}
+
+		PoseEulerCoefficients& operator=(PoseEulerCoefficients&& other)
+		{
+			thetas.swap(other.thetas);
+			return *this;
+		}
+
+		void Reset()
+		{
+			ZeroMemory(thetas.data(), THETA_COUNT * sizeof(float3));
 		}
 
 		friend void operator<<(PoseEulerCoefficients& pose, std::string& input)
@@ -230,6 +264,42 @@ namespace smpl
 		}
 	};
 
+	struct PoseAxisAngleCoefficients
+	{
+		float3 thetas[THETA_COUNT];
+		float3 operator [](int i) const { return thetas[i]; }
+		float3& operator [](int i) { return thetas[i]; }
+
+		// access componentwise
+		float operator ()(int i) const { return thetas[i / 3].data[i % 3]; }
+		float& operator ()(int i) { return thetas[i / 3].data[i % 3]; }
+
+		PoseAxisAngleCoefficients()
+		{
+			ZeroMemory(thetas, THETA_COUNT * sizeof(float) * 3);
+		}
+
+		PoseAxisAngleCoefficients(const PoseAxisAngleCoefficients& other)
+		{
+			memcpy(thetas, other.thetas, THETA_COUNT * sizeof(float) * 3);
+		}
+
+		PoseAxisAngleCoefficients& operator=(const PoseAxisAngleCoefficients& other)
+		{
+			memcpy(thetas, other.thetas, THETA_COUNT * sizeof(float) * 3);
+			return *this;
+		}
+
+		friend void operator<<(PoseAxisAngleCoefficients& pose, std::string& input)
+		{
+			std::stringstream ss(input);
+			for (int i = 0; (i < THETA_COUNT * 3) && !ss.eof(); i++)
+			{
+				ss >> pose(i);
+			}
+		}
+	};
+
 	struct Skin
 	{
 		float4 weight;
@@ -239,123 +309,6 @@ namespace smpl
 	typedef Eigen::MatrixXf Joints;
 
 	std::vector<float3> Joints2Vector(const Joints& joints);
-
-	struct Body
-	{
-		std::vector<float3> vertices;
-		std::vector<float3> deformed_template;
-		std::vector<float6> vertices_normals;
-		std::vector<uint> indices;
-		Joints joints;
-
-		Body()
-		{
-		}
-
-		Body(const std::vector<float3>& v, const std::vector<uint>& i) :
-			vertices(v), indices(i)
-		{
-		}
-
-		Body(const Body& other)
-		{
-			vertices = other.vertices;
-			indices = other.indices;
-			deformed_template = other.deformed_template;
-			vertices_normals = other.vertices_normals;
-			joints = other.joints;
-		}
-
-		Body(Body&& other)
-		{
-			vertices = std::move(other.vertices);
-			indices = std::move(other.indices);
-			deformed_template = std::move(other.deformed_template);
-			vertices_normals = std::move(other.vertices_normals);
-			joints = std::move(other.joints);
-		}
-
-		Body& operator=(Body other)
-		{
-			vertices.swap(other.vertices);
-			indices.swap(other.indices);
-			deformed_template.swap(other.deformed_template);
-			vertices_normals.swap(other.vertices_normals);
-			joints.swap(other.joints);
-			return *this;
-		}
-
-		bool operator==(const Body& other) const
-		{
-			if (
-				vertices == other.vertices &&
-				indices == other.indices &&
-				deformed_template == other.deformed_template &&
-				vertices_normals == other.vertices_normals &&
-				joints == other.joints
-				)
-				return true;
-			else
-				return false;
-		}
-
-		bool IsEqual(const Body& other, float eps) const
-		{
-			for (uint i = 0; i < VERTEX_COUNT; i++)
-			{
-				if (
-					(vertices[i].ToEigen() - other.vertices[i].ToEigen()).norm() > eps
-					)
-					return false;
-				return true;
-			}
-		}
-
-		/*void Draw(Image& image, const Eigen::Matrix3f& intrinsics, const Eigen::Vector3f& scaling, const Eigen::Vector3f& translation) const
-		{
-			int w = image.GetWidth();
-			int h = image.GetHeight();
-
-			RGBTRIPLE white;
-			white.rgbtRed = 255;
-			white.rgbtGreen = 255;
-			white.rgbtBlue = 255;
-
-			for (uint i = 0; i < VERTEX_COUNT; i++)
-			{
-				Eigen::Vector3f p = intrinsics * (Eigen::Scaling(scaling) * vertices[i].ToEigen() + translation);
-				p /= p(2);
-				if ((p(0) >= 0) && (p(0) < w) && (p(1) >= 0) && (p(1) < h))
-				{
-					image[int(p(1))][int(p(0))] = white;
-				}
-			}
-		}*/
-
-		void Dump(const std::string& filename) const
-		{
-			std::ofstream file(filename, std::ios::out);
-			for (auto& v : vertices)
-			{
-				file << "v " << v.x << " " << v.y << " " << v.z << "\n";
-			}
-			for (int i = 0; i < indices.size(); i++)
-			{
-				if (i % 3 == 0)
-				{
-					file << "f " << indices[i] + 1 << " ";
-				}
-				else if (i % 3 == 1)
-				{
-					file << indices[i] + 1 << " ";
-				}
-				else
-				{
-					file << indices[i] + 1 << "\n";
-				}
-			}
-		}
-	};
 
 	template <typename T>
 	struct Point

@@ -41,4 +41,6 @@ bool LevenbergMarquardt::operator()(const Eigen::MatrixXf& jacobian,
 		lambda_ *= alpha_;
 		return false;
 	}
+
+	return false;
 }

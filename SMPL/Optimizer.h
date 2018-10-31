@@ -9,21 +9,6 @@
 
 namespace smpl
 {
-	constexpr uint ALPHA(int idx)
-	{
-		return idx*3;
-	}
-
-	constexpr uint BETA(int idx)
-	{
-		return idx*3 + 1;
-	}
-
-	constexpr uint GAMMA(int idx)
-	{
-		return idx*3 + 2;
-	}
-
 	class Optimizer
 	{
 	public:

@@ -135,8 +135,6 @@ void SmplModel::Generate()
 {
 	smpl::ShapeCoefficients shape;
 	smpl::PoseAxisAngleCoefficients pose;
-	ZeroMemory(&shape, sizeof(shape));
-	ZeroMemory(&pose, sizeof(pose));
 	
 	body_ = generator_(shape, pose);
 }

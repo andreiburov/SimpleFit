@@ -48,6 +48,9 @@
     <ClCompile Include="TestExtrinsics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestBodyDerivatives.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Settings\UnitTests.runsettings" />

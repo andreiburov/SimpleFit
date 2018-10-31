@@ -199,21 +199,14 @@ namespace smpl
 		}
 	}
 
-	void SilhouetteOptimizer::ComputeShapeJacobian(const PoseEulerCoefficients& thetas,
-		const Body& body, std::vector<float3>& dshape)
-	{
-		dshape = generator_.GetShapeDirs();
-		generator_.GetSkinMorph()(thetas, body.joints, dshape);
-	}
-
 	void SilhouetteOptimizer::ComputeSilhouetteFromShapeJacobian(
 		const Body& body, const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
 		const Silhouette& silhouette, const Correspondences& correspondences, 
-		const int residuals, Eigen::MatrixXf& jacobian)
+		const int residuals, Eigen::MatrixXf& jacobian) const
 	{
 		Eigen::Matrix3f view = CalculateView();
 
-#pragma omp parallel for
+#pragma omp parallel for collapse(2)
 		for (int m = 0; m < residuals; m += 2)
 		{
 			const int x = correspondences.model_border[m / 2].x;
@@ -236,7 +229,7 @@ namespace smpl
 				Eigen::Vector3f dinterpolated = barycentrics[0] * dv0 +
 					barycentrics[1] * dv1 + barycentrics[2] * dv2;
 
-				Eigen::Vector2f dprojection = projector_.Derivative(interpolated, dinterpolated);
+				Eigen::Vector2f dprojection = projector_.Jacobian(interpolated, dinterpolated);
 				jacobian(m, j) = dprojection.x();
 				// Flip the sign of y transforming from DirectX Image Space to FreeImage Image Space
 				jacobian(m + 1, j) = -dprojection.y();
@@ -244,7 +237,45 @@ namespace smpl
 		}
 	}
 
-	void SilhouetteOptimizer::Reconstruct(const std::string& image_filename, const Image& input,
+	void SilhouetteOptimizer::ComputeSilhouetteFromPoseJacobian(
+		const Body& body, const std::vector<float3>& dpose, const Eigen::Vector3f& translation,
+		const Silhouette& silhouette, const Correspondences& correspondences,
+		const int residuals, Eigen::MatrixXf& jacobian) const
+	{
+		Eigen::Matrix3f view = CalculateView();
+
+#pragma omp parallel for collapse(2)
+		for (int m = 0; m < residuals; m += 2)
+		{
+			const int x = correspondences.model_border[m / 2].x;
+			const int y = correspondences.model_border[m / 2].y;
+
+			const int4& indices = silhouette.GetVertexIndices()[y*IMAGE_WIDTH + x];
+			const float4& barycentrics = silhouette.GetBarycentrics()[y*IMAGE_WIDTH + x];
+
+			for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
+			{
+				Eigen::Vector3f v0 = view * body.vertices[indices[0]].ToEigen() + translation;
+				Eigen::Vector3f v1 = view * body.vertices[indices[1]].ToEigen() + translation;
+				Eigen::Vector3f v2 = view * body.vertices[indices[2]].ToEigen() + translation;
+				Eigen::Vector3f interpolated = barycentrics[0] * v0 +
+					barycentrics[1] * v1 + barycentrics[2] * v2;
+
+				Eigen::Vector3f dv0 = view * dpose[indices[0] * THETA_COMPONENT_COUNT + k].ToEigen();
+				Eigen::Vector3f dv1 = view * dpose[indices[1] * THETA_COMPONENT_COUNT + k].ToEigen();
+				Eigen::Vector3f dv2 = view * dpose[indices[2] * THETA_COMPONENT_COUNT + k].ToEigen();
+				Eigen::Vector3f dinterpolated = barycentrics[0] * dv0 +
+					barycentrics[1] * dv1 + barycentrics[2] * dv2;
+
+				Eigen::Vector2f dprojection = projector_.Jacobian(interpolated, dinterpolated);
+				jacobian(m, k) = dprojection.x();
+				// Flip the sign of y transforming from DirectX Image Space to FreeImage Image Space
+				jacobian(m + 1, k) = -dprojection.y();
+			}
+		}
+	}
+
+	void SilhouetteOptimizer::ReconstructShape(const std::string& log_path, const Image& input,
 		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT); // dsmpl/dbeta
@@ -266,11 +297,11 @@ namespace smpl
 				projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), 
 					static_cast<float>(IMAGE_HEIGHT)));
 			silhouette.GetImage().SavePNG(
-				std::string("SilhouetteSyntheticShapeImages/silhouette") + 
+				log_path + std::string("/silhouette") + 
 				std::to_string(iteration) + std::string(".png"));
 			Correspondences correspondences = FindCorrespondences(input, silhouette.GetImage(), silhouette.GetNormals());
 			correspondences.image.SavePNG(
-				std::string("SilhouetteSyntheticShapeImages/correspondences") +
+				log_path + std::string("/correspondences") +
 				std::to_string(iteration) + std::string(".png"));
 
 			// should be x2 since each point has two components
@@ -282,8 +313,61 @@ namespace smpl
 
 			ComputeSilhouetteError(correspondences, residuals, error);
 
-			ComputeShapeJacobian(thetas, body, dshape);
+			generator_.ComputeBodyFromShapeJacobian(dshape);
 			ComputeSilhouetteFromShapeJacobian(body, dshape, translation, silhouette, 
+				correspondences, residuals, jacobian);
+
+			// levenberg marquardt
+			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			if (minimized)
+				for (int i = 0; i < BETA_COUNT; i++)
+					betas[i] -= delta(i);
+			else
+				for (int i = 0; i < BETA_COUNT; i++)
+					betas[i] += delta(i);
+		}
+	}
+
+	void SilhouetteOptimizer::ReconstructPose(const std::string& image_filename, const Image& input,
+		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
+	{
+		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT); // dsmpl/dbeta
+		const int iterations_ = 20;
+		const int unknowns = BETA_COUNT;
+
+		LevenbergMarquardt lm_solver(unknowns);
+
+		for (uint iteration = 0; iteration < iterations_; iteration++)
+		{
+			std::cout << "Iteration " << iteration << std::endl;
+			std::cout << "Beta" << std::endl;
+			for (uint j = 0; j < BETA_COUNT; j++)
+				std::cout << betas[j] << " ";
+			std::cout << std::endl;
+
+			Body body = generator_(betas, thetas, true);
+			Silhouette silhouette = silhouette_maker_(body, CalculateView(translation),
+				projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH),
+					static_cast<float>(IMAGE_HEIGHT)));
+			silhouette.GetImage().SavePNG(
+				std::string("SilhouetteSyntheticShapeImages/silhouette") +
+				std::to_string(iteration) + std::string(".png"));
+			Correspondences correspondences = FindCorrespondences(input, silhouette.GetImage(), silhouette.GetNormals());
+			correspondences.image.SavePNG(
+				std::string("SilhouetteSyntheticShapeImages/correspondences") +
+				std::to_string(iteration) + std::string(".png"));
+
+			// should be x2 since each point has two components
+			const int residuals = correspondences.model_border.size() * 2;
+
+			Eigen::MatrixXf jacobian = Eigen::MatrixXf::Zero(residuals, unknowns);
+			Eigen::VectorXf error = Eigen::VectorXf::Zero(residuals);
+			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
+
+			ComputeSilhouetteError(correspondences, residuals, error);
+
+			generator_.ComputeBodyFromShapeJacobian(dshape);
+			ComputeSilhouetteFromShapeJacobian(body, dshape, translation, silhouette,
 				correspondences, residuals, jacobian);
 
 			// levenberg marquardt

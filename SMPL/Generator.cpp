@@ -65,18 +65,16 @@ namespace smpl
 
 	void SkinMorph::operator()(const PoseAxisAngleCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const
 	{
-		Eigen::Matrix4f palette[JOINT_COUNT];
-
 		// parent initialization
 		{
 			Eigen::AngleAxisf angle_axis(thetas[0].ToEigen().norm(), thetas[0].ToEigen().normalized());
-			palette[0] = (Eigen::Translation3f(joints.col(0)) * angle_axis * Eigen::Translation3f(-joints.col(0))).matrix();
+			palette_[0] = (Eigen::Translation3f(joints.col(0)) * angle_axis * Eigen::Translation3f(-joints.col(0))).matrix();
 		}
 
 		for (uint i = 1; i < JOINT_COUNT; i++)
 		{
 			Eigen::AngleAxisf angle_axis(thetas[i].ToEigen().norm(), thetas[i].ToEigen().normalized());
-			palette[i] = palette[PARENT_INDEX[i]]
+			palette_[i] = palette_[PARENT_INDEX[i]]
 				* (Eigen::Translation3f(joints.col(i)) * angle_axis * Eigen::Translation3f(-joints.col(i))).matrix();
 		}
 
@@ -84,10 +82,10 @@ namespace smpl
 		for (uint i = 0; i < VERTEX_COUNT; i++)
 		{
 			Eigen::Matrix4f skin
-				= skins_[i].weight.x * palette[skins_[i].joint_index.x]
-				+ skins_[i].weight.y * palette[skins_[i].joint_index.y]
-				+ skins_[i].weight.z * palette[skins_[i].joint_index.z]
-				+ skins_[i].weight.w * palette[skins_[i].joint_index.w];
+				= skins_[i].weight.x * palette_[skins_[i].joint_index.x]
+				+ skins_[i].weight.y * palette_[skins_[i].joint_index.y]
+				+ skins_[i].weight.z * palette_[skins_[i].joint_index.z]
+				+ skins_[i].weight.w * palette_[skins_[i].joint_index.w];
 
 			vertices[i] = float3((skin * vertices[i].ToEigen().homogeneous()).head(3));
 		}
@@ -96,50 +94,125 @@ namespace smpl
 	void SkinMorph::operator()(const PoseEulerCoefficients& thetas, 
 		const Joints& joints, std::vector<float3>& vertices) const
 	{
-		Eigen::Matrix4f palette[JOINT_COUNT];
 		// parent initialization
 		{
-			palette[0] = EulerSkinningXYZ(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+			part_transformations_[0] = EulerSkinningXYZ(thetas[0].x, thetas[0].y, thetas[0].z, 
+				joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+			palette_[0] = part_transformations_[0];
 		}
 
 		for (uint i = 1; i < JOINT_COUNT; i++)
 		{
-			palette[i] = palette[PARENT_INDEX[i]]
-				* EulerSkinningXYZ(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+			part_transformations_[i] = EulerSkinningXYZ(thetas[i].x, thetas[i].y, thetas[i].z, 
+				joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+			palette_[i] = palette_[PARENT_INDEX[i]] * part_transformations_[i];
 		}
 
+		return operator()(vertices);
+	}
+
+	void SkinMorph::operator()(std::vector<float3>& vertices) const
+	{
 		uint stride = static_cast<uint>(vertices.size() / VERTEX_COUNT);
 
 #pragma omp parallel for
 		for (uint i = 0; i < VERTEX_COUNT; i++)
 		{
 			Eigen::Matrix4f skin
-				= skins_[i].weight.x * palette[skins_[i].joint_index.x]
-				+ skins_[i].weight.y * palette[skins_[i].joint_index.y]
-				+ skins_[i].weight.z * palette[skins_[i].joint_index.z]
-				+ skins_[i].weight.w * palette[skins_[i].joint_index.w];
+				= skins_[i].weight.x * palette_[skins_[i].joint_index.x]
+				+ skins_[i].weight.y * palette_[skins_[i].joint_index.y]
+				+ skins_[i].weight.z * palette_[skins_[i].joint_index.z]
+				+ skins_[i].weight.w * palette_[skins_[i].joint_index.w];
 
 			for (uint j = 0; j < stride; j++)
 			{
-				vertices[i*stride + j] = 
+				vertices[i*stride + j] =
 					float3((skin * vertices[i*stride + j].ToEigen().homogeneous()).head(3));
 			}
 		}
 	}
 
+	void SkinMorph::ComputeSkinningJacobian(const Body& body, Eigen::Matrix4f* dskinning) const
+	{
+		const PoseEulerCoefficients& thetas = body.thetas;
+		const Joints& joints = body.joints;
+		ZeroMemory(dskinning, sizeof(Eigen::Matrix4f) * JOINT_COUNT * JOINT_COUNT * 3);
+
+		// main diagonal initialization
+		{
+			dskinning[ALPHA(0)*JOINT_COUNT] = EulerSkinningXYZDerivativeToAlpha(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+			dskinning[BETA(0)*JOINT_COUNT] = EulerSkinningXYZDerivativeToBeta(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+			dskinning[GAMMA(0)*JOINT_COUNT] = EulerSkinningXYZDerivativeToGamma(thetas[0].x, thetas[0].y, thetas[0].z, joints.col(0)(0), joints.col(0)(1), joints.col(0)(2));
+
+			for (uint i = 1; i < JOINT_COUNT; i++) // body parts with angles controlling them
+			{
+				dskinning[ALPHA(i)*JOINT_COUNT + i] = palette_[PARENT_INDEX[i]] *
+					EulerSkinningXYZDerivativeToAlpha(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				dskinning[BETA(i)*JOINT_COUNT + i] = palette_[PARENT_INDEX[i]] *
+					EulerSkinningXYZDerivativeToBeta(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+				dskinning[GAMMA(i)*JOINT_COUNT + i] = palette_[PARENT_INDEX[i]] *
+					EulerSkinningXYZDerivativeToGamma(thetas[i].x, thetas[i].y, thetas[i].z, joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
+			}
+		}
+
+		for (uint i = 0; i < JOINT_COUNT; i++) // thetas
+		{
+			for (uint j = i + 1; j < JOINT_COUNT; j++) // body parts
+			{
+				dskinning[ALPHA(i) * JOINT_COUNT + j] = dskinning[ALPHA(i) * JOINT_COUNT + PARENT_INDEX[j]] * part_transformations_[j];
+				dskinning[BETA(i) * JOINT_COUNT + j] = dskinning[BETA(i) * JOINT_COUNT + PARENT_INDEX[j]] * part_transformations_[j];
+				dskinning[GAMMA(i) * JOINT_COUNT + j] = dskinning[GAMMA(i) * JOINT_COUNT + PARENT_INDEX[j]] * part_transformations_[j];
+			}
+		}
+	}
+
+	void SkinMorph::ComputeBodyFromPoseJacobian(const Body& body, std::vector<float3>& dpose) const
+	{
+		Eigen::Matrix4f* dskinning = new Eigen::Matrix4f[THETA_COUNT * 3 * JOINT_COUNT];
+		ComputeSkinningJacobian(body, dskinning);
+
+		dpose.resize(VERTEX_COUNT * THETA_COUNT * 3);
+
+#pragma omp parallel for collapse(2)
+		for (uint i = 0; i < VERTEX_COUNT; i++)
+		{
+			for (uint k = 0; k < THETA_COUNT; k++)
+			{
+				dpose[i*THETA_COMPONENT_COUNT + ALPHA(k)] =
+					float3(((skins_[i].weight.x * dskinning[ALPHA(k) * THETA_COUNT + skins_[i].joint_index.x] +
+						skins_[i].weight.y * dskinning[ALPHA(k) * THETA_COUNT + skins_[i].joint_index.y] +
+						skins_[i].weight.z * dskinning[ALPHA(k) * THETA_COUNT + skins_[i].joint_index.z] +
+						skins_[i].weight.w * dskinning[ALPHA(k) * THETA_COUNT + skins_[i].joint_index.w]) *
+						body.deformed_template[i].ToEigen().homogeneous()).head(3));
+
+				dpose[i*THETA_COMPONENT_COUNT + BETA(k)] =
+					float3(((skins_[i].weight.x * dskinning[BETA(k) * THETA_COUNT + skins_[i].joint_index.x] +
+						skins_[i].weight.y * dskinning[BETA(k) * THETA_COUNT + skins_[i].joint_index.y] +
+						skins_[i].weight.z * dskinning[BETA(k) * THETA_COUNT + skins_[i].joint_index.z] +
+						skins_[i].weight.w * dskinning[BETA(k) * THETA_COUNT + skins_[i].joint_index.w]) *
+						body.deformed_template[i].ToEigen().homogeneous()).head(3));
+
+				dpose[i*THETA_COMPONENT_COUNT + GAMMA(k)] =
+					float3(((skins_[i].weight.x * dskinning[GAMMA(k) * THETA_COUNT + skins_[i].joint_index.x] +
+						skins_[i].weight.y * dskinning[GAMMA(k) * THETA_COUNT + skins_[i].joint_index.y] +
+						skins_[i].weight.z * dskinning[GAMMA(k) * THETA_COUNT + skins_[i].joint_index.z] +
+						skins_[i].weight.w * dskinning[GAMMA(k) * THETA_COUNT + skins_[i].joint_index.w]) *
+						body.deformed_template[i].ToEigen().homogeneous()).head(3));
+			}
+		}
+
+		delete dskinning;
+	}
+
 	Body Generator::operator()(const ShapeCoefficients& betas, const PoseAxisAngleCoefficients& thetas) const
 	{
-		Body body;
-		body.vertices = vertices_;
-		body.indices = indices_;
+		Body body(vertices_, indices_);
 
 		identity_morph_(betas, body.vertices);
 		body.joints = joint_regressor_(body.vertices);
 		pose_morph_(thetas, body.vertices);
 
-		// for interspection
 		body.deformed_template = body.vertices;
-
 		skin_morph_(thetas, body.joints, body.vertices);
 
 		return body;
@@ -170,15 +243,12 @@ namespace smpl
 	Body Generator::operator()(const ShapeCoefficients& betas, 
 		const PoseEulerCoefficients& thetas, bool with_normals) const
 	{
-		Body body;
-		body.vertices = vertices_;
-		body.indices = indices_;
+		Body body(betas, thetas, vertices_, indices_);
 
 		identity_morph_(betas, body.vertices);
 		body.joints = joint_regressor_(body.vertices);
 		pose_morph_(thetas, body.vertices);
 
-		// for interspection
 		body.deformed_template = body.vertices;
 		skin_morph_(thetas, body.joints, body.vertices);
 
@@ -214,5 +284,16 @@ namespace smpl
 		{
 			body.vertices_normals.push_back(float6(body.vertices[i], float3(normals[i].normalized())));
 		}
+	}
+
+	void Generator::ComputeBodyFromShapeJacobian(std::vector<float3>& dshape) const
+	{
+		dshape = identity_morph_.GetShapeDirs();
+		skin_morph_(dshape);
+	}
+
+	void Generator::ComputeBodyFromPoseJacobian(const Body& body, std::vector<float3>& dpose) const
+	{
+		return skin_morph_.ComputeBodyFromPoseJacobian(body, dpose);
 	}
 }

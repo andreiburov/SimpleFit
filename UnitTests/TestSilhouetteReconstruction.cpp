@@ -68,176 +68,207 @@ void AttachToProcess()
 	}
 }
 
-namespace silhouette_reconstruction
+TEST_CASE("Hello World")
 {
-	TEST_CASE("Hello World")
+	WARN("Hello World");
+}
+
+TEST_CASE("Create Silhouette")
+{
+	Generator generator(Generator::Configuration(std::string("../Model")));
+	Projector projector(Projector::Configuration(std::string("../Model")));
+	SilhouetteOptimizer silhouette_optimizer(generator, projector);
+
+	Eigen::Vector3f input_translation(0.f, 0.2f, 4.0f);
+	ShapeCoefficients input_betas;
+	PoseEulerCoefficients input_thetas;
+	input_betas << std::string("-1 -5");
+	Silhouette input = silhouette_optimizer.Infer("", input_translation, input_betas, input_thetas);
+
+	Silhouette test(Silhouette::Loader("TestSilhouettes/input"));
+	REQUIRE(input == test);
+}
+
+TEST_CASE("Find Correspondences")
+{
+	Generator generator(Generator::Configuration(std::string("../Model")));
+	Projector projector(Projector::Configuration(std::string("../Model")));
+	SilhouetteOptimizer silhouette_optimizer(generator, projector);
+
+	Eigen::Vector3f input_translation(0.f, 0.2f, 4.0f);
+	ShapeCoefficients input_betas;
+	PoseEulerCoefficients input_thetas;
+	input_betas << std::string("-1 -5");
+	Silhouette input = silhouette_optimizer.Infer("", input_translation, input_betas, input_thetas);
+
+	Eigen::Vector3f model_translation(0.f, 0.2f, 4.0f);
+	ShapeCoefficients model_betas;
+	PoseEulerCoefficients model_thetas;
+	Silhouette model = silhouette_optimizer.Infer("", model_translation, model_betas, model_thetas);
+
+	Correspondences correspondences = silhouette_optimizer.FindCorrespondences(input.GetImage(), model.GetImage(), model.GetNormals());
+
+	Image test("TestSilhouettes/correspondences.png");
+	REQUIRE(correspondences.image == test);
+}
+
+TEST_CASE("Jacobian Silhouette From Shape")
+{
+	Generator generator(Generator::Configuration(std::string("../Model")));
+	Projector projector(Projector::Configuration(std::string("../Model")));
+	SilhouetteOptimizer silhouette_optimizer(generator, projector);
+
+	Eigen::Vector3f translation(0.f, 0.2f, 4.0f);
+	ShapeCoefficients input_betas;
+	PoseEulerCoefficients input_thetas;
+	input_betas[0] = -1.f;
+	input_betas[1] = -5.f;
+	Body input_body = generator(input_betas, input_thetas);
+	Silhouette input_silhouette = silhouette_optimizer.Infer("", translation, input_betas, input_thetas);
+	input_silhouette.GetImage().SavePNG("input_silhouette.png");
+
+	ShapeCoefficients model_betas;
+	PoseEulerCoefficients model_thetas;
+	Body model_body = generator(model_betas, model_thetas);
+	Silhouette model_silhouette = silhouette_optimizer.Infer("", translation, model_betas, model_thetas);
+	model_silhouette.GetImage().SavePNG("model_silhouette.png");
+
+	Correspondences correspondences = silhouette_optimizer.FindCorrespondences(input_silhouette.GetImage(),
+		model_silhouette.GetImage(), model_silhouette.GetNormals());
+
+	std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT);
+	generator.ComputeBodyFromShapeJacobian(dshape);
+
+	const int residuals = correspondences.input_border.size() * 2;
+	Eigen::MatrixXf dsillhouette_shape(residuals, BETA_COUNT);
+	silhouette_optimizer.ComputeSilhouetteFromShapeJacobian(model_body, dshape, translation,
+		model_silhouette, correspondences, residuals, dsillhouette_shape);
+
+	// print model silhouette border before the update
 	{
-		WARN("Hello World");
-	}
-
-	TEST_CASE("Create Silhouette")
-	{
-		Generator generator(Generator::Configuration(std::string("../Model")));
-		Projector projector(Projector::Configuration(std::string("../Model")));
-		SilhouetteOptimizer silhouette_optimizer(generator, projector);
-
-		Eigen::Vector3f input_translation(0.f, 0.2f, 4.0f);
-		ShapeCoefficients input_betas;
-		PoseEulerCoefficients input_thetas;
-		input_betas << std::string("-1 -5");
-		Silhouette input = silhouette_optimizer.Infer("", input_translation, input_betas, input_thetas);
-		input.Dump("input");
-
-		Silhouette test(Silhouette::Loader("TestSilhouettes/input"));
-		REQUIRE(input == test);
-	}
-
-	TEST_CASE("Find Correspondences")
-	{
-		Generator generator(Generator::Configuration(std::string("../Model")));
-		Projector projector(Projector::Configuration(std::string("../Model")));
-		SilhouetteOptimizer silhouette_optimizer(generator, projector);
-
-		Eigen::Vector3f input_translation(0.f, 0.2f, 4.0f);
-		ShapeCoefficients input_betas;
-		PoseEulerCoefficients input_thetas;
-		input_betas << std::string("-1 -5");
-		Silhouette input = silhouette_optimizer.Infer("", input_translation, input_betas, input_thetas);
-
-		Eigen::Vector3f model_translation(0.f, 0.2f, 4.0f);
-		ShapeCoefficients model_betas;
-		PoseEulerCoefficients model_thetas;
-		Silhouette model = silhouette_optimizer.Infer("", model_translation, model_betas, model_thetas);
-
-		Correspondences correspondences = silhouette_optimizer.FindCorrespondences(input.GetImage(), model.GetImage(), model.GetNormals());
-
-		Image test("TestSilhouettes/correspondences.png");
-		REQUIRE(correspondences.image == test);
-	}
-
-	TEST_CASE("Reconstruct Body From Synthetic Silhouette")
-	{
-		Generator generator(Generator::Configuration(std::string("../Model")));
-		Projector projector(Projector::Configuration(std::string("../Model")));
-		SilhouetteOptimizer silhouette_optimizer(generator, projector);
-
-		Eigen::Vector3f input_translation(0.f, 0.2f, 4.0f);
-		ShapeCoefficients input_betas;
-		PoseEulerCoefficients input_thetas;
-		input_betas << std::string("-1 -5");
-		Silhouette input = silhouette_optimizer.Infer("", input_translation, input_betas, input_thetas);
-
-		Eigen::Vector3f model_translation(0.f, 0.2f, 4.0f);
-		ShapeCoefficients model_betas;
-		PoseEulerCoefficients model_thetas;
-
-		silhouette_optimizer.Reconstruct("SilhouetteSyntheticShape/", input.GetImage(), 
-			model_translation, model_betas, model_thetas);
-
-		Body body = generator(model_betas, model_thetas);
-		body.Dump("from_silhouette.obj");
-	}
-
-	TEST_CASE("Jacobian Body From Beta")
-	{
-		Generator generator(Generator::Configuration(std::string("../Model")));
-		Projector projector(Projector::Configuration(std::string("../Model")));
-		SilhouetteOptimizer silhouette_optimizer(generator, projector);
-		float db[10] = { -1.f, -5.0f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
-
-		ShapeCoefficients input_betas;
-		PoseEulerCoefficients input_thetas;
-		input_betas[0] = db[0];
-		input_betas[1] = db[1];
-		Body input_body = generator(input_betas, input_thetas);
-
-		ShapeCoefficients model_betas;
-		PoseEulerCoefficients model_thetas;
-		Body model_body = generator(model_betas, model_thetas);
-
-		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT);
-		silhouette_optimizer.ComputeShapeJacobian(model_thetas, model_body, dshape);
-
-		for (uint i = 0; i < VERTEX_COUNT; i++)
+		Image image;
+		for (auto& p : correspondences.model_border)
 		{
-			for (uint j = 0; j < BETA_COUNT; j++)
-			{
-				Eigen::Vector3f v(0.f, 0.f, 0.f);
-				v += db[j] * dshape[i*BETA_COUNT + j].ToEigen();
-				v += model_body.vertices[i].ToEigen();
-				model_body.vertices[i] = float3(v);
-			}
+			image(p.x, p.y) = BLUE;
+		}
+		image.SavePNG("model_border_before.png");
+	}
+
+	for (uint m = 0; m < residuals; m += 2)
+	{
+		float x = correspondences.model_border[m / 2].x;
+		float y = correspondences.model_border[m / 2].y;
+
+		for (uint j = 0; j < BETA_COUNT; j++)
+		{
+			x += input_betas[j] * dsillhouette_shape(m, j);
+			y += input_betas[j] * dsillhouette_shape(m + 1, j);
 		}
 
-		REQUIRE(model_body.IsEqual(input_body, 0.01f));
+		correspondences.model_border[m / 2].x = x;
+		correspondences.model_border[m / 2].y = y;
 	}
 
-	TEST_CASE("Jacobian Silhouette From Beta")
+	// print model silhouette border after the update
 	{
-		Generator generator(Generator::Configuration(std::string("../Model")));
-		Projector projector(Projector::Configuration(std::string("../Model")));
-		SilhouetteOptimizer silhouette_optimizer(generator, projector);
-		float db[10] = { -1.f, -5.0f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
-
-		Eigen::Vector3f translation(0.f, 0.2f, 4.0f);
-		ShapeCoefficients input_betas;
-		PoseEulerCoefficients input_thetas;
-		input_betas[0] = db[0];
-		input_betas[1] = db[1];
-		Body input_body = generator(input_betas, input_thetas);
-		Silhouette input_silhouette = silhouette_optimizer.Infer("", translation, input_betas, input_thetas);
-		input_silhouette.GetImage().SavePNG("input_silhouette.png");
-
-		ShapeCoefficients model_betas;
-		PoseEulerCoefficients model_thetas;
-		Body model_body = generator(model_betas, model_thetas);
-		Silhouette model_silhouette = silhouette_optimizer.Infer("", translation, model_betas, model_thetas);
-		model_silhouette.GetImage().SavePNG("model_silhouette.png");
-
-		Correspondences correspondences = silhouette_optimizer.FindCorrespondences(input_silhouette.GetImage(),
-			model_silhouette.GetImage(), model_silhouette.GetNormals());
-
-		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT);
-		silhouette_optimizer.ComputeShapeJacobian(model_thetas, model_body, dshape);
-
-		const int residuals = correspondences.input_border.size() * 2;
-		Eigen::MatrixXf dsillhouette_shape(residuals, BETA_COUNT);
-		silhouette_optimizer.ComputeSilhouetteFromShapeJacobian(model_body, dshape, translation, 
-			model_silhouette, correspondences, residuals, dsillhouette_shape);
-
-		// print model silhouette border before the update
+		Image image;
+		for (auto& p : correspondences.model_border)
 		{
-			Image image;
-			for (auto& p : correspondences.model_border)
-			{
-				image(p.x, p.y) = BLUE;
-			}
-			image.SavePNG("model_border_before.png");
+			image(p.x, p.y) = BLUE;
 		}
-
-		for (uint m = 0; m < residuals; m+=2)
-		{
-			float x = correspondences.model_border[m/2].x;
-			float y = correspondences.model_border[m/2].y;
-
-			for (uint j = 0; j < BETA_COUNT; j++)
-			{
-				x += db[j] * dsillhouette_shape(m, j);
-				y += db[j] * dsillhouette_shape(m+1, j);
-			}
-
-			correspondences.model_border[m / 2].x = x;
-			correspondences.model_border[m / 2].y = y;
-		}
-
-		// print model silhouette border after the update
-		{
-			Image image;
-			for (auto& p : correspondences.model_border)
-			{
-				image(p.x, p.y) = BLUE;
-			}
-			image.SavePNG("model_border_after.png");
-		}
+		image.SavePNG("model_border_after.png");
 	}
+}
+
+TEST_CASE("Jacobian Silhouette From Pose")
+{
+	Generator generator(Generator::Configuration(std::string("../Model")));
+	Projector projector(Projector::Configuration(std::string("../Model")));
+	SilhouetteOptimizer silhouette_optimizer(generator, projector);
+
+	Eigen::Vector3f translation(0.f, 0.2f, 4.0f);
+	ShapeCoefficients input_betas;
+	PoseEulerCoefficients input_thetas;
+	input_thetas << std::string("0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\
+								 3.08425 -3.04993 -2.89101 2.77377 3.02695 -2.81275 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ");
+	Body input_body = generator(input_betas, input_thetas);
+	input_body.Dump("input_body.obj");
+	Silhouette input_silhouette = silhouette_optimizer.Infer("", translation, input_betas, input_thetas);
+	input_silhouette.GetImage().SavePNG("input_silhouette.png");
+
+	ShapeCoefficients model_betas;
+	PoseEulerCoefficients model_thetas;
+	Body model_body = generator(model_betas, model_thetas);
+	Silhouette model_silhouette = silhouette_optimizer.Infer("", translation, model_betas, model_thetas);
+	model_silhouette.GetImage().SavePNG("model_silhouette.png");
+
+	Correspondences correspondences = silhouette_optimizer.FindCorrespondences(input_silhouette.GetImage(),
+		model_silhouette.GetImage(), model_silhouette.GetNormals());
+	correspondences.image.SavePNG("correspondences.png");
+
+	std::vector<float3> dpose(VERTEX_COUNT * THETA_COMPONENT_COUNT);
+	generator.ComputeBodyFromPoseJacobian(model_body, dpose);
+
+	const int residuals = correspondences.input_border.size() * 2;
+	Eigen::MatrixXf dsillhouette_pose(residuals, THETA_COMPONENT_COUNT);
+	silhouette_optimizer.ComputeSilhouetteFromPoseJacobian(model_body, dpose, translation,
+		model_silhouette, correspondences, residuals, dsillhouette_pose);
+
+	// print model silhouette border before the update
+	{
+		Image image;
+		for (auto& p : correspondences.model_border)
+		{
+			image(p.x, p.y) = BLUE;
+		}
+		image.SavePNG("model_border_before.png");
+	}
+
+	for (uint m = 0; m < residuals; m += 2)
+	{
+		float x = correspondences.model_border[m / 2].x;
+		float y = correspondences.model_border[m / 2].y;
+
+		for (uint k = 0; k < THETA_COMPONENT_COUNT; k++)
+		{
+			x += input_thetas(k) * dsillhouette_pose(m, k);
+			y += input_thetas(k) * dsillhouette_pose(m + 1, k);
+		}
+
+		correspondences.model_border[m / 2].x = x;
+		correspondences.model_border[m / 2].y = y;
+	}
+
+	// print model silhouette border after the update
+	{
+		Image image;
+		for (auto& p : correspondences.model_border)
+		{
+			image(p.x, p.y) = BLUE;
+		}
+		image.SavePNG("model_border_after.png");
+	}
+}
+
+TEST_CASE("Reconstruct Shape From Synthetic Silhouette")
+{
+	Generator generator(Generator::Configuration(std::string("../Model")));
+	Projector projector(Projector::Configuration(std::string("../Model")));
+	SilhouetteOptimizer silhouette_optimizer(generator, projector);
+
+	Eigen::Vector3f input_translation(0.f, 0.2f, 4.0f);
+	ShapeCoefficients input_betas;
+	PoseEulerCoefficients input_thetas;
+	input_betas << std::string("-1 -5");
+	Silhouette input = silhouette_optimizer.Infer("", input_translation, input_betas, input_thetas);
+
+	Eigen::Vector3f model_translation(0.f, 0.2f, 4.0f);
+	ShapeCoefficients model_betas;
+	PoseEulerCoefficients model_thetas;
+
+	silhouette_optimizer.ReconstructShape("SilhouetteSyntheticShapeImages/", input.GetImage(),
+		model_translation, model_betas, model_thetas);
+
+	Body body = generator(model_betas, model_thetas);
+	body.Dump("from_silhouette.obj");
 }
