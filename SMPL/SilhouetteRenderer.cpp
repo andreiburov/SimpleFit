@@ -1,8 +1,8 @@
-#include "SilhouetteMaker.h"
+#include "SilhouetteRenderer.h"
 
 namespace smpl
 {
-	SilhouetteMaker::SilhouetteMaker(const Body& body) : device_(d3d_context.device), device_context_(d3d_context.device_context)
+	SilhouetteRenderer::SilhouetteRenderer(const Body& body) : device_(d3d_context.device), device_context_(d3d_context.device_context)
 	{
 #ifdef _DEBUG
 		{
@@ -55,6 +55,8 @@ namespace smpl
 			vertex_buffer_desc.StructureByteStride = 0;
 
 			D3D11_SUBRESOURCE_DATA vertex_buffer_data;
+			if (body.vertices_normals.size() == 0)
+				MessageBoxA(nullptr, "Body normals are not calculated", "Error", MB_OK);
 			vertex_buffer_data.pSysMem = body.vertices_normals.data();
 			vertex_buffer_data.SysMemPitch = 0;
 			vertex_buffer_data.SysMemSlicePitch = 0;
@@ -173,7 +175,7 @@ namespace smpl
 		}
 	}
 
-	Silhouette SilhouetteMaker::operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
+	Silhouette SilhouetteRenderer::operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
 	{
 		SetMatrices(view, projection);
 
@@ -272,7 +274,7 @@ namespace smpl
  		return silhouette;
 	}
 
-	void SilhouetteMaker::SetMatrices(const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
+	void SilhouetteRenderer::SetMatrices(const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
 	{
 		matrices_.view = view;
 		matrices_.view_it = view.inverse().transpose();

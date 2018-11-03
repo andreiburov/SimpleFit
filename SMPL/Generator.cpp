@@ -168,35 +168,21 @@ namespace smpl
 
 	void SkinMorph::ComputeBodyFromPoseJacobian(const Body& body, std::vector<float3>& dpose) const
 	{
-		Eigen::Matrix4f* dskinning = new Eigen::Matrix4f[THETA_COUNT * 3 * JOINT_COUNT];
+		Eigen::Matrix4f* dskinning = new Eigen::Matrix4f[THETA_COMPONENT_COUNT * JOINT_COUNT];
 		ComputeSkinningJacobian(body, dskinning);
 
-		dpose.resize(VERTEX_COUNT * THETA_COUNT * 3);
+		dpose.resize(VERTEX_COUNT * THETA_COMPONENT_COUNT);
 
 #pragma omp parallel for collapse(2)
 		for (uint i = 0; i < VERTEX_COUNT; i++)
 		{
-			for (uint k = 0; k < THETA_COUNT; k++)
+			for (uint k = 0; k < THETA_COMPONENT_COUNT; k++)
 			{
-				dpose[i*THETA_COMPONENT_COUNT + ALPHA(k)] =
-					float3(((skins_[i].weight.x * dskinning[ALPHA(k) * THETA_COUNT + skins_[i].joint_index.x] +
-						skins_[i].weight.y * dskinning[ALPHA(k) * THETA_COUNT + skins_[i].joint_index.y] +
-						skins_[i].weight.z * dskinning[ALPHA(k) * THETA_COUNT + skins_[i].joint_index.z] +
-						skins_[i].weight.w * dskinning[ALPHA(k) * THETA_COUNT + skins_[i].joint_index.w]) *
-						body.deformed_template[i].ToEigen().homogeneous()).head(3));
-
-				dpose[i*THETA_COMPONENT_COUNT + BETA(k)] =
-					float3(((skins_[i].weight.x * dskinning[BETA(k) * THETA_COUNT + skins_[i].joint_index.x] +
-						skins_[i].weight.y * dskinning[BETA(k) * THETA_COUNT + skins_[i].joint_index.y] +
-						skins_[i].weight.z * dskinning[BETA(k) * THETA_COUNT + skins_[i].joint_index.z] +
-						skins_[i].weight.w * dskinning[BETA(k) * THETA_COUNT + skins_[i].joint_index.w]) *
-						body.deformed_template[i].ToEigen().homogeneous()).head(3));
-
-				dpose[i*THETA_COMPONENT_COUNT + GAMMA(k)] =
-					float3(((skins_[i].weight.x * dskinning[GAMMA(k) * THETA_COUNT + skins_[i].joint_index.x] +
-						skins_[i].weight.y * dskinning[GAMMA(k) * THETA_COUNT + skins_[i].joint_index.y] +
-						skins_[i].weight.z * dskinning[GAMMA(k) * THETA_COUNT + skins_[i].joint_index.z] +
-						skins_[i].weight.w * dskinning[GAMMA(k) * THETA_COUNT + skins_[i].joint_index.w]) *
+				dpose[i*THETA_COMPONENT_COUNT + k] =
+					float3(((skins_[i].weight.x * dskinning[k * JOINT_COUNT + skins_[i].joint_index.x] +
+						skins_[i].weight.y * dskinning[k * JOINT_COUNT + skins_[i].joint_index.y] +
+						skins_[i].weight.z * dskinning[k * JOINT_COUNT + skins_[i].joint_index.z] +
+						skins_[i].weight.w * dskinning[k * JOINT_COUNT + skins_[i].joint_index.w]) *
 						body.deformed_template[i].ToEigen().homogeneous()).head(3));
 			}
 		}

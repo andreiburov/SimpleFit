@@ -105,7 +105,7 @@ namespace smpl
 		std::vector<float4> normals_, vertex_indices_, barycentrics_;
 	};
 
-	class SilhouetteMaker
+	class SilhouetteRenderer
 	{
 	public:
 		struct Matrices
@@ -122,7 +122,7 @@ namespace smpl
 			Eigen::Matrix4f projection;
 		};
 
-		SilhouetteMaker(const Body& body); // pass body to allocate appropriate amounts of memory
+		SilhouetteRenderer(const Body& body); // pass body to allocate appropriate amounts of memory
 		Silhouette operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection); // pass body to create a silhouette
 
 	private:

@@ -164,6 +164,7 @@
     <ClCompile Include="TestPoseReconstruction3D.cpp" />
     <ClCompile Include="TestShapeReconstruction.cpp" />
     <ClCompile Include="TestSilhouetteReconstruction.cpp" />
+    <ClCompile Include="TestSilhouetteRenderer.cpp" />
     <ClCompile Include="TestSkinningDerivatives.cpp" />
     <ClCompile Include="UnitTests.cpp" />
   </ItemGroup>

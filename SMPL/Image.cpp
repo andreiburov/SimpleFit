@@ -170,7 +170,8 @@ namespace smpl
 	{
 		if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT)
 		{
-			MessageBoxA(NULL, "Out of bounds!", "Error", MB_OK);
+			//MessageBoxA(NULL, "Out of bounds!", "Error", MB_OK);
+			std::cout << "Out of bounds\n";
 			x = 0;
 			y = 0;
 		}

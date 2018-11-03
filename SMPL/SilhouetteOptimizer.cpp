@@ -174,6 +174,15 @@ namespace smpl
 		{
 			Bresenham(input_contour, correspondences, model_correspondence[i], input_correspondence[i], true);
 		}
+		// Draw input onto correspondences for clarity
+		for (int y = 0; y < IMAGE_HEIGHT; y++)
+			for (int x = 0; x < IMAGE_WIDTH; x++)
+			{
+				if (input_contour(x, y).IsWhite())
+				{
+					correspondences(x, y) = YELLOW;
+				}
+			}
 
 		Correspondences result(correspondences, model_correspondence, input_correspondence, distance);
 		return result;
@@ -183,7 +192,7 @@ namespace smpl
 		ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		Body body = generator_(betas, thetas, true);
-		Silhouette result = silhouette_maker_(body, CalculateView(translation),
+		Silhouette result = silhouette_renderer_(body, CalculateView(translation),
 			projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), static_cast<float>(IMAGE_HEIGHT)));
 		return result;
 	}
@@ -293,7 +302,7 @@ namespace smpl
 			std::cout << std::endl;
 				
 			Body body = generator_(betas, thetas, true);
-			Silhouette silhouette = silhouette_maker_(body, CalculateView(translation),
+			Silhouette silhouette = silhouette_renderer_(body, CalculateView(translation),
 				projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), 
 					static_cast<float>(IMAGE_HEIGHT)));
 			silhouette.GetImage().SavePNG(
@@ -328,33 +337,29 @@ namespace smpl
 		}
 	}
 
-	void SilhouetteOptimizer::ReconstructPose(const std::string& image_filename, const Image& input,
+	void SilhouetteOptimizer::ReconstructPose(const std::string& log_path, const Image& input,
 		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
-		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT); // dsmpl/dbeta
-		const int iterations_ = 20;
-		const int unknowns = BETA_COUNT;
+		std::vector<float3> dpose(VERTEX_COUNT * THETA_COMPONENT_COUNT); // dsmpl/dtheta
+		const int iterations_ = 50;
+		const int unknowns = THETA_COMPONENT_COUNT;
 
 		LevenbergMarquardt lm_solver(unknowns);
 
 		for (uint iteration = 0; iteration < iterations_; iteration++)
 		{
 			std::cout << "Iteration " << iteration << std::endl;
-			std::cout << "Beta" << std::endl;
-			for (uint j = 0; j < BETA_COUNT; j++)
-				std::cout << betas[j] << " ";
-			std::cout << std::endl;
 
 			Body body = generator_(betas, thetas, true);
-			Silhouette silhouette = silhouette_maker_(body, CalculateView(translation),
+			Silhouette silhouette = silhouette_renderer_(body, CalculateView(translation),
 				projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH),
 					static_cast<float>(IMAGE_HEIGHT)));
 			silhouette.GetImage().SavePNG(
-				std::string("SilhouetteSyntheticShapeImages/silhouette") +
+				log_path + std::string("/silhouette") +
 				std::to_string(iteration) + std::string(".png"));
 			Correspondences correspondences = FindCorrespondences(input, silhouette.GetImage(), silhouette.GetNormals());
 			correspondences.image.SavePNG(
-				std::string("SilhouetteSyntheticShapeImages/correspondences") +
+				log_path + std::string("/correspondences") +
 				std::to_string(iteration) + std::string(".png"));
 
 			// should be x2 since each point has two components
@@ -366,18 +371,18 @@ namespace smpl
 
 			ComputeSilhouetteError(correspondences, residuals, error);
 
-			generator_.ComputeBodyFromShapeJacobian(dshape);
-			ComputeSilhouetteFromShapeJacobian(body, dshape, translation, silhouette,
+			generator_.ComputeBodyFromPoseJacobian(body, dpose);
+			ComputeSilhouetteFromPoseJacobian(body, dpose, translation, silhouette,
 				correspondences, residuals, jacobian);
 
 			// levenberg marquardt
 			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 				for (int i = 0; i < BETA_COUNT; i++)
-					betas[i] -= delta(i);
+					thetas(i) -= delta(i);
 			else
 				for (int i = 0; i < BETA_COUNT; i++)
-					betas[i] += delta(i);
+					thetas(i) += delta(i);
 		}
 	}
 

@@ -4,7 +4,7 @@
 #include "Image.h"
 #include "Generator.h"
 #include "Projector.h"
-#include "SilhouetteMaker.h"
+#include "SilhouetteRenderer.h"
 
 namespace smpl
 {
@@ -26,7 +26,7 @@ namespace smpl
 	{
 	public:
 		SilhouetteOptimizer(const Generator& generator, const Projector& projector) 
-		:	generator_(generator), projector_(projector), silhouette_maker_(generator_(true))
+		:	generator_(generator), projector_(projector), silhouette_renderer_(generator_(true))
 		{
 		}
 
@@ -48,7 +48,7 @@ namespace smpl
 			const Silhouette& silhouette, const Correspondences& correspondences,
 			const int residuals, Eigen::MatrixXf& jacobian) const;
 
-		void ReconstructShape(const std::string& image_filename, const Image& input,
+		void ReconstructShape(const std::string& log_path, const Image& input,
 			Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
 
 		void ReconstructPose(const std::string& log_path, const Image& input,
@@ -63,6 +63,6 @@ namespace smpl
 
 		const Generator& generator_;
 		const Projector& projector_;
-		SilhouetteMaker silhouette_maker_;
+		SilhouetteRenderer silhouette_renderer_;
 	};
 }

@@ -4,5 +4,5 @@
 #include "Optimizer.h"
 #include "JointRegressor.h"
 #include "Image.h"
-#include "SilhouetteMaker.h"
+#include "SilhouetteRenderer.h"
 #include "SilhouetteOptimizer.h"

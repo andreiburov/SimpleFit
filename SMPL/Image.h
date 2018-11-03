@@ -48,7 +48,7 @@ namespace smpl
 			return (bc() == 0U && gc() == 0U && rc() == 0U);
 		}
 
-		bool IsWhite(const PIXEL& rgb) const
+		bool IsWhite() const
 		{
 			return (bc() == 255U && gc() == 255U && rc() == 255U);
 		}

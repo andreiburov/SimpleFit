@@ -28,7 +28,7 @@
     <ClCompile Include="Projector.cpp" />
     <ClCompile Include="JointRegressor.cpp" />
     <ClCompile Include="Optimizer.cpp" />
-    <ClCompile Include="SilhouetteMaker.cpp" />
+    <ClCompile Include="SilhouetteRenderer.cpp" />
     <ClCompile Include="SilhouetteOptimizer.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
@@ -41,7 +41,7 @@
     <ClInclude Include="Projector.h" />
     <ClInclude Include="JointRegressor.h" />
     <ClInclude Include="Optimizer.h" />
-    <ClInclude Include="SilhouetteMaker.h" />
+    <ClInclude Include="SilhouetteRenderer.h" />
     <ClInclude Include="SilhouetteOptimizer.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Definitions.h" />
