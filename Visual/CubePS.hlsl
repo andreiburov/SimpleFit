@@ -2,7 +2,8 @@
 
 float4 main(PixelShaderInput input) : SV_TARGET
 {
-	float3 color = float3(0.9, 0.9, 0.9); // gray
+	//float3 color = float3(0.9, 0.9, 0.9); // gray
+	float3 color = input.col.rgb;
 	float3 lightColor = float3(1, 1, 1);
 
 	// for smpl

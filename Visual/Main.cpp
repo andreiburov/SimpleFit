@@ -261,7 +261,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 	for (UINT i = 0; i < smpl::THETA_COUNT; i++)
 	{
 		TwAddVarCB(g_bar, std::string("T").append(std::to_string(i)).append(" ").append(smpl::JOINT_FROM_INDEX[i]).c_str(),
-			TW_TYPE_QUAT4F, SetTheta, GetTheta, (void*)i, "opened=true axisz=z");
+			TW_TYPE_QUAT4F, SetTheta, GetTheta, (void*)i, "opened=false axisz=z");
+	}
+
+	for (UINT i = 0; i < smpl::JOINT_COUNT; i++)
+	{
+		TwAddVarRW(g_bar, std::string("J").append(std::to_string(i)).append(" ").append(smpl::JOINT_FROM_INDEX[i]).c_str(),
+			TW_TYPE_COLOR4F, &(g_SmplModel.GetJointColors()[i]), "colormode=rgb");
 	}
 
 	// Main message loop

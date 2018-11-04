@@ -17,6 +17,8 @@ public:
 	void Generate(smpl::ShapeCoefficients& shape, smpl::PoseEulerCoefficients& pose);
 	void Dump(const std::string& filename);
 
+	std::vector<Eigen::Vector4f>& GetJointColors() { return joint_colors_; }
+
 private:
 
 	void Generate();
@@ -33,6 +35,12 @@ private:
 	unsigned int			indices_count_ = 0;
 
 	ID3D11Buffer*			camera_constant_buffer_ = nullptr;
+	ID3D11Buffer*			joint_color_constant_buffer_ = nullptr;
+	ID3D11ShaderResourceView* 
+							skin_buffer_view_ = nullptr;
+
+	std::vector<Eigen::Vector4f> 
+							joint_colors_;
 
 	Camera&					camera_;
 	smpl::Body				body_;
