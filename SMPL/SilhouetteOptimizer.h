@@ -10,9 +10,10 @@ namespace smpl
 {
 	struct Correspondences
 	{
-		Correspondences(const Image& image, const std::vector<Point<int> > model_border,
-			const std::vector<Point<int> > input_border, std::vector<Point<float> >&  distance) :
-			image(image), model_border(model_border), input_border(input_border), distance(distance)
+		Correspondences(const Image& image, const std::vector<Point<int> >& model_border,
+			const std::vector<Point<int> >& input_border, std::vector<Point<float> >&  distance) :
+			image(image), model_border(model_border), 
+			input_border(input_border), distance(distance)
 		{
 		}
 
@@ -31,6 +32,9 @@ namespace smpl
 		}
 
 		Correspondences FindCorrespondences(const Image& input, const Image& model, const std::vector<float4>& normals);
+
+		void PruneCorrepondences(const Image& input, const Image& model, const std::vector<float4>& normals,
+			Correspondences& correspondences);
 
 		Silhouette Infer(const std::string& image_filename, Eigen::Vector3f& translation,
 			ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
@@ -63,6 +67,7 @@ namespace smpl
 
 		const Generator& generator_;
 		const Projector& projector_;
+		const int pd_ = 5; // a hyper-parameter used in prunning
 		SilhouetteRenderer silhouette_renderer_;
 	};
 }

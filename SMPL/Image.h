@@ -53,6 +53,14 @@ namespace smpl
 			return (bc() == 255U && gc() == 255U && rc() == 255U);
 		}
 
+		float GrayScale() const
+		{
+			float gray = (0.3f * static_cast<float>(rc()/255) +
+				(0.59f * static_cast<float>(gc()/255)) + 
+				(0.11f * static_cast<float>(bc()/255)));
+			return max(0.f, min(1.f, gray));
+		}
+
 		bool operator==(const PIXEL& rgb) const
 		{
 			if (bc() == rgb.bc() && gc() == rgb.gc() && rc() == rgb.rc())
@@ -114,9 +122,13 @@ namespace smpl
 
 		Image(const Image& other);
 
+		Image(Image&& other);
+
 		~Image();
 
 		Image& operator=(const Image& other);
+
+		Image& operator=(Image&& other);
 
 		Image& operator=(FIBITMAP* other);
 

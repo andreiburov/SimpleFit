@@ -13,21 +13,44 @@ TEST_CASE("Find Correspondences")
 	Projector projector(Projector::Configuration(std::string("../Model")));
 	SilhouetteOptimizer silhouette_optimizer(generator, projector);
 
-	Eigen::Vector3f input_translation(0.f, 0.2f, 4.0f);
+	Eigen::Vector3f translation(0.f, 0.2f, 4.0f);
 	ShapeCoefficients input_betas;
 	PoseEulerCoefficients input_thetas;
 	input_betas << std::string("-1 -5");
-	Silhouette input = silhouette_optimizer.Infer("", input_translation, input_betas, input_thetas);
+	Silhouette input = silhouette_optimizer.Infer("", translation, input_betas, input_thetas);
 
-	Eigen::Vector3f model_translation(0.f, 0.2f, 4.0f);
 	ShapeCoefficients model_betas;
 	PoseEulerCoefficients model_thetas;
-	Silhouette model = silhouette_optimizer.Infer("", model_translation, model_betas, model_thetas);
+	Silhouette model = silhouette_optimizer.Infer("", translation, model_betas, model_thetas);
 
 	Correspondences correspondences = silhouette_optimizer.FindCorrespondences(input.GetImage(), model.GetImage(), model.GetNormals());
 
 	Image test("TestSilhouettes/correspondences.png");
 	REQUIRE(correspondences.image == test);
+}
+
+TEST_CASE("Prune Correspondences")
+{
+	Generator generator(Generator::Configuration(std::string("../Model")));
+	Projector projector(Projector::Configuration(std::string("../Model")));
+	SilhouetteOptimizer silhouette_optimizer(generator, projector);
+
+	Eigen::Vector3f translation(0.f, 0.2f, 4.0f);
+	ShapeCoefficients input_betas;
+	PoseEulerCoefficients input_thetas;
+	input_thetas[SHOULDER_RIGHT].z = 1.f;
+	Silhouette input = silhouette_optimizer.Infer("", translation, input_betas, input_thetas);
+	input.GetImage().SavePNG("input.png");
+
+	ShapeCoefficients model_betas;
+	PoseEulerCoefficients model_thetas;
+	Silhouette model = silhouette_optimizer.Infer("", translation, model_betas, model_thetas);
+	input.GetImage().SavePNG("model.png");
+
+	Correspondences correspondences = silhouette_optimizer.FindCorrespondences(input.GetImage(), model.GetImage(), model.GetNormals());
+	correspondences.image.SavePNG("pure_correspondences.png");
+	silhouette_optimizer.PruneCorrepondences(input.GetImage(), model.GetImage(), model.GetNormals(), correspondences);
+	correspondences.image.SavePNG("pruned_correspondences.png");
 }
 
 TEST_CASE("Jacobian Silhouette From Shape")
@@ -121,6 +144,8 @@ TEST_CASE("Jacobian Silhouette From Pose")
 
 	Correspondences correspondences = silhouette_optimizer.FindCorrespondences(input_silhouette.GetImage(),
 		model_silhouette.GetImage(), model_silhouette.GetNormals());
+	silhouette_optimizer.PruneCorrepondences(input_silhouette.GetImage(),
+		model_silhouette.GetImage(), model_silhouette.GetNormals(), correspondences);
 	correspondences.image.SavePNG("correspondences.png");
 
 	std::vector<float3> dpose(VERTEX_COUNT * THETA_COMPONENT_COUNT);

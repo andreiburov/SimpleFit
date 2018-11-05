@@ -340,9 +340,15 @@ namespace smpl
 		{
 			Point point;
 			float norm = sqrt(static_cast<float>(x * x + y * y));
+			if (norm < 1e-8f) norm = 1; // for zero norms
 			point.x = x / norm;
 			point.y = y / norm;
 			return point;
+		}
+
+		float dot(const Point& other) const
+		{
+			return static_cast<float>(x*other.x + y * other.y);
 		}
 
 		bool IsDefined() const { return is_defined; }

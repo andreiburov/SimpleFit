@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <cmath>
+#include <functional>
 #include "LevenbergMarquardt.h"
 
 namespace smpl
@@ -26,8 +27,9 @@ namespace smpl
 			return false;
 	}
 
-	Point<int> Bresenham(const Image& input, Image& model, const Point<int>& p0,
-		const Point<int>& p1, bool painted)
+	Point<int> Bresenham(std::function<bool(int, int)> stop_condition, 
+		const Point<int>& p0, const Point<int>& p1, 
+		Image& model, bool painted)
 	{
 		if (!p1.IsDefined()) return Point<int>();
 
@@ -55,7 +57,8 @@ namespace smpl
 		{
 			if (painted) model(x, y) = BLUE;
 
-			if (!input(x, y).IsBlack()) return Point<int>(x, y);
+			//if (!input(x, y).IsBlack()) return Point<int>(x, y);
+			if (stop_condition(x, y)) return Point<int>(x, y);
 			if (x < 0 || y < 0 || x >= IMAGE_WIDTH || y >= IMAGE_HEIGHT) return Point<int>();
 			// update error
 			e2 = 2 * err;
@@ -67,18 +70,18 @@ namespace smpl
 		return Point<int>();
 	}
 
-	void AddCorrespondence(const Image& input, Image& model, const Point<int>& point, 
-		const Point<float>& normal,	int max_dist,
-		std::vector<Point<int> >& model_correspondence, 
+	void AddCorrespondence(std::function<bool(int, int)> stop_condition,
+		const Point<int>& point, const Point<float>& normal, int max_dist,
+		std::vector<Point<int> >& model_correspondence,
 		std::vector<Point<int> >& input_correspondence,
-		std::vector<Point<float> >& distance)
+		std::vector<Point<float> >& distance, Image& model)
 	{
 		Point<int> x1(static_cast<int>(point[0] + max_dist * normal[0]), static_cast<int>(point[1] + max_dist * normal[1]));
 		Point<int> x2(static_cast<int>(point[0] - max_dist * normal[0]), static_cast<int>(point[1] - max_dist * normal[1]));
 
 		// input correspondences
-		Point<int> c1 = Bresenham(input, model, point, x1, false);
-		Point<int> c2 = Bresenham(input, model, point, x2, false);
+		Point<int> c1 = Bresenham(stop_condition, point, x1, model, false);
+		Point<int> c2 = Bresenham(stop_condition, point, x2, model, false);
 		Point<float> d1, d2; // distance to x1,x2
 
 		int l1_2 = -1;
@@ -132,7 +135,7 @@ namespace smpl
 		std::vector<Point<int> > model_border;
 
 		// model border with input correspondences
-		std::vector<Point<int> > model_correspondence; 
+		std::vector<Point<int> > model_correspondence;
 		std::vector<Point<int> > input_correspondence;
 		std::vector<Point<float> > distance;
 
@@ -158,21 +161,20 @@ namespace smpl
 			}
 		}
 
-		/*input_contour.SavePNG("input_contour.png");
-		correspondences.SavePNG("model_contour.png");*/
-
+		auto stop_condition = [&input_contour](int x, int y) { return (input_contour(x, y).IsWhite()); };
 		for (auto& point : model_border)
 		{
 			float4 normal4 = normals[point.y*IMAGE_WIDTH + point.x];
 			Point<float> normal = Point<float>(normal4.x, -normal4.y).normalized();
-			AddCorrespondence(input_contour, correspondences, point, normal,
-				MAX_DIST, model_correspondence, input_correspondence, distance);
+			AddCorrespondence(stop_condition, point, normal, MAX_DIST,
+				model_correspondence, input_correspondence, distance, correspondences);
 		}
 
 		// Draw correspondences
 		for (int i = 0; i < model_correspondence.size(); i++)
-		{
-			Bresenham(input_contour, correspondences, model_correspondence[i], input_correspondence[i], true);
+		{		
+			Bresenham(stop_condition, model_correspondence[i], input_correspondence[i],
+				correspondences, true);
 		}
 		// Draw input onto correspondences for clarity
 		for (int y = 0; y < IMAGE_HEIGHT; y++)
@@ -186,6 +188,101 @@ namespace smpl
 
 		Correspondences result(correspondences, model_correspondence, input_correspondence, distance);
 		return result;
+	}
+
+	void SilhouetteOptimizer::PruneCorrepondences(const Image& input, const Image& model, const std::vector<float4>& normals,
+		Correspondences& correspondences)
+	{
+		std::vector<Point<float> > input_normals;
+		input_normals.reserve(correspondences.input_border.size());
+
+		Image draw_normals(input);
+		auto stop_condition = [](int x, int y) { return false; };
+
+		// Compute the input_border normals
+		for (const auto& p : correspondences.input_border)
+		{
+			// Derivatives in FreeImage space, inverted to point out of the silhouette
+			// Taking step to because the contours can have a width of 2
+			float dx = (input(p.x + pd_, p.y).GrayScale() - input(p.x - pd_, p.y).GrayScale()) / 2.f;
+			float dy = (input(p.x, p.y + pd_).GrayScale() - input(p.x, p.y - pd_).GrayScale()) / 2.f;
+			Point<float> n = Point<float>(-dx, -dy).normalized();
+			input_normals.push_back(n);
+
+			// Draw the normals
+			const int radius = 5;
+			Point<int> end(static_cast<int>(p.x + radius * n.x), static_cast<int>(p.y + radius * n.y));
+			Bresenham(stop_condition, p, end, draw_normals, true);
+		}
+
+		//draw_normals.SavePNG("input_normals.png");
+
+		// Prune the correspondances based on normals
+		size_t n = correspondences.input_border.size();
+		assert(n == correspondences.model_border.size());
+		const float threshold = 0.1f;
+		std::vector<int> filtered_indices;
+		filtered_indices.reserve(n);
+
+		// Filtering the correpondences
+		for (size_t i = 0; i < n; i++)
+		{
+			auto& p = correspondences.model_border[i];
+			float4 normal4 = normals[p.y*IMAGE_WIDTH + p.x];
+			Point<float> n = Point<float>(normal4.x, -normal4.y).normalized();
+			
+			Point<float>& n_target = input_normals[i];
+			if (n.dot(n_target) > threshold) filtered_indices.push_back(i);
+		}
+
+		size_t filtered_n = correspondences.input_border.size();
+		std::vector<Point<int> > model_border; model_border.reserve(filtered_n);
+		std::vector<Point<int> > input_border; input_border.reserve(filtered_n);
+		std::vector<Point<float> > distance; distance.reserve(filtered_n);
+
+		for (const auto& i : filtered_indices)
+		{
+			model_border.push_back(correspondences.model_border[i]);
+			input_border.push_back(correspondences.input_border[i]);
+			distance.push_back(correspondences.distance[i]);
+		}
+
+		correspondences.model_border = model_border;
+		correspondences.input_border = input_border;
+		correspondences.distance = distance;
+
+		// Draw correspondences
+		Image draw_correspondences(model);
+		for (int j = 0; j < IMAGE_HEIGHT; j++)
+		{
+			for (int i = 0; i < IMAGE_WIDTH; i++)
+			{
+				if (!model(i, j).IsBlack())
+					if (IsBorderingPixelBlack(model, i, j))
+						draw_correspondences(i, j) = WHITE;
+					else draw_correspondences(i, j) = BLACK;
+			}
+		}
+		
+		for (int i = 0; i < model_border.size(); i++)
+		{
+			Bresenham(stop_condition, model_border[i], input_border[i],
+				draw_correspondences, true);
+		}
+
+		for (int j = 0; j < IMAGE_HEIGHT; j++)
+		{
+			for (int i = 0; i < IMAGE_WIDTH; i++)
+			{
+				if(!input(i, j).IsBlack())
+					if (IsBorderingPixelBlack(input, i, j))
+					{
+						draw_correspondences(i, j) = YELLOW;
+					}
+			}
+		}
+
+		correspondences.image = draw_correspondences;
 	}
 
 	Silhouette SilhouetteOptimizer::Infer(const std::string& image_filename, Eigen::Vector3f& translation,
@@ -329,10 +426,10 @@ namespace smpl
 			// levenberg marquardt
 			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
-				for (int i = 0; i < BETA_COUNT; i++)
+				for (int i = 0; i < unknowns; i++)
 					betas[i] -= delta(i);
 			else
-				for (int i = 0; i < BETA_COUNT; i++)
+				for (int i = 0; i < unknowns; i++)
 					betas[i] += delta(i);
 		}
 	}
@@ -341,7 +438,7 @@ namespace smpl
 		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		std::vector<float3> dpose(VERTEX_COUNT * THETA_COMPONENT_COUNT); // dsmpl/dtheta
-		const int iterations_ = 50;
+		const int iterations_ = 20;
 		const int unknowns = THETA_COMPONENT_COUNT;
 
 		LevenbergMarquardt lm_solver(unknowns);
@@ -358,6 +455,7 @@ namespace smpl
 				log_path + std::string("/silhouette") +
 				std::to_string(iteration) + std::string(".png"));
 			Correspondences correspondences = FindCorrespondences(input, silhouette.GetImage(), silhouette.GetNormals());
+			PruneCorrepondences(input, silhouette.GetImage(), silhouette.GetNormals(), correspondences);
 			correspondences.image.SavePNG(
 				log_path + std::string("/correspondences") +
 				std::to_string(iteration) + std::string(".png"));
@@ -375,13 +473,19 @@ namespace smpl
 			ComputeSilhouetteFromPoseJacobian(body, dpose, translation, silhouette,
 				correspondences, residuals, jacobian);
 
+			// need to normalize since there might be unequal number of correspondences
+			// that one adds up compared to the previous iteration
+			float norm = sqrt(static_cast<float>(residuals));
+			error /= norm;
+			jacobian /= norm;
+
 			// levenberg marquardt
 			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
-				for (int i = 0; i < BETA_COUNT; i++)
+				for (int i = 0; i < unknowns; i++)
 					thetas(i) -= delta(i);
 			else
-				for (int i = 0; i < BETA_COUNT; i++)
+				for (int i = 0; i < unknowns; i++)
 					thetas(i) += delta(i);
 		}
 	}

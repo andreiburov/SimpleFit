@@ -94,17 +94,38 @@ namespace smpl
 		bitmap_ = FreeImage_Clone(other.bitmap_);
 	}
 
+	Image::Image(Image&& other) :
+		width_(other.width_), height_(other.height_), bpp_(other.bpp_)
+	{
+		bitmap_ = other.bitmap_;
+		other.bitmap_ = nullptr;
+	}
+
 	Image::~Image()
 	{
-		FreeImage_Unload(bitmap_);
+		if (bitmap_ != nullptr) FreeImage_Unload(bitmap_);
 	}
 
 	Image& Image::operator=(const Image& other)
 	{
 		if (this == &other) return *this;
 
-		FreeImage_Unload(bitmap_);
+		if (bitmap_ != nullptr) FreeImage_Unload(bitmap_);
 		bitmap_ = FreeImage_Clone(other.bitmap_);
+		width_ = other.width_;
+		height_ = other.height_;
+		bpp_ = other.bpp_;
+
+		return *this;
+	}
+
+	Image& Image::operator=(Image&& other)
+	{
+		if (this == &other) return *this;
+
+		if (bitmap_ != nullptr) FreeImage_Unload(bitmap_);
+		bitmap_ = other.bitmap_;
+		other.bitmap_ = nullptr;
 		width_ = other.width_;
 		height_ = other.height_;
 		bpp_ = other.bpp_;
@@ -114,7 +135,7 @@ namespace smpl
 
 	Image& Image::operator=(FIBITMAP* other)
 	{
-		FreeImage_Unload(bitmap_);
+		if (bitmap_ != nullptr) FreeImage_Unload(bitmap_);
 		bitmap_ = other;
 		return *this;
 	}
