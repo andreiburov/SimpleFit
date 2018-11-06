@@ -141,8 +141,8 @@ namespace smpl
 		int data[4];
 		int4() : x(0), y(0), z(0), w(0) {};
 		int4(int x, int y, int z, int w) : x(x), y(y), z(z), w(w) {};
-		int4(float4 other) : x(static_cast<float>(other.x)), y(static_cast<float>(other.y)), 
-			z(static_cast<float>(other.z)), w(static_cast<float>(other.w)) {};
+		int4(float4 other) : x(static_cast<int>(other.x)), y(static_cast<int>(other.y)),
+			z(static_cast<int>(other.z)), w(static_cast<int>(other.w)) {};
 		int4(const Eigen::Vector4i& v) : x(v.x()), y(v.y()), z(v.z()), w(v.w()) {};
 		Eigen::Vector4i ToEigen() const { return Eigen::Vector4i(x, y, z, w); }
 		int operator [](int i) const { return data[i]; }

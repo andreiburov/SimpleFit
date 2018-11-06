@@ -7,8 +7,6 @@
 
 namespace smpl
 {
-	const int MAX_DIST = 25;
-
 	bool IsBorderingPixelBlack(const Image& image, int i, int j)
 	{
 		if (image(max(0, i - 1), max(0, j - 1)).IsBlack() ||
@@ -57,9 +55,9 @@ namespace smpl
 		{
 			if (painted) model(x, y) = BLUE;
 
-			//if (!input(x, y).IsBlack()) return Point<int>(x, y);
-			if (stop_condition(x, y)) return Point<int>(x, y);
 			if (x < 0 || y < 0 || x >= IMAGE_WIDTH || y >= IMAGE_HEIGHT) return Point<int>();
+			if (stop_condition(x, y)) return Point<int>(x, y);
+			
 			// update error
 			e2 = 2 * err;
 			// update coordinates depending on the error
@@ -88,13 +86,13 @@ namespace smpl
 		if (c1.IsDefined())
 		{
 			l1_2 = (point[0] - c1[0]) * (point[0] - c1[0]) + (point[1] - c1[1]) * (point[1] - c1[1]);
-			d1 = Point<float>(point[0] - c1[0], point[1] - c1[1]);
+			d1 = Point<float>(static_cast<float>(point[0] - c1[0]), static_cast<float>(point[1] - c1[1]));
 		}
 		int l2_2 = -1;
 		if (c2.IsDefined())
 		{
 			l2_2 = (point[0] - c2[0]) * (point[0] - c2[0]) + (point[1] - c2[1]) * (point[1] - c2[1]);
-			d2 = Point<float>(point[0] - c2[0], point[1] - c2[1]);
+			d2 = Point<float>(static_cast<float>(point[0] - c2[0]), static_cast<float>(point[1] - c2[1]));
 		}
 
 		if (l1_2 > 0 && l2_2 > 0)
@@ -124,6 +122,37 @@ namespace smpl
 			input_correspondence.push_back(c2);
 			distance.push_back(d2);
 		}
+	}
+
+	SilhouetteOptimizer::SilhouetteOptimizer(const Generator& generator, const Projector& projector) :
+		generator_(generator), projector_(projector), silhouette_renderer_(generator_(true)),
+		pose_prior_per_theta_({
+		10, 10, 10, // 0
+		1, 2, 2, //1 
+		1, 2, 2, //2
+		2, 4, 4, //3
+		1, 100, 100, //4
+		1, 100, 100, //5
+		2, 4, 4, //6
+		100, 100, 100, //7
+		100, 100, 100, //8
+		10, 4, 4, //9
+		100, 100, 100, //10
+		100, 100, 100, //11
+		1, 1, 2, //12
+		10, 10, 10, //13
+		10, 10, 10, //14
+		4, 2, 4, //15
+		2, 1, 1, //16
+		2, 1, 1, //17
+		100, 100, 1, //18
+		100, 100, 1, //19
+		100, 100, 100, //20
+		100, 100, 100, //21
+		100, 100, 100, //22
+		100, 100, 100  //23
+		})
+	{
 	}
 
 	Correspondences SilhouetteOptimizer::FindCorrespondences(const Image& input, const Image& model, const std::vector<float4>& normals)
@@ -166,7 +195,7 @@ namespace smpl
 		{
 			float4 normal4 = normals[point.y*IMAGE_WIDTH + point.x];
 			Point<float> normal = Point<float>(normal4.x, -normal4.y).normalized();
-			AddCorrespondence(stop_condition, point, normal, MAX_DIST,
+			AddCorrespondence(stop_condition, point, normal, ray_dist_,
 				model_correspondence, input_correspondence, distance, correspondences);
 		}
 
@@ -218,14 +247,14 @@ namespace smpl
 		//draw_normals.SavePNG("input_normals.png");
 
 		// Prune the correspondances based on normals
-		size_t n = correspondences.input_border.size();
+		int n = static_cast<int>(correspondences.input_border.size());
 		assert(n == correspondences.model_border.size());
 		const float threshold = 0.1f;
 		std::vector<int> filtered_indices;
 		filtered_indices.reserve(n);
 
 		// Filtering the correpondences
-		for (size_t i = 0; i < n; i++)
+		for (int i = 0; i < n; i++)
 		{
 			auto& p = correspondences.model_border[i];
 			float4 normal4 = normals[p.y*IMAGE_WIDTH + p.x];
@@ -235,7 +264,7 @@ namespace smpl
 			if (n.dot(n_target) > threshold) filtered_indices.push_back(i);
 		}
 
-		size_t filtered_n = correspondences.input_border.size();
+		int filtered_n = static_cast<int>(correspondences.input_border.size());
 		std::vector<Point<int> > model_border; model_border.reserve(filtered_n);
 		std::vector<Point<int> > input_border; input_border.reserve(filtered_n);
 		std::vector<Point<float> > distance; distance.reserve(filtered_n);
@@ -302,6 +331,22 @@ namespace smpl
 		{
 			error(m) = correspondences.distance[m / 2].x;
 			error(m + 1) = correspondences.distance[m / 2].y;
+		}
+		
+		// need to normalize since there might be unequal number of correspondences
+		// that one adds up compared to the previous iteration
+		float norm = sqrt(static_cast<float>(correspondences.model_border.size() * 2));
+		error /= norm;
+		error *= silhouette_weight_;
+	}
+
+	void SilhouetteOptimizer::ComputePosePriorError(
+		const PoseEulerCoefficients& thetas, Eigen::VectorXf error) const
+	{
+#pragma omp parallel for
+		for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
+		{
+			error(k) = pose_prior_weight_ * pose_prior_per_theta_[k] * thetas(k);
 		}
 	}
 
@@ -379,6 +424,21 @@ namespace smpl
 				jacobian(m + 1, k) = -dprojection.y();
 			}
 		}
+
+		// need to normalize since there might be unequal number of correspondences
+		// that one adds up compared to the previous iteration
+		float norm = sqrt(static_cast<float>(correspondences.model_border.size() * 2));
+		jacobian /= norm;
+		jacobian *= silhouette_weight_;
+	}
+
+	void SilhouetteOptimizer::ComputePosePriorJacobian(Eigen::MatrixXf& jacobian) const
+	{
+#pragma omp parallel for
+		for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
+		{
+			jacobian(k, k) = pose_prior_weight_ * pose_prior_per_theta_[k];
+		}
 	}
 
 	void SilhouetteOptimizer::ReconstructShape(const std::string& log_path, const Image& input,
@@ -411,7 +471,7 @@ namespace smpl
 				std::to_string(iteration) + std::string(".png"));
 
 			// should be x2 since each point has two components
-			const int residuals = correspondences.model_border.size() * 2; 
+			const int residuals = static_cast<int>(correspondences.model_border.size() * 2); 
 
 			Eigen::MatrixXf jacobian = Eigen::MatrixXf::Zero(residuals, unknowns);
 			Eigen::VectorXf error = Eigen::VectorXf::Zero(residuals);
@@ -434,11 +494,13 @@ namespace smpl
 		}
 	}
 
-	void SilhouetteOptimizer::ReconstructPose(const std::string& log_path, const Image& input,
+	void SilhouetteOptimizer::ReconstructPose(
+		const std::string& log_path, const Image& input, const int ray_dist,
 		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		std::vector<float3> dpose(VERTEX_COUNT * THETA_COMPONENT_COUNT); // dsmpl/dtheta
-		const int iterations_ = 20;
+		ray_dist_ = ray_dist;
+		const int iterations_ = 30;
 		const int unknowns = THETA_COMPONENT_COUNT;
 
 		LevenbergMarquardt lm_solver(unknowns);
@@ -461,23 +523,30 @@ namespace smpl
 				std::to_string(iteration) + std::string(".png"));
 
 			// should be x2 since each point has two components
-			const int residuals = correspondences.model_border.size() * 2;
+			const int residuals_silhouette = static_cast<int>(correspondences.model_border.size() * 2);
+			Eigen::MatrixXf jacobian_silhouette = Eigen::MatrixXf::Zero(residuals_silhouette, unknowns);
+			Eigen::VectorXf error_silhouette = Eigen::VectorXf::Zero(residuals_silhouette);
 
-			Eigen::MatrixXf jacobian = Eigen::MatrixXf::Zero(residuals, unknowns);
-			Eigen::VectorXf error = Eigen::VectorXf::Zero(residuals);
+			ComputeSilhouetteError(correspondences, residuals_silhouette, error_silhouette);
+			generator_.ComputeBodyFromPoseJacobian(body, dpose);
+			ComputeSilhouetteFromPoseJacobian(body, dpose, translation, 
+				silhouette,	correspondences, 
+				residuals_silhouette, jacobian_silhouette);
+
+			const int residuals_pose_prior = THETA_COMPONENT_COUNT;
+			Eigen::MatrixXf jacobian_pose_prior = Eigen::MatrixXf::Zero(residuals_pose_prior, unknowns);
+			Eigen::VectorXf error_pose_prior = Eigen::VectorXf::Zero(residuals_pose_prior);
+
+			ComputePosePriorError(thetas, error_pose_prior);
+			ComputePosePriorJacobian(jacobian_pose_prior);
+
+			const int residuals = residuals_silhouette + residuals_pose_prior;
+			Eigen::MatrixXf jacobian(residuals, unknowns);
+			Eigen::VectorXf error(residuals);
 			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
 
-			ComputeSilhouetteError(correspondences, residuals, error);
-
-			generator_.ComputeBodyFromPoseJacobian(body, dpose);
-			ComputeSilhouetteFromPoseJacobian(body, dpose, translation, silhouette,
-				correspondences, residuals, jacobian);
-
-			// need to normalize since there might be unequal number of correspondences
-			// that one adds up compared to the previous iteration
-			float norm = sqrt(static_cast<float>(residuals));
-			error /= norm;
-			jacobian /= norm;
+			jacobian << jacobian_silhouette, jacobian_pose_prior;
+			error << error_silhouette, error_pose_prior;
 
 			// levenberg marquardt
 			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
