@@ -125,11 +125,11 @@ namespace smpl
 	}
 
 	SilhouetteOptimizer::SilhouetteOptimizer(const Generator& generator, const Projector& projector) :
-		generator_(generator), projector_(projector), silhouette_renderer_(generator_(true)),
+		generator_(generator), projector_(projector), silhouette_renderer_(generator_(true)), is_rhs_(projector.IsRhs()),
 		pose_prior_per_theta_({
 		10, 10, 10, // 0
-		1, 2, 2, //1 
-		1, 2, 2, //2
+		1, 10, 2, //1 
+		1, 10, 2, //2
 		2, 4, 4, //3
 		1, 100, 100, //4
 		1, 100, 100, //5
@@ -145,8 +145,8 @@ namespace smpl
 		4, 2, 4, //15
 		2, 1, 1, //16
 		2, 1, 1, //17
-		100, 100, 1, //18
-		100, 100, 1, //19
+		100, 2, 1, //18
+		100, 2, 1, //19
 		100, 100, 100, //20
 		100, 100, 100, //21
 		100, 100, 100, //22
@@ -355,7 +355,7 @@ namespace smpl
 		const Silhouette& silhouette, const Correspondences& correspondences, 
 		const int residuals, Eigen::MatrixXf& jacobian) const
 	{
-		Eigen::Matrix3f view = CalculateView();
+		Eigen::Matrix3f view = CalculateView(translation).block<3, 3>(0, 0);
 
 #pragma omp parallel for collapse(2)
 		for (int m = 0; m < residuals; m += 2)
@@ -393,7 +393,7 @@ namespace smpl
 		const Silhouette& silhouette, const Correspondences& correspondences,
 		const int residuals, Eigen::MatrixXf& jacobian) const
 	{
-		Eigen::Matrix3f view = CalculateView();
+		Eigen::Matrix3f view = CalculateView(translation).block<3, 3>(0, 0);
 
 #pragma omp parallel for collapse(2)
 		for (int m = 0; m < residuals; m += 2)
@@ -556,30 +556,37 @@ namespace smpl
 			else
 				for (int i = 0; i < unknowns; i++)
 					thetas(i) += delta(i);
+
+			std::cout << "Thetas\n";
+			for (int i = 0; i < unknowns; i++)
+				std::cout << thetas(i) << " ";
+			std::cout << "\n";
 		}
 	}
 
 	Eigen::Matrix4f SilhouetteOptimizer::CalculateView(Eigen::Vector3f translation) const
 	{
 		Eigen::Matrix4f view(Eigen::Matrix4f::Identity());
-		// mesh is facing from us, rotate 180 around y
-		view(0, 0) = -1;
-		view(1, 1) = 1;
-		view(2, 2) = -1;
-		// mesh should be put at distance
-		view(0, 3) = translation.x();
-		view(1, 3) = translation.y();
-		view(2, 3) = translation.z();
-		return view;
-	}
 
-	Eigen::Matrix3f SilhouetteOptimizer::CalculateView() const
-	{
-		Eigen::Matrix3f view(Eigen::Matrix3f::Identity());
-		// mesh is facing from us, rotate 180 around y
-		view(0, 0) = -1;
-		view(1, 1) = 1;
-		view(2, 2) = -1;
+		if (is_rhs_)
+		{
+			// put mesh at negative distance
+			view(0, 3) = translation.x();
+			view(1, 3) = translation.y();
+			view(2, 3) = -translation.z();
+		}
+		else 
+		{
+			// mesh is facing from us in LHS, rotate 180 around y
+			view(0, 0) = -1;
+			view(1, 1) = 1;
+			view(2, 2) = -1;
+
+			view(0, 3) = translation.x();
+			view(1, 3) = translation.y();
+			view(2, 3) = translation.z();
+		}
+
 		return view;
 	}
 }

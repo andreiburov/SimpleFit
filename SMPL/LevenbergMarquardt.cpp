@@ -21,12 +21,12 @@ bool LevenbergMarquardt::operator()(const Eigen::MatrixXf& jacobian,
 		cg.compute(JtJ);
 		delta = cg.solve(JtF);
 
-		std::cout << "Delta\n";
+		/*std::cout << "Delta\n";
 		for (int i = 0; i < unknowns_; i++)
 		{
 			std::cout << delta(i) << " ";
 		}
-		std::cout << std::endl;
+		std::cout << std::endl;*/
 
 		delta_old_ = delta;
 		last_residual_error_ = current_residual_error;

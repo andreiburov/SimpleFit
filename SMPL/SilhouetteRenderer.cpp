@@ -142,6 +142,38 @@ namespace smpl
 			}
 		}
 
+		// Create depth texture and attach a depth view to it
+		{
+			D3D11_TEXTURE2D_DESC depth_stencil_desc;
+			ZeroMemory(&depth_stencil_desc, sizeof(depth_stencil_desc));
+
+			depth_stencil_desc.Width = IMAGE_WIDTH;
+			depth_stencil_desc.Height = IMAGE_HEIGHT;
+			depth_stencil_desc.MipLevels = 1;
+			depth_stencil_desc.ArraySize = 1;
+			depth_stencil_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//DXGI_FORMAT_D16_UNORM;
+			depth_stencil_desc.SampleDesc.Count = 1;
+			depth_stencil_desc.SampleDesc.Quality = 0;
+			depth_stencil_desc.Usage = D3D11_USAGE_DEFAULT;
+			depth_stencil_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+			depth_stencil_desc.CPUAccessFlags = 0;
+			depth_stencil_desc.MiscFlags = 0;
+
+			VALIDATE(
+				device_->CreateTexture2D(&depth_stencil_desc, NULL, &depth_stencil_texture_),
+				"Cannot create depth stencil texture.");
+
+			D3D11_DEPTH_STENCIL_VIEW_DESC dept_stencil_view_desc;
+			ZeroMemory(&dept_stencil_view_desc, sizeof(dept_stencil_view_desc));
+			dept_stencil_view_desc.Format = depth_stencil_desc.Format;
+			dept_stencil_view_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+			dept_stencil_view_desc.Texture2D.MipSlice = 0;
+
+			VALIDATE(device_->CreateDepthStencilView(depth_stencil_texture_, 
+				&dept_stencil_view_desc, &depth_stencil_view_),
+				"Cannot create depth stencil view");
+		}
+
 		// set viewport
 		{
 			D3D11_VIEWPORT vp;
@@ -154,13 +186,13 @@ namespace smpl
 			device_context_->RSSetViewports(1, &vp);
 		}
 
-		// set rasterizer state
+		// Set rasterizer state
 		{
 			ID3D11RasterizerState* rasterizerState;
 
 			D3D11_RASTERIZER_DESC rasterizerStateDesc;
 			rasterizerStateDesc.FillMode = D3D11_FILL_SOLID;
-			rasterizerStateDesc.CullMode = D3D11_CULL_BACK;
+			rasterizerStateDesc.CullMode = D3D11_CULL_NONE;//D3D11_CULL_FRONT;
 			rasterizerStateDesc.FrontCounterClockwise = false;
 			rasterizerStateDesc.DepthBias = false;
 			rasterizerStateDesc.DepthBiasClamp = 0;
@@ -173,6 +205,30 @@ namespace smpl
 
 			device_context_->RSSetState(rasterizerState);
 		}
+
+		// Depth stencil state
+		{
+			D3D11_DEPTH_STENCILOP_DESC od;
+			od.StencilFunc = D3D11_COMPARISON_ALWAYS;
+			od.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+			od.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+			od.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+			D3D11_DEPTH_STENCIL_DESC dsd;
+			dsd.DepthEnable = TRUE;
+			dsd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+			dsd.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+			dsd.StencilEnable = FALSE;
+			dsd.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+			dsd.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+			dsd.FrontFace = od;
+			dsd.BackFace = od;
+			
+			VALIDATE(
+				device_->CreateDepthStencilState(&dsd, &depth_stencil_state_),
+				"Cannot create depth stencil state");
+
+			device_context_->OMSetDepthStencilState(depth_stencil_state_, 0);
+		}
 	}
 
 	Silhouette SilhouetteRenderer::operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
@@ -184,6 +240,7 @@ namespace smpl
 		{
 			device_context_->ClearRenderTargetView(render_target_views_[i], clear_color);
 		}
+		device_context_->ClearDepthStencilView(depth_stencil_view_, D3D11_CLEAR_DEPTH, 1.f, 0);
 
 		// Update the vertex buffer
 		{
@@ -210,7 +267,7 @@ namespace smpl
 		device_context_->GSSetShader(geometry_shader_, nullptr, 0);
 		device_context_->GSSetConstantBuffers(0, 1, &camera_constant_buffer_);
 		device_context_->PSSetShader(pixel_shader_, nullptr, 0);
-		device_context_->OMSetRenderTargets(render_targets_number_, render_target_views_, nullptr);
+		device_context_->OMSetRenderTargets(render_targets_number_, render_target_views_, depth_stencil_view_);	
 
 		device_context_->DrawIndexed(indices_count_, 0, 0);
 

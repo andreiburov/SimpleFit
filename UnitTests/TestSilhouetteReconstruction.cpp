@@ -221,7 +221,7 @@ TEST_CASE("Reconstruct Pose From Synthetic Silhouette")
 	Projector projector(Projector::Configuration(std::string("../Model")));
 	SilhouetteOptimizer silhouette_optimizer(generator, projector);
 
-	Eigen::Vector3f translation(0.f, 0.2f, 4.0f);
+	Eigen::Vector3f translation(0.f, 0.5f, 4.0f);
 	ShapeCoefficients input_betas;
 	PoseEulerCoefficients input_thetas;
 

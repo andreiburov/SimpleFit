@@ -149,7 +149,11 @@ namespace smpl
 
 		ID3D11Texture2D*		render_target_textures_[render_targets_number_];
 		ID3D11Texture2D*		render_target_staging_textures_[render_targets_number_];
+		ID3D11Texture2D*		depth_stencil_texture_;
 		ID3D11RenderTargetView* render_target_views_[render_targets_number_];
+		ID3D11DepthStencilView* depth_stencil_view_;
+		ID3D11DepthStencilState*
+								depth_stencil_state_;
 
 #ifdef _DEBUG
 		RENDERDOC_API_1_1_2*	rdoc_api_ = nullptr;

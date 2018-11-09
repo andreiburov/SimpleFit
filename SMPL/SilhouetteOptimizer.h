@@ -63,13 +63,15 @@ namespace smpl
 	private:
 
 		Eigen::Matrix4f CalculateView(Eigen::Vector3f translation) const;
-		Eigen::Matrix3f CalculateView() const;
 
 	private:
 
 		const Generator& generator_;
 		const Projector& projector_;
 		SilhouetteRenderer silhouette_renderer_;
+
+		// global parameters
+		int is_rhs_;
 
 		// hyper parameters
 		int ray_dist_ = 35;

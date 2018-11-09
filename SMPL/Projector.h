@@ -20,9 +20,17 @@ namespace smpl
 					intrinsics_file >> intrinsics[i];
 				}
 
+				std::ifstream projector_config(configuration_path + std::string("/projector_configuration.txt"));
+				if (intrinsics_file.fail()) MessageBoxA(NULL, "File not found: projector_configuration.txt", "Error", MB_OK);
+
+				projector_config >> near_ >> far_ >> is_rhs_;
 			}
 
 			float intrinsics[9];
+
+			float near_;
+			float far_;
+			int is_rhs_;
 		};
 
 		Projector(float* intrinsics);
@@ -39,16 +47,17 @@ namespace smpl
 
 		const Eigen::Matrix3f& GetIntrinsics() const { return intrinsics_; }
 
-		Eigen::Matrix4f GetDirectXProjection(float image_width, float image_height, float _near, float _far) const;
+		const int IsRhs() const { return is_rhs_; }
 
-		Eigen::Matrix4f GetDirectXProjection(float image_width, float image_height) const;
-
-	private:
-		Eigen::Matrix4f CalculateNDC(float left, float right, float bottom, float top, float _near, float _far) const;
+		Eigen::Matrix4f GetDirectXProjection(float width, float height) const;
 
 	private:
-		const float near_ = 0.001f;
-		const float far_ = 10.f;
+		Eigen::Matrix4f CalculateNDC(float width, float height) const;
+
+	private:
 		const Eigen::Matrix3f intrinsics_;
+		const float near_ = 0.1f;
+		const float far_ = 10.f;
+		const int is_rhs_ = 1; // works as boolean
 	};
 }
