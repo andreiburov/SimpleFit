@@ -133,8 +133,6 @@
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
-    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64;$(SolutionDir)eigen-eigen-5a0156e40feb;C:\Program Files\RenderDoc;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -148,8 +146,7 @@
     <LinkIncremental>true</LinkIncremental>
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
-    <IncludePath>$(SolutionDir)FreeImage-3170\Dist\x64;$(SolutionDir)eigen-eigen-5a0156e40feb;C:\Program Files\RenderDoc;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)FreeImage-3170\Dist\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -170,6 +167,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;_HAS_ITERATOR_DEBUGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -179,6 +177,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;d3d11.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -231,6 +230,7 @@ copy *.cso ..\x64\Release\ /Y</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -238,6 +238,7 @@ copy *.cso ..\x64\Release\ /Y</Command>
     </Link>
     <Lib>
       <AdditionalDependencies>FreeImage.lib;d3d11.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>

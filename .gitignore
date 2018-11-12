@@ -5,26 +5,16 @@
 
 # Project-specific
 Resources/
-Archive/
-examples/
-eigen-eigen-5a0156e40feb/
-OpenCV-2.4.13.6/
-FreeImage-3170/
-Catch2/
-AntTweakBar_116/
-mLib/
-src/openpose/
-openpose/
-Main/Photos/
-ReconstructionTemp/
-Utilities/Video/
+3rdparty/
 UnitTests/Frames0_joints/
-UnitTests/Captures/
+Demo/models
+*.jpg
 *.png
 *.avi
 *.normals
 *.vertex_indices
 *.barycentrics
+*.rdc
 
 # Linux
 *.swp
