@@ -13,4 +13,6 @@ int Convert(int argc, char** argv);
 // smpl.posedirs smpl.posedirs.txt
 void ConvertBack(int argc, char** argv);
 
+int Serialize(int argc, char** argv);
+
 void FreeImageExample();

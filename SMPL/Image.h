@@ -58,7 +58,7 @@ namespace smpl
 			float gray = (0.3f * static_cast<float>(rc()/255) +
 				(0.59f * static_cast<float>(gc()/255)) + 
 				(0.11f * static_cast<float>(bc()/255)));
-			return max(0.f, min(1.f, gray));
+			return std::max(0.f, std::min(1.f, gray));
 		}
 
 		bool operator==(const PIXEL& rgb) const

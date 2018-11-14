@@ -20,29 +20,35 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Body.cpp" />
+    <ClCompile Include="Reconstruction.cpp" />
     <ClCompile Include="Definitions.cpp" />
     <ClCompile Include="EulerAngles.cpp" />
     <ClCompile Include="Generator.cpp" />
     <ClCompile Include="Image.cpp" />
+    <ClCompile Include="JointsEnergy.cpp" />
     <ClCompile Include="LevenbergMarquardt.cpp" />
+    <ClCompile Include="PriorEnergy.cpp" />
     <ClCompile Include="Projector.cpp" />
     <ClCompile Include="JointRegressor.cpp" />
     <ClCompile Include="Optimizer.cpp" />
     <ClCompile Include="SilhouetteRenderer.cpp" />
-    <ClCompile Include="SilhouetteOptimizer.cpp" />
+    <ClCompile Include="SilhouetteEnergy.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Body.h" />
+    <ClInclude Include="Reconstruction.h" />
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="EulerAngles.h" />
     <ClInclude Include="Image.h" />
+    <ClInclude Include="JointsEnergy.h" />
     <ClInclude Include="LevenbergMarquardt.h" />
+    <ClInclude Include="PriorEnergy.h" />
     <ClInclude Include="Projector.h" />
     <ClInclude Include="JointRegressor.h" />
     <ClInclude Include="Optimizer.h" />
     <ClInclude Include="SilhouetteRenderer.h" />
-    <ClInclude Include="SilhouetteOptimizer.h" />
+    <ClInclude Include="SilhouetteEnergy.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Definitions.h" />
     <ClInclude Include="Generator.h" />
@@ -167,7 +173,8 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;_HAS_ITERATOR_DEBUGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -230,7 +237,7 @@ copy *.cso ..\x64\Release\ /Y</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

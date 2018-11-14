@@ -24,10 +24,10 @@ namespace smpl
 		std::vector<Point<float> > distance;
 	};
 
-	class SilhouetteOptimizer
+	class SilhouetteEnergy
 	{
 	public:
-		SilhouetteOptimizer(const Generator& generator, const Projector& projector);
+		SilhouetteEnergy(const Generator& generator, const Projector& projector);
 
 		Correspondences FindCorrespondences(const Image& input, const Image& model, const std::vector<float4>& normals);
 

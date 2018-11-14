@@ -1,0 +1,11 @@
+{
+    "with_normals": true,
+    "output_path": "hello world",
+    "precision": 0.10000000149011612,
+    "iterations": 10,
+    "numbers": [
+        3,
+        2,
+        1
+    ]
+}

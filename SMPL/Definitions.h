@@ -6,6 +6,11 @@
 #include <sstream>
 #include "DXUtils.h"
 
+#ifdef max
+#undef max
+#undef min
+#endif
+
 namespace smpl
 {
 	const int BETA_COUNT = 10;

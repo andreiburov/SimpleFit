@@ -54,6 +54,9 @@
     <ClCompile Include="TestSilhouetteRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestJointsReconstruction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Settings\UnitTests.runsettings" />

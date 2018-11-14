@@ -1,4 +1,4 @@
-#include "SilhouetteOptimizer.h"
+#include "SilhouetteEnergy.h"
 
 #include <stdexcept>
 #include <cmath>
@@ -9,16 +9,16 @@ namespace smpl
 {
 	bool IsBorderingPixelBlack(const Image& image, int i, int j)
 	{
-		if (image(max(0, i - 1), max(0, j - 1)).IsBlack() ||
-			image(i, max(0, j - 1)).IsBlack() ||
-			image(min(IMAGE_WIDTH - 1, i + 1), max(0, j - 1)).IsBlack() ||
+		if (image(std::max(0, i - 1), std::max(0, j - 1)).IsBlack() ||
+			image(i, std::max(0, j - 1)).IsBlack() ||
+			image(std::min(IMAGE_WIDTH - 1, i + 1), std::max(0, j - 1)).IsBlack() ||
 
-			image(max(0, i - 1), j).IsBlack() ||
-			image(min(IMAGE_WIDTH - 1, i + 1), j).IsBlack() ||
+			image(std::max(0, i - 1), j).IsBlack() ||
+			image(std::min(IMAGE_WIDTH - 1, i + 1), j).IsBlack() ||
 
-			image(max(0, i - 1), min(IMAGE_HEIGHT - 1, j + 1)).IsBlack() ||
-			image(i, min(IMAGE_HEIGHT - 1, j + 1)).IsBlack() ||
-			image(min(IMAGE_WIDTH - 1, i + 1), min(IMAGE_HEIGHT - 1, j + 1)).IsBlack()
+			image(std::max(0, i - 1), std::min(IMAGE_HEIGHT - 1, j + 1)).IsBlack() ||
+			image(i, std::min(IMAGE_HEIGHT - 1, j + 1)).IsBlack() ||
+			image(std::min(IMAGE_WIDTH - 1, i + 1), std::min(IMAGE_HEIGHT - 1, j + 1)).IsBlack()
 			)
 			return true;
 		else
@@ -50,7 +50,7 @@ namespace smpl
 		int y = y0;
 
 		// start loop to set nPixels
-		int nPixels = static_cast<int>(max(dx, -dy));
+		int nPixels = static_cast<int>(std::max(dx, -dy));
 		for (int i = 0; i < nPixels; ++i)
 		{
 			if (painted) model(x, y) = BLUE;
@@ -124,7 +124,7 @@ namespace smpl
 		}
 	}
 
-	SilhouetteOptimizer::SilhouetteOptimizer(const Generator& generator, const Projector& projector) :
+	SilhouetteEnergy::SilhouetteEnergy(const Generator& generator, const Projector& projector) :
 		generator_(generator), projector_(projector), silhouette_renderer_(generator_(true)), is_rhs_(projector.IsRhs()),
 		pose_prior_per_theta_({
 		10, 10, 10, // 0
@@ -155,7 +155,7 @@ namespace smpl
 	{
 	}
 
-	Correspondences SilhouetteOptimizer::FindCorrespondences(const Image& input, const Image& model, const std::vector<float4>& normals)
+	Correspondences SilhouetteEnergy::FindCorrespondences(const Image& input, const Image& model, const std::vector<float4>& normals)
 	{
 		Image correspondences(model);
 		Image input_contour(input);
@@ -219,7 +219,7 @@ namespace smpl
 		return result;
 	}
 
-	void SilhouetteOptimizer::PruneCorrepondences(const Image& input, const Image& model, const std::vector<float4>& normals,
+	void SilhouetteEnergy::PruneCorrepondences(const Image& input, const Image& model, const std::vector<float4>& normals,
 		Correspondences& correspondences)
 	{
 		std::vector<Point<float> > input_normals;
@@ -314,7 +314,7 @@ namespace smpl
 		correspondences.image = draw_correspondences;
 	}
 
-	Silhouette SilhouetteOptimizer::Infer(const std::string& image_filename, Eigen::Vector3f& translation,
+	Silhouette SilhouetteEnergy::Infer(const std::string& image_filename, Eigen::Vector3f& translation,
 		ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		Body body = generator_(betas, thetas, true);
@@ -323,7 +323,7 @@ namespace smpl
 		return result;
 	}
 
-	void SilhouetteOptimizer::ComputeSilhouetteError(const Correspondences& correspondences,
+	void SilhouetteEnergy::ComputeSilhouetteError(const Correspondences& correspondences,
 		const int residuals, Eigen::VectorXf& error) const
 	{
 #pragma omp parallel for
@@ -340,7 +340,7 @@ namespace smpl
 		error *= silhouette_weight_;
 	}
 
-	void SilhouetteOptimizer::ComputePosePriorError(
+	void SilhouetteEnergy::ComputePosePriorError(
 		const PoseEulerCoefficients& thetas, Eigen::VectorXf error) const
 	{
 #pragma omp parallel for
@@ -350,7 +350,7 @@ namespace smpl
 		}
 	}
 
-	void SilhouetteOptimizer::ComputeSilhouetteFromShapeJacobian(
+	void SilhouetteEnergy::ComputeSilhouetteFromShapeJacobian(
 		const Body& body, const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
 		const Silhouette& silhouette, const Correspondences& correspondences, 
 		const int residuals, Eigen::MatrixXf& jacobian) const
@@ -388,7 +388,7 @@ namespace smpl
 		}
 	}
 
-	void SilhouetteOptimizer::ComputeSilhouetteFromPoseJacobian(
+	void SilhouetteEnergy::ComputeSilhouetteFromPoseJacobian(
 		const Body& body, const std::vector<float3>& dpose, const Eigen::Vector3f& translation,
 		const Silhouette& silhouette, const Correspondences& correspondences,
 		const int residuals, Eigen::MatrixXf& jacobian) const
@@ -432,7 +432,7 @@ namespace smpl
 		jacobian *= silhouette_weight_;
 	}
 
-	void SilhouetteOptimizer::ComputePosePriorJacobian(Eigen::MatrixXf& jacobian) const
+	void SilhouetteEnergy::ComputePosePriorJacobian(Eigen::MatrixXf& jacobian) const
 	{
 #pragma omp parallel for
 		for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
@@ -441,7 +441,7 @@ namespace smpl
 		}
 	}
 
-	void SilhouetteOptimizer::ReconstructShape(const std::string& log_path, const Image& input,
+	void SilhouetteEnergy::ReconstructShape(const std::string& log_path, const Image& input,
 		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
 		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT); // dsmpl/dbeta
@@ -494,7 +494,7 @@ namespace smpl
 		}
 	}
 
-	void SilhouetteOptimizer::ReconstructPose(
+	void SilhouetteEnergy::ReconstructPose(
 		const std::string& log_path, const Image& input, const int ray_dist,
 		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
 	{
@@ -564,7 +564,7 @@ namespace smpl
 		}
 	}
 
-	Eigen::Matrix4f SilhouetteOptimizer::CalculateView(Eigen::Vector3f translation) const
+	Eigen::Matrix4f SilhouetteEnergy::CalculateView(Eigen::Vector3f translation) const
 	{
 		Eigen::Matrix4f view(Eigen::Matrix4f::Identity());
 

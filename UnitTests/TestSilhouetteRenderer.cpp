@@ -50,7 +50,7 @@ TEST_CASE("Create Silhouette from Shape")
 {
 	Generator generator(Generator::Configuration(std::string("../Model")));
 	Projector projector(Projector::Configuration(std::string("../Model")));
-	SilhouetteOptimizer silhouette_optimizer(generator, projector);
+	SilhouetteEnergy silhouette_optimizer(generator, projector);
 
 	Eigen::Vector3f input_translation(0.f, 0.4f, 4.5f);
 	ShapeCoefficients input_betas;

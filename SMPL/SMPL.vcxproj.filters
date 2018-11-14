@@ -44,9 +44,6 @@
     <ClInclude Include="EulerAngles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SilhouetteOptimizer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LevenbergMarquardt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -54,6 +51,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SilhouetteRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SilhouetteEnergy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PriorEnergy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="JointsEnergy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Reconstruction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -82,9 +91,6 @@
     <ClCompile Include="Definitions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SilhouetteOptimizer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LevenbergMarquardt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -92,6 +98,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SilhouetteRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SilhouetteEnergy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PriorEnergy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="JointsEnergy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Reconstruction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

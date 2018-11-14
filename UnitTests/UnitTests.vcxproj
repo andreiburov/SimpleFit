@@ -91,7 +91,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)SMPL;$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)3rdparty\Catch2;$(SolutionDir)3rdparty\Eigen-3.3.4;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)SMPL;$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)3rdparty\Catch2;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)SMPL;$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)3rdparty\Catch2;$(SolutionDir)3rdparty\Eigen-3.3.4;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)SMPL;$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)3rdparty\Catch2;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -158,6 +158,7 @@
     <ClCompile Include="TestEigen.cpp" />
     <ClCompile Include="TestEulerAngles.cpp" />
     <ClCompile Include="TestExtrinsics.cpp" />
+    <ClCompile Include="TestJointsReconstruction.cpp" />
     <ClCompile Include="TestKinematicChain.cpp" />
     <ClCompile Include="TestReconstruction.cpp" />
     <ClCompile Include="TestPoseReconstruction2D.cpp" />

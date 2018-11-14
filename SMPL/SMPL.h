@@ -5,4 +5,5 @@
 #include "JointRegressor.h"
 #include "Image.h"
 #include "SilhouetteRenderer.h"
-#include "SilhouetteOptimizer.h"
+#include "SilhouetteEnergy.h"
+#include "Reconstruction.h"
