@@ -29,7 +29,7 @@ namespace smpl
 		"HAND_LEFT",
 	};
 
-	std::vector<float3> Joints2Vector(const Joints& joints)
+	std::vector<float3> Joints2Vector(const RegressedJoints& joints)
 	{
 		std::vector<float3> r;
 

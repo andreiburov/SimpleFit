@@ -67,7 +67,7 @@ TEST_CASE("Create Silhouette from Pose")
 	Projector projector(Projector::Configuration(std::string("../Model")));
 	auto view = CreateView();
 	auto projection = projector.
-		GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), static_cast<float>(IMAGE_HEIGHT));
+		DirectXProjection(static_cast<float>(IMAGE_WIDTH), static_cast<float>(IMAGE_HEIGHT));
 
 	Generator generator(Generator::Configuration(std::string("../Model")));
 	SilhouetteRenderer silhouette_renderer(generator(true));

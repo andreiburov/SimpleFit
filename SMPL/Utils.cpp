@@ -41,6 +41,11 @@ namespace smpl
 		return gpu_matrix;
 	}
 
+	Eigen::Vector3f mul(const Eigen::Matrix4f& matrix, const Eigen::Vector3f& vector)
+	{
+		return (matrix * vector.homogeneous()).head(3);
+	}
+
 	Eigen::SparseMatrix<float> SparseMatrix::ToEigen(const uint& joint_count) const
 	{
 		Eigen::SparseMatrix<float> matrix(joint_count, VERTEX_COUNT);

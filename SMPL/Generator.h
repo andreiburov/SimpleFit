@@ -3,7 +3,7 @@
 #include "Definitions.h"
 #include "Body.h"
 #include "Utils.h"
-#include "JointRegressor.h"
+#include "JointsRegressor.h"
 #include "EulerAngles.h"
 
 namespace smpl {
@@ -57,7 +57,7 @@ namespace smpl {
 		}
 
 		void operator()(const PoseAxisAngleCoefficients& thetas, 
-			const Joints& joints, std::vector<float3>& vertices) const;
+			const RegressedJoints& joints, std::vector<float3>& vertices) const;
 
 		/*
 			Applies skinning to the vertices of the smpl body.
@@ -65,12 +65,12 @@ namespace smpl {
 			is applied to stride = vertices.size() / VERTEX_COUNT number of vertices.
 		*/
 		void operator()(const PoseEulerCoefficients& thetas, 
-			const Joints& joints, std::vector<float3>& vertices) const;
+			const RegressedJoints& joints, std::vector<float3>& vertices) const;
 
 		/*
 			Applies skinning to the vertices of the smpl body.
 			The matrix palette from previous invocation of 
-			operator()(const PoseEulerCoefficients&, const Joints&, std::vector<float3>&)
+			operator()(const PoseEulerCoefficients&, const RegressedJoints&, std::vector<float3>&)
 			is used.
 		*/
 		void operator()(std::vector<float3>& vertices) const;
@@ -189,7 +189,7 @@ namespace smpl {
 			return skin_morph_.GetPartTransformations();
 		}
 
-		const JointRegressor& GetJointRegressor() const
+		const JointsRegressor& GetJointRegressor() const
 		{
 			return joint_regressor_;
 		}
@@ -203,7 +203,7 @@ namespace smpl {
 		const std::vector<float3> vertices_;
 		const std::vector<uint> indices_;
 		const IdentityMorph identity_morph_;
-		const JointRegressor joint_regressor_;
+		const JointsRegressor joint_regressor_;
 		const PoseMorph pose_morph_;
 		const SkinMorph skin_morph_;
 	};

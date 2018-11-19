@@ -7,40 +7,46 @@
 
 namespace smpl
 {
-	Reconstruction::Reconstruction(Configuration&& configuration) :
-		generator_(configuration.configuration_path),
-		projector_(configuration.configuration_path),
+	Reconstruction::Reconstruction(const Configuration& configuration) :
+		generator_(configuration.model_path_),
+		projector_(configuration.model_path_),
+		regressor_(JointsRegressor::Configuration(configuration.model_path_, JointsRegressor::COCO)),
 		silhouette_renderer_(generator_(true)),
 
 		// configuration
-		output_path_(configuration.output_path_),
+		logging_on_(configuration.logging_on_),
+		joints_weight_(configuration.joints_weight_),
 		iterations_(configuration.iterations_),
+		model_path_(configuration.model_path_),
+		output_path_(configuration.output_path_),
 		translation_(configuration.translation_)
 	{
 	}
 
 	void Reconstruction::BodyFromSilhouette(const Image& silhouette, ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const
 	{
-
 	}
 
-	void Reconstruction::BodyFromJoints(const std::vector<Point<int> >& joints, Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const
+	void Reconstruction::BodyFromJoints(
+		const std::vector<float>& joints, Eigen::Vector3f& translation, 
+		ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const
 	{
-		JointsEnergy joint_energy(generator_, projector_);
+		JointsEnergy joint_energy(generator_, projector_, regressor_);
 	}
 
-	void Reconstruction::ShapeFromJoints(const std::vector<Point<int> >& joints, ShapeCoefficients& betas) const
+	void Reconstruction::ShapeFromJoints(const std::vector<float>& input_joints, ShapeCoefficients& betas) const
 	{
 		PoseEulerCoefficients thetas;
-		Eigen::Vector3f translation(translation_[0], translation_[1], translation_[2]);
-		JointsEnergy joint_energy(generator_, projector_);
+		Eigen::Vector3f translation(translation_);
+		JointsEnergy joints_energy(generator_, projector_, regressor_);
 
 		const int unknowns = BETA_COUNT;
-		LevenbergMarquardt lm_solver(unknowns);
+		LevenbergMarquardt lm_solver(unknowns, logging_on_);
 
 		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT); // dsmpl/dbeta
 		for (int iteration = 0; iteration < iterations_; iteration++)
 		{
+			if (logging_on_)
 			std::cout << "Iteration " << iteration << std::endl;
 
 			Body body = generator_(betas, thetas, false);	
@@ -48,13 +54,15 @@ namespace smpl
 			// Prepare Jacobians and Errors
 
 			// should be x2 since each point has two components
-			const int residuals_joints = static_cast<int>(joints.size() * 2);
+			const int residuals_joints = static_cast<int>(input_joints.size());
 			Eigen::MatrixXf jacobian_joints = Eigen::MatrixXf::Zero(residuals_joints, unknowns);
 			Eigen::VectorXf error_joints = Eigen::VectorXf::Zero(residuals_joints);
 
-			joint_energy.ComputeError(body.joints, joints, residuals_joints, error_joints);
+			joints_energy.ComputeError(input_joints, regressor_(body.vertices), translation, 
+				residuals_joints, joints_weight_, error_joints);
 			generator_.ComputeBodyFromShapeJacobian(dshape);
-			joint_energy.ComputeJacobianFromShape(body, dshape, translation, residuals_joints, jacobian_joints);
+			joints_energy.ComputeJacobianFromShape(body, dshape, translation, 
+				residuals_joints, joints_weight_, jacobian_joints);
 
 			// Reconstruction
 			const int residuals = residuals_joints;
@@ -74,10 +82,25 @@ namespace smpl
 				for (int i = 0; i < unknowns; i++)
 					betas[i] += delta(i);
 
-			std::cout << "Betas\n";
-			for (int i = 0; i < unknowns; i++)
-				std::cout << betas[i] << " ";
-			std::cout << "\n";
+			if (logging_on_)
+			{
+				if (minimized)
+				{
+					std::cout << "Betas" << std::endl;
+					for (int i = 0; i < unknowns; i++)
+						std::cout << betas[i] << " ";
+					std::cout << std::endl;
+				}
+
+				std::vector<float> joints = Image::Coordinates(
+					projector_.FromRegressed(regressor_(body.vertices), translation));
+
+				Image image;
+				Image::Draw3D(image, Pixel::White(), projector_, translation, body.vertices);
+				Image::Draw2D(image, Pixel::Blue(), joints);
+				Image::Draw2D(image, Pixel::Yellow(), input_joints);
+				image.SavePNG(output_path_ + std::to_string(iteration) + ".png");
+			}
 		}
 	}
 }

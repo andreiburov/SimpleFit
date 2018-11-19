@@ -16,7 +16,7 @@ namespace pose_reconstruction_2d
 	//SparseMatrix smpl_matrix, coco_matrix;
 	//Eigen::Vector3f	translation(0.f, 0.2f, -4.f);
 
-	//void LogBodyAndProjection(const Body& body, const Joints& joints, const Projector& project,
+	//void LogBodyAndProjection(const Body& body, const RegressedJoints& joints, const Projector& project,
 	//	const std::string& body_filename, const std::string& projection_filename)
 	//{
 	//	body.Dump(body_filename);
@@ -26,7 +26,7 @@ namespace pose_reconstruction_2d
 	//	image.SavePNG(projection_filename);
 	//}
 
-	//void LogBodyAndProjectionWithCorrespondances(const Body& body, const Joints& joints, 
+	//void LogBodyAndProjectionWithCorrespondances(const Body& body, const RegressedJoints& joints, 
 	//	const std::vector<float>& correspondances, const Projector& project,
 	//	const std::string& body_filename, const std::string& projection_filename)
 	//{
@@ -44,12 +44,12 @@ namespace pose_reconstruction_2d
 	//	ZeroMemory(&shape, sizeof(shape));
 
 	//	Optimizer::Configuration configuration("../Model");
-	//	JointRegressor smpl_regressor(configuration.smpl_regressor, smpl::JOINT_COUNT);
-	//	JointRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
+	//	JointsRegressor smpl_regressor(configuration.smpl_regressor, smpl::JOINT_COUNT);
+	//	JointsRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
 	//	Projector project(configuration.intrinsics);
 
 	//	Body body2 = generator(shape, pose);
-	//	Joints joints2 = (joint_type == smpl::Optimizer::JOINT_TYPE::COCO ?
+	//	RegressedJoints joints2 = (joint_type == smpl::Optimizer::JOINT_TYPE::COCO ?
 	//		coco_regressor(body2.vertices) : smpl_regressor(body2.vertices));
 	//	LogBodyAndProjection(body2, joints2, project, "Body2.obj", "Body2.png");
 
@@ -68,7 +68,7 @@ namespace pose_reconstruction_2d
 	//	optimize.OptimizePoseFromJoints2D(joint_type, "black.png", translation, shape, pose);
 
 	//	Body body1 = generator(shape, pose);
-	//	Joints joints1 = (joint_type == smpl::Optimizer::JOINT_TYPE::COCO ?
+	//	RegressedJoints joints1 = (joint_type == smpl::Optimizer::JOINT_TYPE::COCO ?
 	//		coco_regressor(body1.vertices) : smpl_regressor(body1.vertices));
 	//	LogBodyAndProjection(body1, joints1, project, "Body1.obj", "Body1.png");
 	//}
@@ -82,7 +82,7 @@ namespace pose_reconstruction_2d
 	//	ZeroMemory(&pose, sizeof(pose));
 
 	//	Optimizer::Configuration configuration("../Model");
-	//	JointRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
+	//	JointsRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
 	//	Projector project(configuration.intrinsics);
 	//	smpl::Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 	//	smpl::Optimizer optimize(configuration,	generator, tracked_joints);
@@ -91,7 +91,7 @@ namespace pose_reconstruction_2d
 	//		image_filename, translation, shape, pose);
 	//	
 	//	Body body = generator(shape, pose);
-	//	Joints joints = coco_regressor(body.vertices);
+	//	RegressedJoints joints = coco_regressor(body.vertices);
 	//	LogBodyAndProjectionWithCorrespondances(body, joints, tracked_joints, project, "Body2.obj", "Body2.png");
 	//}
 

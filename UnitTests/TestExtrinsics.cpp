@@ -13,7 +13,7 @@ namespace extrinsics
 	Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 	Eigen::Vector3f	translation(0, 0, -4.f);
 
-	void LogBodyAndProjection(const Body& body, const Joints& joints, const Projector& project,
+	void LogBodyAndProjection(const Body& body, const RegressedJoints& joints, const Projector& project,
 		const std::string& body_filename, const std::string& projection_filename)
 	{
 		body.Dump(body_filename);

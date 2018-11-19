@@ -14,7 +14,7 @@ namespace reconstruction
 	//SparseMatrix smpl_matrix, coco_matrix;
 	//Eigen::Vector3f	translation(0.f, 0.2f, -4.f);
 
-	//void LogBodyAndProjectionWithCorrespondances(const Body& body, const Joints& joints,
+	//void LogBodyAndProjectionWithCorrespondances(const Body& body, const RegressedJoints& joints,
 	//	const std::vector<float>& correspondances, const Projector& project,
 	//	const std::string& body_filename, const std::string& projection_filename)
 	//{
@@ -34,7 +34,7 @@ namespace reconstruction
 	//	ZeroMemory(&pose, sizeof(pose));
 
 	//	Optimizer::Configuration configuration("../Model");
-	//	JointRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
+	//	JointsRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
 	//	Projector project(configuration.intrinsics);
 	//	smpl::Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 	//	smpl::Optimizer optimize(configuration, generator, tracked_joints);
@@ -70,7 +70,7 @@ namespace reconstruction
 	//	optimize.ReconstructFine(image_filename, translation, shape, pose, count);
 
 	//	Body body = generator(shape, pose);
-	//	Joints joints = coco_regressor(body.vertices);
+	//	RegressedJoints joints = coco_regressor(body.vertices);
 	//	LogBodyAndProjectionWithCorrespondances(body, joints, tracked_joints, project, "Body2.obj", "Body2.png");
 	//}
 
@@ -82,7 +82,7 @@ namespace reconstruction
 	//	ZeroMemory(&pose, sizeof(pose));
 
 	//	Optimizer::Configuration configuration("../Model");
-	//	JointRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
+	//	JointsRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
 	//	Projector project(configuration.intrinsics);
 	//	smpl::Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 	//	smpl::Optimizer optimize(configuration, generator, tracked_joints);
@@ -99,7 +99,7 @@ namespace reconstruction
 	//	optimize.ReconstructTotal(image_filename, translation, shape, pose, count);
 
 	//	Body body = generator(shape, pose);
-	//	Joints joints = coco_regressor(body.vertices);
+	//	RegressedJoints joints = coco_regressor(body.vertices);
 	//	LogBodyAndProjectionWithCorrespondances(body, joints, tracked_joints, project, "Body2.obj", "Body2.png");
 	//}
 
@@ -111,7 +111,7 @@ namespace reconstruction
 	//	ZeroMemory(&pose, sizeof(pose));
 
 	//	Optimizer::Configuration configuration("../Model");
-	//	JointRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
+	//	JointsRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
 	//	Projector project(configuration.intrinsics);
 	//	smpl::Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 	//	smpl::Optimizer optimize(configuration, generator, tracked_joints);
@@ -129,7 +129,7 @@ namespace reconstruction
 	//	ZeroMemory(&pose, sizeof(pose));
 
 	//	Optimizer::Configuration configuration("../Model");
-	//	JointRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
+	//	JointsRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
 	//	Projector project(configuration.intrinsics);
 	//	smpl::Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 	//	smpl::Optimizer optimize(configuration, generator, tracked_joints);
@@ -178,7 +178,7 @@ namespace reconstruction
 	//	ZeroMemory(&pose, sizeof(pose));
 
 	//	Optimizer::Configuration configuration("../Model");
-	//	JointRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
+	//	JointsRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
 	//	Projector project(configuration.intrinsics);
 	//	smpl::Generator generator(smpl::Generator::Configuration(std::string("../Model")));
 

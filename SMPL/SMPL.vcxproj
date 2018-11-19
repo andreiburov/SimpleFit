@@ -29,7 +29,7 @@
     <ClCompile Include="LevenbergMarquardt.cpp" />
     <ClCompile Include="PriorEnergy.cpp" />
     <ClCompile Include="Projector.cpp" />
-    <ClCompile Include="JointRegressor.cpp" />
+    <ClCompile Include="JointsRegressor.cpp" />
     <ClCompile Include="Optimizer.cpp" />
     <ClCompile Include="SilhouetteRenderer.cpp" />
     <ClCompile Include="SilhouetteEnergy.cpp" />
@@ -45,7 +45,7 @@
     <ClInclude Include="LevenbergMarquardt.h" />
     <ClInclude Include="PriorEnergy.h" />
     <ClInclude Include="Projector.h" />
-    <ClInclude Include="JointRegressor.h" />
+    <ClInclude Include="JointsRegressor.h" />
     <ClInclude Include="Optimizer.h" />
     <ClInclude Include="SilhouetteRenderer.h" />
     <ClInclude Include="SilhouetteEnergy.h" />
@@ -174,7 +174,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;</AdditionalIncludeDirectories>
-      <OpenMPSupport>true</OpenMPSupport>
+      <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -183,8 +183,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>FreeImage.lib;d3d11.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -196,7 +198,8 @@
       </Outputs>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy *.cso ..\UnitTests\ /Y
+      <Command>@echo Copy CSO to UnitTests and x64\Release
+copy *.cso ..\UnitTests\ /Y
 copy *.cso ..\x64\Release\ /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -244,8 +247,10 @@ copy *.cso ..\x64\Release\ /Y</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>FreeImage.lib;d3d11.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -257,7 +262,8 @@ copy *.cso ..\x64\Release\ /Y</Command>
       </Outputs>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy *.cso ..\UnitTests\ /Y
+      <Command>@echo Copy CSO to UnitTests and x64\Debug
+copy *.cso ..\UnitTests\ /Y
 copy *.cso ..\x64\Debug\ /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

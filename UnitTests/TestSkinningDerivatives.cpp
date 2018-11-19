@@ -71,7 +71,7 @@ namespace skinning_derivatives
 //		ZeroMemory(&zero_pose, sizeof(zero_pose));
 //
 //		Body body1 = generator(shape, zero_pose);
-//		Joints joints = optimizer.RegressJoints(body1, Optimizer::JOINT_TYPE::SMPL);
+//		RegressedJoints joints = optimizer.RegressJoints(body1, Optimizer::JOINT_TYPE::SMPL);
 //
 //		dskinning = new Eigen::Matrix4f[JOINT_COUNT * JOINT_COUNT * 3];
 //		optimizer.ComputeSkinningDerivatives(pose, joints, palette, dskinning);

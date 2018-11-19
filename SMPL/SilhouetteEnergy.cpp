@@ -319,7 +319,7 @@ namespace smpl
 	{
 		Body body = generator_(betas, thetas, true);
 		Silhouette result = silhouette_renderer_(body, CalculateView(translation),
-			projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), static_cast<float>(IMAGE_HEIGHT)));
+			projector_.DirectXProjection(static_cast<float>(IMAGE_WIDTH), static_cast<float>(IMAGE_HEIGHT)));
 		return result;
 	}
 
@@ -357,23 +357,22 @@ namespace smpl
 	{
 		Eigen::Matrix3f view = CalculateView(translation).block<3, 3>(0, 0);
 
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for
 		for (int m = 0; m < residuals; m += 2)
 		{
 			const int x = correspondences.model_border[m / 2].x;
 			const int y = correspondences.model_border[m / 2].y;
-
 			const int4& indices = silhouette.GetVertexIndices()[y*IMAGE_WIDTH + x];
 			const float4& barycentrics = silhouette.GetBarycentrics()[y*IMAGE_WIDTH + x];
 
+			Eigen::Vector3f v0 = view * body.vertices[indices[0]].ToEigen() + translation;
+			Eigen::Vector3f v1 = view * body.vertices[indices[1]].ToEigen() + translation;
+			Eigen::Vector3f v2 = view * body.vertices[indices[2]].ToEigen() + translation;
+			Eigen::Vector3f interpolated = barycentrics[0] * v0 +
+				barycentrics[1] * v1 + barycentrics[2] * v2;
+
 			for (int j = 0; j < BETA_COUNT; j++)
 			{
-				Eigen::Vector3f v0 = view * body.vertices[indices[0]].ToEigen() + translation;
-				Eigen::Vector3f v1 = view * body.vertices[indices[1]].ToEigen() + translation;
-				Eigen::Vector3f v2 = view * body.vertices[indices[2]].ToEigen() + translation;
-				Eigen::Vector3f interpolated = barycentrics[0] * v0 +
-					barycentrics[1] * v1 + barycentrics[2] * v2;
-
 				Eigen::Vector3f dv0 = view * dshape[indices[0] * BETA_COUNT + j].ToEigen();
 				Eigen::Vector3f dv1 = view * dshape[indices[1] * BETA_COUNT + j].ToEigen();
 				Eigen::Vector3f dv2 = view * dshape[indices[2] * BETA_COUNT + j].ToEigen();
@@ -395,23 +394,22 @@ namespace smpl
 	{
 		Eigen::Matrix3f view = CalculateView(translation).block<3, 3>(0, 0);
 
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for
 		for (int m = 0; m < residuals; m += 2)
 		{
 			const int x = correspondences.model_border[m / 2].x;
 			const int y = correspondences.model_border[m / 2].y;
-
 			const int4& indices = silhouette.GetVertexIndices()[y*IMAGE_WIDTH + x];
 			const float4& barycentrics = silhouette.GetBarycentrics()[y*IMAGE_WIDTH + x];
 
+			Eigen::Vector3f v0 = view * body.vertices[indices[0]].ToEigen() + translation;
+			Eigen::Vector3f v1 = view * body.vertices[indices[1]].ToEigen() + translation;
+			Eigen::Vector3f v2 = view * body.vertices[indices[2]].ToEigen() + translation;
+			Eigen::Vector3f interpolated = barycentrics[0] * v0 +
+				barycentrics[1] * v1 + barycentrics[2] * v2;
+
 			for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
 			{
-				Eigen::Vector3f v0 = view * body.vertices[indices[0]].ToEigen() + translation;
-				Eigen::Vector3f v1 = view * body.vertices[indices[1]].ToEigen() + translation;
-				Eigen::Vector3f v2 = view * body.vertices[indices[2]].ToEigen() + translation;
-				Eigen::Vector3f interpolated = barycentrics[0] * v0 +
-					barycentrics[1] * v1 + barycentrics[2] * v2;
-
 				Eigen::Vector3f dv0 = view * dpose[indices[0] * THETA_COMPONENT_COUNT + k].ToEigen();
 				Eigen::Vector3f dv1 = view * dpose[indices[1] * THETA_COMPONENT_COUNT + k].ToEigen();
 				Eigen::Vector3f dv2 = view * dpose[indices[2] * THETA_COMPONENT_COUNT + k].ToEigen();
@@ -448,7 +446,7 @@ namespace smpl
 		const int iterations_ = 20;
 		const int unknowns = BETA_COUNT;
 
-		LevenbergMarquardt lm_solver(unknowns);
+		LevenbergMarquardt lm_solver(unknowns, true);
 
 		for (uint iteration = 0; iteration < iterations_; iteration++)
 		{
@@ -460,7 +458,7 @@ namespace smpl
 				
 			Body body = generator_(betas, thetas, true);
 			Silhouette silhouette = silhouette_renderer_(body, CalculateView(translation),
-				projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH), 
+				projector_.DirectXProjection(static_cast<float>(IMAGE_WIDTH), 
 					static_cast<float>(IMAGE_HEIGHT)));
 			silhouette.GetImage().SavePNG(
 				log_path + std::string("/silhouette") + 
@@ -503,7 +501,7 @@ namespace smpl
 		const int iterations_ = 30;
 		const int unknowns = THETA_COMPONENT_COUNT;
 
-		LevenbergMarquardt lm_solver(unknowns);
+		LevenbergMarquardt lm_solver(unknowns, true);
 
 		for (uint iteration = 0; iteration < iterations_; iteration++)
 		{
@@ -511,7 +509,7 @@ namespace smpl
 
 			Body body = generator_(betas, thetas, true);
 			Silhouette silhouette = silhouette_renderer_(body, CalculateView(translation),
-				projector_.GetDirectXProjection(static_cast<float>(IMAGE_WIDTH),
+				projector_.DirectXProjection(static_cast<float>(IMAGE_WIDTH),
 					static_cast<float>(IMAGE_HEIGHT)));
 			silhouette.GetImage().SavePNG(
 				log_path + std::string("/silhouette") +

@@ -13,6 +13,8 @@ namespace smpl
 {
 	extern D3D d3d_context;
 
+	Eigen::Vector3f mul(const Eigen::Matrix4f&, const Eigen::Vector3f&);
+
 	struct SparseMatrixGPU
 	{
 		std::vector<float> values;
@@ -32,7 +34,6 @@ namespace smpl
 	void ReadObjFile(const std::string& filename, std::vector<float3>& vertices, std::vector<uint>& indices, std::vector<Skin>& skins);
 	void ReadFloat3FromBinary(const std::string& filename, std::vector<float3>& array, size_t arraySize);
 	void ReadSparseMatrixFile(const std::string& filename, SparseMatrix& matrix);
-
 
 	template <typename T>
 	void DumpFloatVectorToBinary(const std::string& filename, const std::vector<T>& vector)

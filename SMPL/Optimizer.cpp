@@ -95,7 +95,7 @@ namespace smpl
 			Eigen::Vector3f dscaling(0.f, 0.f, 0.f);
 			Eigen::Vector3f dtranslation(0.f, 0.f, 0.f);
 
-			Joints joints = coco_regress_(body.vertices);
+			RegressedJoints joints = coco_regress_(body.vertices);
 
 			for (uint i = 0; i < COCO_JOINT_COUNT; i++)
 			{
@@ -115,8 +115,8 @@ namespace smpl
 			if (count % log_every_ == 0)
 			{
 				Image image(image_filename.c_str());
-				Image::Draw3D(image, project_, translation, WHITE, body.vertices);
-				Image::Draw3D(image, project_, translation, BLUE, 2, Joints2Vector(joints));
+				Image::Draw3D(image, WHITE, project_, translation, body.vertices);
+				Image::Draw3D(image, BLUE, 2, project_, translation, Joints2Vector(joints));
 				Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 				image.SavePNG(std::string("ExtrinscisTemp/").append(std::to_string(count)).append(".png").c_str());
 				std::cout << "Iteration: " << count << std::endl;
@@ -155,7 +155,7 @@ namespace smpl
 			energy = 0.f;
 			float dbetas[BETA_COUNT] = { 0 };
 
-			Joints joints = (joint_type == JOINT_TYPE::COCO ? coco_regress_(body.vertices) : smpl_regress_(body.vertices));
+			RegressedJoints joints = (joint_type == JOINT_TYPE::COCO ? coco_regress_(body.vertices) : smpl_regress_(body.vertices));
 
 			for (uint m = 0; m < COCO_JOINT_COUNT; m++)
 			{
@@ -180,8 +180,8 @@ namespace smpl
 			if (count % log_every_ == 0)
 			{
 				Image image(image_filename.c_str());
-				Image::Draw3D(image, project_, translation, WHITE, body.vertices);
-				Image::Draw3D(image, project_, translation, BLUE, 2, Joints2Vector(joints));
+				Image::Draw3D(image, WHITE, project_, translation, body.vertices);
+				Image::Draw3D(image, BLUE, 2, project_, translation, Joints2Vector(joints));
 				Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 				image.SavePNG(std::string("ShapeReconstructionTemp/").append(std::to_string(count)).append(".png"));
 	
@@ -268,8 +268,8 @@ namespace smpl
 				
 				float dthetas[JOINT_COUNT * 3] = { 0 };
 
-				Joints smpl_joints = smpl_regress_(body.vertices);
-				Joints reconstruction_joints = (joint_type == JOINT_TYPE::COCO ? coco_regress_(body.vertices) : smpl_regress_(body.vertices));
+				RegressedJoints smpl_joints = smpl_regress_(body.vertices);
+				RegressedJoints reconstruction_joints = (joint_type == JOINT_TYPE::COCO ? coco_regress_(body.vertices) : smpl_regress_(body.vertices));
 				Eigen::Matrix4f* dskinning = new Eigen::Matrix4f[JOINT_COUNT * JOINT_COUNT * 3];
 				ComputeSkinningDerivatives(thetas, smpl_joints, dskinning);
 
@@ -284,16 +284,16 @@ namespace smpl
 
 					energy += error.squaredNorm();
 
-					Eigen::VectorXf regressor_m = (joint_type == JOINT_TYPE::COCO ? coco_regress_.GetRow(m) : smpl_regress_.GetRow(m));
+					Eigen::VectorXf regressor_m = (joint_type == JOINT_TYPE::COCO ? coco_regress_.JointRegressor(m) : smpl_regress_.JointRegressor(m));
 
 					Eigen::Vector3f djoint_alpha(0, 0, 0);
 					Eigen::Vector3f djoint_beta(0, 0, 0);
 					Eigen::Vector3f djoint_gamma(0, 0, 0);
 
-					for (uint k = 0; k < JOINT_COUNT; k++) // Update dthetas
+					for (int k = 0; k < JOINT_COUNT; k++) // Update dthetas
 					{
 #pragma omp parallel for
-						for (uint i = 0; i < VERTEX_COUNT; i++)
+						for (int i = 0; i < VERTEX_COUNT; i++)
 						{
 							if (regressor_m(i) > 0.001f)
 							{
@@ -350,8 +350,8 @@ namespace smpl
 				if (count % log_every_ == 0)
 				{
 					Image image(image_filename.c_str());
-					Image::Draw3D(image, project_, translation, WHITE, body.vertices);
-					Image::Draw3D(image, project_, translation, BLUE, 2, Joints2Vector(reconstruction_joints));
+					Image::Draw3D(image, WHITE, project_, translation, body.vertices);
+					Image::Draw3D(image, BLUE, 2, project_, translation, Joints2Vector(reconstruction_joints));
 
 					std::vector<float3> checked_joint_coordinates;
 					checked_joint_coordinates.reserve(10);
@@ -359,7 +359,7 @@ namespace smpl
 					{
 						checked_joint_coordinates.push_back(float3(reconstruction_joints.col(m)));
 					}
-					Image::Draw3D(image, project_, translation, RED, 2, checked_joint_coordinates);
+					Image::Draw3D(image, RED, 2, project_, translation, checked_joint_coordinates);
 
 					std::vector<float3> movable_joint_coordinates;
 					movable_joint_coordinates.reserve(10);
@@ -367,7 +367,7 @@ namespace smpl
 					{
 						movable_joint_coordinates.push_back(float3(smpl_joints.col(m)));
 					}
-					Image::Draw3D(image, project_, translation, GREEN, 2, movable_joint_coordinates);
+					Image::Draw3D(image, GREEN, 2, project_, translation, movable_joint_coordinates);
 					Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 					
 					image.SavePNG(std::string("PoseReconstructionTemp2D/").append(std::to_string(count)).append(".png"));
@@ -426,7 +426,7 @@ namespace smpl
 
 				energy = 0.f;
 				float dthetas[THETA_COUNT * 3] = { 0 };
-				Joints joints = smpl_regress_(body.vertices);
+				RegressedJoints joints = smpl_regress_(body.vertices);
 				Eigen::Matrix4f* dskinning = new Eigen::Matrix4f[JOINT_COUNT * JOINT_COUNT * 3];
 				ComputeSkinningDerivatives(thetas, joints, dskinning);
 
@@ -440,16 +440,16 @@ namespace smpl
 
 					energy += error.squaredNorm();
 
-					Eigen::VectorXf regressor_m = smpl_regress_.GetRow(m);
+					Eigen::VectorXf regressor_m = smpl_regress_.JointRegressor(m);
 
 					Eigen::Vector3f djoint_alpha(0, 0, 0);
 					Eigen::Vector3f djoint_beta(0, 0, 0);
 					Eigen::Vector3f djoint_gamma(0, 0, 0);
 
-					for (uint k = 0; k < JOINT_COUNT; k++) // Update dthetas
+					for (int k = 0; k < JOINT_COUNT; k++) // Update dthetas
 					{
 #pragma omp parallel for
-						for (uint i = 0; i < VERTEX_COUNT; i++)
+						for (int i = 0; i < VERTEX_COUNT; i++)
 						{
 							if (regressor_m(i) > 0.001f)
 							{
@@ -557,8 +557,8 @@ namespace smpl
 			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
 
 			Body body = generate_(betas, thetas);
-			Joints coco_joints = coco_regress_(body.vertices);
-			Joints smpl_joints = smpl_regress_(body.vertices);
+			RegressedJoints coco_joints = coco_regress_(body.vertices);
+			RegressedJoints smpl_joints = smpl_regress_(body.vertices);
 
 			std::vector<Eigen::Vector3f> transformed_joint(COCO_JOINT_COUNT, Eigen::Vector3f(0.f, 0.f, 0.f));
 
@@ -587,7 +587,7 @@ namespace smpl
 				ComputeSkinningDerivatives(thetas, smpl_joints, dskinning);
 				for (auto& m : coarse_joints)
 				{
-					Eigen::VectorXf regressor_m = coco_regress_.GetRow(m);
+					Eigen::VectorXf regressor_m = coco_regress_.JointRegressor(m);
 					Eigen::Vector3f djoint_alpha(0, 0, 0);
 					Eigen::Vector3f djoint_beta(0, 0, 0);
 					Eigen::Vector3f djoint_gamma(0, 0, 0);
@@ -722,7 +722,7 @@ namespace smpl
 		// initialize camera distance assuming figure pitch == 0
 		{
 			Body body = generate_(betas, thetas);
-			Joints coco_joints = coco_regress_(body.vertices);
+			RegressedJoints coco_joints = coco_regress_(body.vertices);
 
 			float model_avg_shoulders_to_hips = (coco_joints.col(COCO_SHOULDER_LEFT) + coco_joints.col(COCO_SHOULDER_RIGHT)
 				- coco_joints.col(COCO_HIP_LEFT) - coco_joints.col(COCO_HIP_RIGHT)).norm();
@@ -749,8 +749,8 @@ namespace smpl
 			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
 
 			Body body = generate_(betas, thetas);
-			Joints coco_joints = coco_regress_(body.vertices);
-			Joints smpl_joints = smpl_regress_(body.vertices);
+			RegressedJoints coco_joints = coco_regress_(body.vertices);
+			RegressedJoints smpl_joints = smpl_regress_(body.vertices);
 
 			std::vector<Eigen::Vector3f> transformed_joint(COCO_JOINT_COUNT, Eigen::Vector3f(0.f, 0.f, 0.f));
 
@@ -789,7 +789,7 @@ namespace smpl
 				ComputeSkinningDerivatives(thetas, smpl_joints, dskinning);
 				for (auto& m : coarse_joints)
 				{
-					Eigen::VectorXf regressor_m = coco_regress_.GetRow(m);
+					Eigen::VectorXf regressor_m = coco_regress_.JointRegressor(m);
 					Eigen::Vector3f djoint_alpha(0, 0, 0);
 					Eigen::Vector3f djoint_beta(0, 0, 0);
 					Eigen::Vector3f djoint_gamma(0, 0, 0);
@@ -1005,8 +1005,8 @@ namespace smpl
 			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
 
 			Body body = generate_(betas, thetas);
-			Joints coco_joints = coco_regress_(body.vertices);
-			Joints smpl_joints = smpl_regress_(body.vertices);
+			RegressedJoints coco_joints = coco_regress_(body.vertices);
+			RegressedJoints smpl_joints = smpl_regress_(body.vertices);
 
 			std::vector<Eigen::Vector3f> transformed_joint(COCO_JOINT_COUNT, Eigen::Vector3f(0.f, 0.f, 0.f));
 
@@ -1054,7 +1054,7 @@ namespace smpl
 				ComputeSkinningDerivatives(thetas, smpl_joints, dskinning);
 				for (uint m = 0; m < COCO_JOINT_COUNT; m++)
 				{
-					Eigen::VectorXf regressor_m = coco_regress_.GetRow(m);
+					Eigen::VectorXf regressor_m = coco_regress_.JointRegressor(m);
 
 					for (uint k = 0; k < JOINT_COUNT; k++) // Update dthetas
 					{
@@ -1219,8 +1219,8 @@ namespace smpl
 				Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
 
 				Body body = generate_(betas, thetas);
-				Joints coco_joints = coco_regress_(body.vertices);
-				Joints smpl_joints = smpl_regress_(body.vertices);
+				RegressedJoints coco_joints = coco_regress_(body.vertices);
+				RegressedJoints smpl_joints = smpl_regress_(body.vertices);
 
 				std::vector<Eigen::Vector3f> transformed_joint(COCO_JOINT_COUNT, Eigen::Vector3f(0.f, 0.f, 0.f));
 
@@ -1264,7 +1264,7 @@ namespace smpl
 					ComputeSkinningDerivatives(thetas, smpl_joints, dskinning);
 					for (auto& m : checked_joint_sets_coco_[level])
 					{
-						Eigen::VectorXf regressor_m = coco_regress_.GetRow(m);
+						Eigen::VectorXf regressor_m = coco_regress_.JointRegressor(m);
 						
 						for (auto& k : movable_joint_sets_coco_[level]) // Update dthetas
 						{
@@ -1437,7 +1437,7 @@ namespace smpl
 			const std::vector<float3>& shapedirs = generate_.GetShapeDirs();
 			for (uint m = 0; m < joint_count; m++)
 			{
-				Eigen::VectorXf regressor_m = (joint_type == JOINT_TYPE::COCO ? coco_regress_.GetRow(m) : smpl_regress_.GetRow(m));
+				Eigen::VectorXf regressor_m = (joint_type == JOINT_TYPE::COCO ? coco_regress_.JointRegressor(m) : smpl_regress_.JointRegressor(m));
 				for (uint j = 0; j < BETA_COUNT; j++)
 				{
 					Eigen::Vector3f temp(0, 0, 0);
@@ -1453,7 +1453,7 @@ namespace smpl
 		}
 	}
 
-	void Optimizer::ComputeSkinning(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
+	void Optimizer::ComputeSkinning(const PoseEulerCoefficients& thetas, const RegressedJoints& smpl_joints,
 		Eigen::Matrix4f(&palette)[JOINT_COUNT]) const
 	{
 		palette[0] = EulerSkinningXYZ(thetas[0].x, thetas[0].y, thetas[0].z, smpl_joints.col(0)(0), smpl_joints.col(0)(1), smpl_joints.col(0)(2));
@@ -1464,7 +1464,7 @@ namespace smpl
 	}
 
 	void Optimizer::ComputeSkinningLastDerivatives(const PoseEulerCoefficients& thetas,
-		const Joints& smpl_joints,
+		const RegressedJoints& smpl_joints,
 		Eigen::Matrix4f(&palette)[JOINT_COUNT],
 		Eigen::Matrix4f(&dskinning)[JOINT_COUNT * 3]) const
 	{
@@ -1488,7 +1488,7 @@ namespace smpl
 		}
 	}
 
-	void Optimizer::ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
+	void Optimizer::ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas, const RegressedJoints& smpl_joints,
 		Eigen::Matrix4f* dskinning) const
 	{
 		Eigen::Matrix4f palette[JOINT_COUNT];
@@ -1496,7 +1496,7 @@ namespace smpl
 	}
 
 	void Optimizer::ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas,
-		const Joints& joints,
+		const RegressedJoints& joints,
 		Eigen::Matrix4f(&palette)[JOINT_COUNT],
 		Eigen::Matrix4f* dskinning) const
 	{
@@ -1564,7 +1564,7 @@ namespace smpl
 	}
 
 	void Optimizer::ComputeJacobianAndError(Eigen::MatrixXf& jacobian, Eigen::VectorXf& error, 
-		const Body& body, const Joints& coco_joints, const Joints& smpl_joints,
+		const Body& body, const RegressedJoints& coco_joints, const RegressedJoints& smpl_joints,
 		const Eigen::Vector3f& translation, const ShapeCoefficients& betas,
 		const PoseEulerCoefficients& thetas, int active_set, 
 		float shape_prior_weight, float pose_prior_weight)
@@ -1616,7 +1616,7 @@ namespace smpl
 		ComputeSkinningDerivatives(thetas, smpl_joints, dskinning);
 		for (auto& m : checked_joint_sets_coco_[active_set])
 		{
-			Eigen::VectorXf regressor_m = coco_regress_.GetRow(m);
+			Eigen::VectorXf regressor_m = coco_regress_.JointRegressor(m);
 
 			Eigen::Vector3f djoint_alpha(0, 0, 0);
 			Eigen::Vector3f djoint_beta(0, 0, 0);
@@ -1625,7 +1625,7 @@ namespace smpl
 			for (auto& k : movable_joint_sets_coco_[active_set]) // Update dthetas
 			{
 #pragma omp parallel for
-				for (uint i = 0; i < VERTEX_COUNT; i++)
+				for (int i = 0; i < VERTEX_COUNT; i++)
 				{
 					if (regressor_m(i) > 0.001f)
 					{
@@ -1686,7 +1686,7 @@ namespace smpl
 		}
 	}
 
-	Joints Optimizer::RegressJoints(const Body& body, const JOINT_TYPE& joint_type) const
+	RegressedJoints Optimizer::RegressJoints(const Body& body, const JOINT_TYPE& joint_type) const
 	{
 		switch (joint_type)
 		{
@@ -1695,17 +1695,17 @@ namespace smpl
 		case COCO:
 			return coco_regress_(body.vertices);
 		default:
-			return Joints();
+			return RegressedJoints();
 		}
 	}
 
 	void Optimizer::Log(const std::string& image_filename, const Body& body, 
-		const Joints& reconstruction_joints, const Joints& smpl_joints,
+		const RegressedJoints& reconstruction_joints, const RegressedJoints& smpl_joints,
 		const Eigen::Vector3f& translation, int active_set, int count) const
 	{
 		Image image(image_filename.c_str());
-		Image::Draw3D(image, project_, translation, WHITE, body.vertices);
-		Image::Draw3D(image, project_, translation, BLUE, 2, Joints2Vector(reconstruction_joints));
+		Image::Draw3D(image, WHITE, project_, translation, body.vertices);
+		Image::Draw3D(image, BLUE, 2, project_, translation, Joints2Vector(reconstruction_joints));
 
 		std::vector<float3> checked_joint_coordinates;
 		checked_joint_coordinates.reserve(10);
@@ -1713,7 +1713,7 @@ namespace smpl
 		{
 			checked_joint_coordinates.push_back(float3(reconstruction_joints.col(m)));
 		}
-		Image::Draw3D(image, project_, translation, RED, 2, checked_joint_coordinates);
+		Image::Draw3D(image, RED, 2, project_, translation, checked_joint_coordinates);
 
 		std::vector<float3> movable_joint_coordinates;
 		movable_joint_coordinates.reserve(10);
@@ -1721,7 +1721,7 @@ namespace smpl
 		{
 			movable_joint_coordinates.push_back(float3(smpl_joints.col(m)));
 		}
-		Image::Draw3D(image, project_, translation, GREEN, 2, movable_joint_coordinates);
+		Image::Draw3D(image, GREEN, 2, project_, translation, movable_joint_coordinates);
 		Image::Draw2D(image, YELLOW, 2, tracked_joints_);
 
 		image.SavePNG(std::string("ReconstructionTemp/").append(std::to_string(count)).append(".png"));

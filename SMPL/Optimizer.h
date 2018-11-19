@@ -88,29 +88,29 @@ namespace smpl
 		void ComputeShapeDerivatives(const JOINT_TYPE& joint_type,
 			std::vector<Eigen::Vector3f>& dshape);
 		
-		void ComputeSkinning(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
+		void ComputeSkinning(const PoseEulerCoefficients& thetas, const RegressedJoints& smpl_joints,
 			Eigen::Matrix4f(&palette)[JOINT_COUNT]) const;
 
-		void ComputeSkinningLastDerivatives(const PoseEulerCoefficients& thetas, const Joints& smpl_joints, 
+		void ComputeSkinningLastDerivatives(const PoseEulerCoefficients& thetas, const RegressedJoints& smpl_joints, 
 			Eigen::Matrix4f (&palette)[JOINT_COUNT], Eigen::Matrix4f (&dskinning)[JOINT_COUNT * 3]) const;
 
-		void ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
+		void ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas, const RegressedJoints& smpl_joints,
 			Eigen::Matrix4f(&palette)[JOINT_COUNT], Eigen::Matrix4f* dskinning) const;
 
-		void ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas, const Joints& smpl_joints,
+		void ComputeSkinningDerivatives(const PoseEulerCoefficients& thetas, const RegressedJoints& smpl_joints,
 			Eigen::Matrix4f* dskinning) const;
 
 		void ComputeJacobianAndError(Eigen::MatrixXf& jacobian, Eigen::VectorXf& error, 
-			const Body& body, const Joints& coco_joints, const Joints& smpl_joint_, 
+			const Body& body, const RegressedJoints& coco_joints, const RegressedJoints& smpl_joint_, 
 			const Eigen::Vector3f& translation, const ShapeCoefficients& betas,
 			const PoseEulerCoefficients& thetas, int active_set, 
 			float shape_prior_weight, float pose_prior_weight);
 
 		void Log(const std::string& image_filename, const Body& body,
-			const Joints& reconstruction_joints, const Joints& smpl_joints,
+			const RegressedJoints& reconstruction_joints, const RegressedJoints& smpl_joints,
 			const Eigen::Vector3f& translation, int active_set, int count) const;
 
-		Joints RegressJoints(const Body& body, const JOINT_TYPE& joint_type) const;
+		RegressedJoints RegressJoints(const Body& body, const JOINT_TYPE& joint_type) const;
 
 		void operator()(const std::string& image_filename, ShapeCoefficients& betas, 
 			PoseAxisAngleCoefficients& thetas, Eigen::Vector3f& translation);
@@ -119,8 +119,8 @@ namespace smpl
 		const std::map<std::string, float> optimization_parameters;
 		const Generator generate_;
 		const Projector project_;
-		const JointRegressor coco_regress_;
-		const JointRegressor smpl_regress_;
+		const JointsRegressor coco_regress_;
+		const JointsRegressor smpl_regress_;
 		const std::vector<float> tracked_joints_;
 		std::vector<Eigen::Vector3f> dshape_coco_;
 		std::vector<Eigen::Vector3f> dshape_smpl_;

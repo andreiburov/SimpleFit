@@ -311,9 +311,9 @@ namespace smpl
 		int4 joint_index;
 	};
 
-	typedef Eigen::MatrixXf Joints;
+	typedef Eigen::MatrixXf RegressedJoints;
 
-	std::vector<float3> Joints2Vector(const Joints& joints);
+	std::vector<float3> Joints2Vector(const RegressedJoints& joints);
 
 	template <typename T>
 	struct Point

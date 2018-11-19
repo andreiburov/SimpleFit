@@ -10,6 +10,7 @@ bool LevenbergMarquardt::operator()(const Eigen::MatrixXf& jacobian,
 	Eigen::MatrixXf JtJ_diag = JtJ.diagonal().asDiagonal();
 
 	float current_residual_error = error.squaredNorm();
+	if (logging_on_)
 	std::cout << "Error " << current_residual_error << std::endl;
 	
 	if (last_residual_error_ == MINF ||
@@ -20,13 +21,6 @@ bool LevenbergMarquardt::operator()(const Eigen::MatrixXf& jacobian,
 		Eigen::ConjugateGradient<Eigen::MatrixXf, Eigen::Lower | Eigen::Upper> cg;
 		cg.compute(JtJ);
 		delta = cg.solve(JtF);
-
-		/*std::cout << "Delta\n";
-		for (int i = 0; i < unknowns_; i++)
-		{
-			std::cout << delta(i) << " ";
-		}
-		std::cout << std::endl;*/
 
 		delta_old_ = delta;
 		last_residual_error_ = current_residual_error;

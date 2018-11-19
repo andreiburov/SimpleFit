@@ -14,7 +14,7 @@ namespace shape_reconstruction
 	Eigen::Vector3f scaling(1.f, 1.f, 1.f);
 	Eigen::Vector3f	translation(0.f, 0.2f, -4.f);
 
-	void LogBodyAndProjection(const Body& body, const Joints& joints, const Projector& project,
+	void LogBodyAndProjection(const Body& body, const RegressedJoints& joints, const Projector& project,
 		const std::string& body_filename, const std::string& projection_filename)
 	{
 		body.Dump(body_filename);
@@ -30,11 +30,11 @@ namespace shape_reconstruction
 		ZeroMemory(&pose, sizeof(pose));
 
 		Optimizer::Configuration configuration("../Model");
-		JointRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
+		JointsRegressor coco_regressor(configuration.coco_regressor, smpl::COCO_JOINT_COUNT);
 		Projector project(configuration.intrinsics);
 
 		Body body2 = generator(shape, pose);
-		Joints joints2 = coco_regressor(body2.vertices);
+		RegressedJoints joints2 = coco_regressor(body2.vertices);
 		LogBodyAndProjection(body2, joints2, project, "Body2.obj", "Body2.png");
 
 		std::vector<float> tracked_joints;
@@ -53,7 +53,7 @@ namespace shape_reconstruction
 			translation, pose, shape);
 
 		Body body1 = generator(shape, pose);
-		Joints joints1 = coco_regressor(body1.vertices);
+		RegressedJoints joints1 = coco_regressor(body1.vertices);
 		LogBodyAndProjection(body1, joints1, project, "Body1.obj", "Body1.png");
 	}
 

@@ -12,7 +12,7 @@ namespace smpl
 		// produced by smpl body generator
 		std::vector<float3> deformed_template;	// shaped and posed mesh before the skinning
 		std::vector<float6> vertices_normals;	// mesh vertices and normals interleaved
-		Joints joints;							// mesh joints for skinning
+		RegressedJoints joints;							// mesh joints for skinning
 
 		// parameters used by generator
 		ShapeCoefficients betas;				// shape parameters

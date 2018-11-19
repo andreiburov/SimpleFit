@@ -123,7 +123,7 @@ namespace kinematic_chain
 //		ZeroMemory(&pose, sizeof(pose));
 //
 //		smpl::Body body1 = generator(shape, pose);
-//		smpl::Joints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
+//		smpl::RegressedJoints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
 //		optimizer.ComputeSkinningLastDerivatives(pose, joints, palette, dskinning);
 //
 //		// Update the palette in 16th Gamma and propagate the change
@@ -159,7 +159,7 @@ namespace kinematic_chain
 //		ZeroMemory(&pose, sizeof(pose));
 //
 //		smpl::Body body1 = generator(shape, pose);
-//		smpl::Joints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
+//		smpl::RegressedJoints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
 //		optimizer.ComputeSkinningLastDerivatives(pose, joints, palette, dskinning);
 //
 //		// Update the palette in 16th Gamma and propagate the change
@@ -199,7 +199,7 @@ namespace kinematic_chain
 //		ZeroMemory(&pose, sizeof(pose));
 //
 //		smpl::Body body1 = generator(shape, pose);
-//		smpl::Joints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
+//		smpl::RegressedJoints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
 //		optimizer.ComputeSkinningLastDerivatives(pose, joints, palette, dskinning);
 //
 //		// Update the palette in 16th Gamma and propagate the change
@@ -250,7 +250,7 @@ namespace kinematic_chain
 //		ZeroMemory(&pose, sizeof(pose));
 //
 //		smpl::Body body1 = generator(shape, pose);
-//		smpl::Joints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
+//		smpl::RegressedJoints joints = optimizer.RegressJoints(body1, smpl::Optimizer::JOINT_TYPE::SMPL);
 //		optimizer.ComputeSkinningLastDerivatives(pose, joints, palette, dskinning);
 //
 //		// Update the palette in 13th Gamma and propagate the change

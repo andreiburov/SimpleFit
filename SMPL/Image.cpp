@@ -5,22 +5,22 @@ namespace smpl
 	FreeImageLibrary free_image_library;
 
 #ifdef USE_24_BITS_PER_PIXEL
-	PIXEL WHITE = { 255, 255, 255 };
-	PIXEL BLUE = { 255, 0, 0 };
-	PIXEL GREEN = { 0, 255, 0 };
-	PIXEL RED = { 0, 0, 255 };
-	PIXEL BLACK = { 0, 0, 0 };
-	PIXEL YELLOW = { 0, 255, 255 };
+	Pixel WHITE = { 255, 255, 255 };
+	Pixel BLUE = { 255, 0, 0 };
+	Pixel GREEN = { 0, 255, 0 };
+	Pixel RED = { 0, 0, 255 };
+	Pixel BLACK = { 0, 0, 0 };
+	Pixel YELLOW = { 0, 255, 255 };
 
 	const int BPP = 24;
 #endif
 #ifdef USE_32_BITS_PER_PIXEL
-	PIXEL WHITE = { 255, 255, 255, 0 };
-	PIXEL BLUE = { 255, 0, 0, 0 };
-	PIXEL GREEN = { 0, 255, 0, 0 };
-	PIXEL RED = { 0, 0, 255, 0 };
-	PIXEL BLACK = { 0, 0, 0, 0 };
-	PIXEL YELLOW = { 0, 255, 255, 0 };
+	Pixel WHITE = { 255, 255, 255, 0 };
+	Pixel BLUE = { 255, 0, 0, 0 };
+	Pixel GREEN = { 0, 255, 0, 0 };
+	Pixel RED = { 0, 0, 255, 0 };
+	Pixel BLACK = { 0, 0, 0, 0 };
+	Pixel YELLOW = { 0, 255, 255, 0 };
 
 	const int BPP = 32;
 #endif
@@ -157,65 +157,64 @@ namespace smpl
 		return true;
 	}
 
-	PIXEL* Image::operator[](int i)
+	Pixel* Image::operator[](int i)
 	{
 		if (i < 0)
 		{
-			//MessageBoxA(NULL, "Out of bounds!", "Error", MB_OK);
 			std::cout << "Out of bounds\n";
 			i = 0;
 		}
 		else if (i >= height_)
 		{
-			//MessageBoxA(NULL, "Out of bounds!", "Error", MB_OK);
 			std::cout << "Out of bounds\n";
 			i = height_ - 1;
 		}
 
-		PIXEL* scan_line = (PIXEL*)FreeImage_GetScanLine(bitmap_, height_ - i - 1);
+		Pixel* scan_line = (Pixel*)FreeImage_GetScanLine(bitmap_, height_ - i - 1);
 		return scan_line;
 	}
 
-	PIXEL Image::operator()(int x, int y) const
+	Pixel Image::operator()(int x, int y) const
 	{
 		if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT)
 		{
-			//MessageBoxA(NULL, "Out of bounds!", "Error", MB_OK);
 			std::cout << "Out of bounds\n";
 			x = 0;
 			y = 0;
 		}
 
-		PIXEL* scan_line = (PIXEL*)FreeImage_GetScanLine(bitmap_, height_ - y - 1);
+		Pixel* scan_line = (Pixel*)FreeImage_GetScanLine(bitmap_, height_ - y - 1);
 		return scan_line[x];
 	}
 
-	PIXEL& Image::operator()(int x, int y)
+	Pixel& Image::operator()(int x, int y)
 	{
 		if (x < 0 || x >= IMAGE_WIDTH || y < 0 || y >= IMAGE_HEIGHT)
 		{
-			//MessageBoxA(NULL, "Out of bounds!", "Error", MB_OK);
 			std::cout << "Out of bounds\n";
 			x = 0;
 			y = 0;
 		}
 
-		PIXEL* scan_line = (PIXEL*)FreeImage_GetScanLine(bitmap_, height_ - y - 1);
+		Pixel* scan_line = (Pixel*)FreeImage_GetScanLine(bitmap_, height_ - y - 1);
 		return scan_line[x];
 	}
 
-	void Image::Draw3D(Image& image, const Projector& projector, const Eigen::Vector3f& translation,
-		const PIXEL& color, const int brush_size, const std::vector<float3>& pointcloud)
+	void Image::Draw3D(Image& image, const Pixel& color, const int brush_size, 
+		const Projector& projector, const Eigen::Vector3f& translation,
+		const std::vector<float3>& pointcloud)
 	{
 		int w = image.GetWidth();
 		int h = image.GetHeight();
 
 		for (int i = 0; i < pointcloud.size(); i++)
 		{
-			Eigen::Vector2f p = projector(pointcloud[i].ToEigen(), translation);
+			Eigen::Vector2f p = Image::Coordinate(
+				projector(pointcloud[i].ToEigen(), translation));
+
 			int x_c = (int)p(0);
 			// flip the y, since DirectX has different image axes than FreeImage
-			int y_c = IMAGE_HEIGHT-(int)p(1); 
+			int y_c = (int)p(1);
 
 			for (int x = x_c - brush_size; x < x_c + brush_size + 1; x++)
 			{
@@ -230,7 +229,7 @@ namespace smpl
 		}
 	}
 
-	void Image::Draw2D(Image& image, const PIXEL& color, const int brush_size, const std::vector<float>& points)
+	void Image::Draw2D(Image& image, const Pixel& color, const int brush_size, const std::vector<float>& points)
 	{
 		int w = image.GetWidth();
 		int h = image.GetHeight();

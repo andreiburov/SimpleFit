@@ -12,13 +12,6 @@ namespace smpl
 				int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api_);
 				assert(ret == 1);
 			}
-
-			if (rdoc_api_)
-			{
-				rdoc_api_->SetCaptureFilePathTemplate("Captures/Example");
-				rdoc_api_->StartFrameCapture(device_, nullptr);
-				std::cout << "Start Frame Capture" << std::endl;
-			}
 		}
 #endif
 
@@ -234,6 +227,15 @@ namespace smpl
 	Silhouette SilhouetteRenderer::operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
 	{
 		SetMatrices(view, projection);
+
+#ifdef _DEBUG
+		if (rdoc_api_)
+		{
+			rdoc_api_->SetCaptureFilePathTemplate("Captures/Example");
+			rdoc_api_->StartFrameCapture(device_, nullptr);
+			std::cout << "Start Frame Capture" << std::endl;
+		}
+#endif
 
 		const float clear_color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		for (int i = 0; i < render_targets_number_; i++)

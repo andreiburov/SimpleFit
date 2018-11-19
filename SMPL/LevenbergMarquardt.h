@@ -4,8 +4,8 @@
 class LevenbergMarquardt
 {
 public:
-	LevenbergMarquardt(const int unknowns) :
-		unknowns_(unknowns), delta_old_(Eigen::VectorXf::Zero(unknowns))
+	LevenbergMarquardt(const int unknowns, const bool logging_on) :
+		unknowns_(unknowns), logging_on_(logging_on), delta_old_(Eigen::VectorXf::Zero(unknowns))
 	{
 	}
 
@@ -18,6 +18,7 @@ private:
 	Eigen::VectorXf delta_old_;
 
 	const float MINF = -100000.f;
+	const bool logging_on_;
 
 	const float lambda_min_ = 0.1f;
 	const float alpha_ = 1.8f; // increase lambda factor when error goes down

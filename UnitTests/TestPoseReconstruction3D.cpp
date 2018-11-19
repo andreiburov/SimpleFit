@@ -23,8 +23,8 @@ namespace pose_reconstruction_3d
 	//	body2.Dump("Body2.obj");
 
 	//	ReadSparseMatrixFile("Model/smpl_regressor.txt", smpl_matrix);
-	//	JointRegressor smpl_regressor(smpl_matrix, smpl::JOINT_COUNT);
-	//	Joints smpl_joints = smpl_regressor(body2.vertices);
+	//	JointsRegressor smpl_regressor(smpl_matrix, smpl::JOINT_COUNT);
+	//	RegressedJoints smpl_joints = smpl_regressor(body2.vertices);
 
 	//	std::vector<float> tracked_joints;
 	//	tracked_joints.reserve(smpl::JOINT_COUNT * 3);

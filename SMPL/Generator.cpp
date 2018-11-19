@@ -5,10 +5,10 @@ namespace smpl
 	void IdentityMorph::operator()(const ShapeCoefficients& betas, std::vector<float3>& vertices) const
 	{
 #pragma omp parallel for
-		for (uint i = 0; i < VERTEX_COUNT; i++)
+		for (int i = 0; i < VERTEX_COUNT; i++)
 		{
 			Eigen::Vector3f v = vertices[i].ToEigen();
-			for (uint j = 0; j < BETA_COUNT; j++)
+			for (int j = 0; j < BETA_COUNT; j++)
 			{
 				v += betas[j] * shapedirs_[i*BETA_COUNT + j].ToEigen();
 			}
@@ -21,7 +21,7 @@ namespace smpl
 		// invariant to rotation of the parent joint
 		Eigen::Matrix3f rotation[THETA_COUNT_WITHOUT_PARENT];
 
-		for (uint i = 0; i < THETA_COUNT_WITHOUT_PARENT; i++)
+		for (int i = 0; i < THETA_COUNT_WITHOUT_PARENT; i++)
 		{
 			Eigen::AngleAxisf angle_axis(thetas[i + 1].ToEigen().norm(), thetas[i + 1].ToEigen().normalized());
 			// rotations will be flattened row-wise
@@ -29,10 +29,10 @@ namespace smpl
 		}
 
 #pragma omp parallel for
-		for (uint i = 0; i < VERTEX_COUNT; i++)
+		for (int i = 0; i < VERTEX_COUNT; i++)
 		{
 			Eigen::Vector3f v = vertices[i].ToEigen();
-			for (uint j = 0; j < THETA_MATRIX_COMPONENT_COUNT; j++)
+			for (int j = 0; j < THETA_MATRIX_COMPONENT_COUNT; j++)
 			{
 				v += rotation[j / 9].data()[j % 9] * posedirs_[i*THETA_MATRIX_COMPONENT_COUNT + j].ToEigen();
 			}
@@ -45,17 +45,17 @@ namespace smpl
 		// invariant to rotation of the parent joint
 		Eigen::Matrix3f rotation[THETA_COUNT_WITHOUT_PARENT];
 
-		for (uint i = 0; i < THETA_COUNT_WITHOUT_PARENT; i++)
+		for (int i = 0; i < THETA_COUNT_WITHOUT_PARENT; i++)
 		{
 			// rotations will be flattened row-wise
 			rotation[i] = (EulerRotationXYZ(thetas[i].x, thetas[i].y, thetas[i].z) - Eigen::Matrix3f::Identity()).transpose();
 		}
 
 #pragma omp parallel for
-		for (uint i = 0; i < VERTEX_COUNT; i++)
+		for (int i = 0; i < VERTEX_COUNT; i++)
 		{
 			Eigen::Vector3f v = vertices[i].ToEigen();
-			for (uint j = 0; j < THETA_MATRIX_COMPONENT_COUNT; j++)
+			for (int j = 0; j < THETA_MATRIX_COMPONENT_COUNT; j++)
 			{
 				v += rotation[j / 9].data()[j % 9] * posedirs_[i*THETA_MATRIX_COMPONENT_COUNT + j].ToEigen();
 			}
@@ -63,7 +63,7 @@ namespace smpl
 		}
 	}
 
-	void SkinMorph::operator()(const PoseAxisAngleCoefficients& thetas, const Joints& joints, std::vector<float3>& vertices) const
+	void SkinMorph::operator()(const PoseAxisAngleCoefficients& thetas, const RegressedJoints& joints, std::vector<float3>& vertices) const
 	{
 		// parent initialization
 		{
@@ -71,7 +71,7 @@ namespace smpl
 			palette_[0] = (Eigen::Translation3f(joints.col(0)) * angle_axis * Eigen::Translation3f(-joints.col(0))).matrix();
 		}
 
-		for (uint i = 1; i < JOINT_COUNT; i++)
+		for (int i = 1; i < JOINT_COUNT; i++)
 		{
 			Eigen::AngleAxisf angle_axis(thetas[i].ToEigen().norm(), thetas[i].ToEigen().normalized());
 			palette_[i] = palette_[PARENT_INDEX[i]]
@@ -79,7 +79,7 @@ namespace smpl
 		}
 
 #pragma omp parallel for
-		for (uint i = 0; i < VERTEX_COUNT; i++)
+		for (int i = 0; i < VERTEX_COUNT; i++)
 		{
 			Eigen::Matrix4f skin
 				= skins_[i].weight.x * palette_[skins_[i].joint_index.x]
@@ -92,7 +92,7 @@ namespace smpl
 	}
 
 	void SkinMorph::operator()(const PoseEulerCoefficients& thetas, 
-		const Joints& joints, std::vector<float3>& vertices) const
+		const RegressedJoints& joints, std::vector<float3>& vertices) const
 	{
 		// parent initialization
 		{
@@ -101,7 +101,7 @@ namespace smpl
 			palette_[0] = part_transformations_[0];
 		}
 
-		for (uint i = 1; i < JOINT_COUNT; i++)
+		for (int i = 1; i < JOINT_COUNT; i++)
 		{
 			part_transformations_[i] = EulerSkinningXYZ(thetas[i].x, thetas[i].y, thetas[i].z, 
 				joints.col(i)(0), joints.col(i)(1), joints.col(i)(2));
@@ -113,10 +113,10 @@ namespace smpl
 
 	void SkinMorph::operator()(std::vector<float3>& vertices) const
 	{
-		uint stride = static_cast<uint>(vertices.size() / VERTEX_COUNT);
+		int stride = static_cast<int>(vertices.size() / VERTEX_COUNT);
 
 #pragma omp parallel for
-		for (uint i = 0; i < VERTEX_COUNT; i++)
+		for (int i = 0; i < VERTEX_COUNT; i++)
 		{
 			Eigen::Matrix4f skin
 				= skins_[i].weight.x * palette_[skins_[i].joint_index.x]
@@ -124,7 +124,7 @@ namespace smpl
 				+ skins_[i].weight.z * palette_[skins_[i].joint_index.z]
 				+ skins_[i].weight.w * palette_[skins_[i].joint_index.w];
 
-			for (uint j = 0; j < stride; j++)
+			for (int j = 0; j < stride; j++)
 			{
 				vertices[i*stride + j] =
 					float3((skin * vertices[i*stride + j].ToEigen().homogeneous()).head(3));
@@ -135,7 +135,7 @@ namespace smpl
 	void SkinMorph::ComputeSkinningJacobian(const Body& body, Eigen::Matrix4f* dskinning) const
 	{
 		const PoseEulerCoefficients& thetas = body.thetas;
-		const Joints& joints = body.joints;
+		const RegressedJoints& joints = body.joints;
 		ZeroMemory(dskinning, sizeof(Eigen::Matrix4f) * JOINT_COUNT * JOINT_COUNT * 3);
 
 		// main diagonal initialization
@@ -173,10 +173,10 @@ namespace smpl
 
 		dpose.resize(VERTEX_COUNT * THETA_COMPONENT_COUNT);
 
-#pragma omp parallel for collapse(2)
-		for (uint i = 0; i < VERTEX_COUNT; i++)
+#pragma omp parallel for
+		for (int i = 0; i < VERTEX_COUNT; i++)
 		{
-			for (uint k = 0; k < THETA_COMPONENT_COUNT; k++)
+			for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
 			{
 				dpose[i*THETA_COMPONENT_COUNT + k] =
 					float3(((skins_[i].weight.x * dskinning[k * JOINT_COUNT + skins_[i].joint_index.x] +
@@ -248,10 +248,10 @@ namespace smpl
 
 	void Generator::CalculateNormals(Body& body) const
 	{
-		body.vertices_normals.reserve(VERTEX_COUNT);
 		std::vector<Eigen::Vector3f> normals(VERTEX_COUNT, Eigen::Vector3f(0.f, 0.f, 0.f));
 
-		for (uint i = 0; i < FACE_COUNT * 3; i += 3)
+#pragma omp parallel for
+		for (int i = 0; i < FACE_COUNT * 3; i += 3)
 		{
 			uint id0 = indices_[i];
 			uint id1 = indices_[i+1];
@@ -266,7 +266,8 @@ namespace smpl
 			normals[id2] += face_normal;
 		}
 
-		for (uint i = 0; i < VERTEX_COUNT; i++)
+		body.vertices_normals.reserve(VERTEX_COUNT);
+		for (int i = 0; i < VERTEX_COUNT; i++)
 		{
 			body.vertices_normals.push_back(float6(body.vertices[i], float3(normals[i].normalized())));
 		}

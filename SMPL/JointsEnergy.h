@@ -16,38 +16,40 @@ namespace smpl
 	class JointsEnergy
 	{
 	public:
-		JointsEnergy(const Generator& generator, const Projector& projector);
+		JointsEnergy(const Generator& generator, 
+			const Projector& projector, 
+			const JointsRegressor& regressor);
 
 		/*
 			We can start by reading the values from the file.
 			But then it should be from the openpose.
 		*/
-		std::vector<OpenPoseJoint> Infer(const std::string& image_filename, Eigen::Vector3f& translation,
-			ShapeCoefficients& betas, PoseEulerCoefficients& thetas);
+		/*std::vector<OpenPoseJoint> Infer(const std::string& image_filename, Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas);*/
 
-		void ComputeError(const Joints& model_joints, const std::vector<Point<int> >& tracked_joints,
-			const int residuals, Eigen::VectorXf& error) const;
+		void ComputeError(const std::vector<float>& input_joints, 
+			const RegressedJoints& model_joints, const Eigen::Vector3f translation,
+			const int residuals, const float weight, Eigen::VectorXf& error) const;
 
 		void ComputeJacobianFromShape(
 			const Body& body, const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
-			const int residuals, Eigen::MatrixXf& jacobian) const;
+			const int residuals, const float weight, Eigen::MatrixXf& jacobian) const;
 
 		void ComputeJacobianFromPose(
 			const Body& body, const std::vector<float3>& dpose, const Eigen::Vector3f& translation,
-			const int residuals, Eigen::MatrixXf& jacobian) const;
+			const int residuals, const float weight, Eigen::MatrixXf& jacobian) const;
 
 	private:
 
+		// rhs
+		Eigen::Vector3f ToView(const Eigen::Vector3f& vertex, const Eigen::Vector3f& translation) const;
+		Eigen::Vector3f ToView(const Eigen::Vector3f& vertex) const;
 		Eigen::Matrix4f CalculateView(Eigen::Vector3f translation) const;
 
 	private:
 
 		const Generator& generator_;
 		const Projector& projector_;
-
-		// global parameters
-		int is_rhs_;
-
-		// hyper parameters
+		const JointsRegressor& regressor_;
 	};
 }

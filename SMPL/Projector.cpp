@@ -7,7 +7,7 @@ namespace smpl
 	{
 	}
 
-	Projector::Projector(Configuration configuration) :
+	Projector::Projector(Configuration&& configuration) :
 		intrinsics_(Eigen::Map<Eigen::Matrix3f, Eigen::RowMajor>(configuration.intrinsics, 3, 3).transpose()), 
 		near_(configuration.near_), far_(configuration.far_), is_rhs_(configuration.is_rhs_)
 	{
@@ -15,30 +15,80 @@ namespace smpl
 
 	Eigen::Vector2f Projector::operator()(const Eigen::Vector3f& vertex) const
 	{
+		// since the camera looks at -Z
+		// the focal lengths are also negative
+		if (is_rhs_)
+		{
+			float x = -intrinsics_(0, 0) * vertex(0) / vertex(2) + intrinsics_(0, 2);
+			float y = -intrinsics_(1, 1) * vertex(1) / vertex(2) + intrinsics_(1, 2);
+			return Eigen::Vector2f(x, y);
+		}
+
+		// lhs
 		Eigen::Vector3f t = intrinsics_ * vertex;
 		return Eigen::Vector2f(t(0) / t(2), t(1) / t(2));
 	}
 
-	Eigen::Vector2f Projector::operator()(const Eigen::Vector3f& vertex, const Eigen::Vector3f& translation) const
+	Eigen::Vector2f Projector::operator()
+		(const Eigen::Vector3f& vertex, const Eigen::Vector3f& translation) const
 	{
-		Eigen::Vector3f t = intrinsics_ * (vertex + translation);
-		return Eigen::Vector2f(t(0) / t(2), t(1) / t(2));
+		if (is_rhs_)
+		{
+			return operator()(vertex + translation);
+		}
+
+		// lhs
+		Eigen::Vector3f turn(-vertex.x(), vertex.y(), -vertex.z());
+		return operator()(turn + translation);
+	}
+
+	std::vector<float> Projector::FromRegressed
+	(const RegressedJoints& regressed_joints, const Eigen::Vector3f& translation) const
+	{
+		std::vector<float> result;
+		result.reserve(regressed_joints.cols() * 2);
+
+		for (uint j = 0; j < regressed_joints.cols(); j++)
+		{
+			Eigen::Vector2f projected = operator()(regressed_joints.col(j), translation);
+			result.push_back(projected(0));
+			result.push_back(projected(1));
+		}
+
+		return result;
 	}
 
 	Eigen::Vector2f Projector::Jacobian(const Eigen::Vector3f& t, const Eigen::Vector3f& dt) const
 	{
-		float z2 = t(2)*t(2); // z squared
-		return Eigen::Vector2f(intrinsics_(0, 0) * (dt(0) / t(2) - t(0)*dt(2) / z2), intrinsics_(1, 1) * (dt(1) / t(2) - t(1)*dt(2) / z2));
+		float z2 = t(2)*t(2);
+
+		if (is_rhs_)
+		{
+			return Eigen::Vector2f(intrinsics_(0, 0) * (t(0)*dt(2) / z2 - dt(0) / t(2)),
+				intrinsics_(1, 1) * (t(1)*dt(2) / z2 - dt(1) / t(2)));
+		}
+		
+		return Eigen::Vector2f(intrinsics_(0, 0) * (dt(0) / t(2) - t(0)*dt(2) / z2), 
+			intrinsics_(1, 1) * (dt(1) / t(2) - t(1)*dt(2) / z2));
 	}
 
 	Eigen::Matrix<float, 3, 2> Projector::Jacobian(const Eigen::Vector3f& t) const
 	{
 		float z2 = t(2) * t(2);
-		float r[6] = { intrinsics_(0,0) / t(2), 0, -intrinsics_(0,0) * t(0) / z2, 0, intrinsics_(1,1) / t(2), -intrinsics_(1,1) * t(1) / z2 };
+		
+		if (is_rhs_)
+		{
+			float r2[6] = { -intrinsics_(0,0) / t(2), 0, intrinsics_(0,0) * t(0) / z2,
+				0, -intrinsics_(1,1) / t(2), intrinsics_(1,1) * t(1) / z2 };
+			return Eigen::Map<Eigen::MatrixXf, Eigen::RowMajor>(r2, 3, 2);
+		}
+		
+		float r[6] = { intrinsics_(0,0) / t(2), 0, -intrinsics_(0,0) * t(0) / z2,
+			0, intrinsics_(1,1) / t(2), -intrinsics_(1,1) * t(1) / z2 };
 		return Eigen::Map<Eigen::MatrixXf, Eigen::RowMajor>(r, 3, 2);
 	}
 
-	Eigen::Matrix4f Projector::GetDirectXProjection(float width, float height) const
+	Eigen::Matrix4f Projector::DirectXProjection(float width, float height) const
 	{
 		Eigen::Matrix4f intrinsics4x4(Eigen::Matrix4f::Zero());
 		intrinsics4x4.block<3, 3>(0, 0) = intrinsics_;

@@ -1,0 +1,12 @@
+{
+  "logging_on_": true,
+  "joints_weight_": 1.0,
+  "iterations_": 10,
+  "model_path_": "../Model/",
+  "output_path_": "SyntheticShapeFromJoints0/",
+  "translation_vector_": [
+    0.0,
+    0.1,
+    -4.2
+  ]
+}

@@ -143,6 +143,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)SMPL;$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)3rdparty\Catch2;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -158,11 +159,12 @@
     <ClCompile Include="TestEigen.cpp" />
     <ClCompile Include="TestEulerAngles.cpp" />
     <ClCompile Include="TestExtrinsics.cpp" />
-    <ClCompile Include="TestJointsReconstruction.cpp" />
+    <ClCompile Include="TestJointsDerivatives.cpp" />
     <ClCompile Include="TestKinematicChain.cpp" />
-    <ClCompile Include="TestReconstruction.cpp" />
+    <ClCompile Include="TestReconstruction2.cpp" />
     <ClCompile Include="TestPoseReconstruction2D.cpp" />
     <ClCompile Include="TestPoseReconstruction3D.cpp" />
+    <ClCompile Include="TestShapeFromJoints.cpp" />
     <ClCompile Include="TestShapeReconstruction.cpp" />
     <ClCompile Include="TestSilhouetteReconstruction.cpp" />
     <ClCompile Include="TestSilhouetteRenderer.cpp" />
@@ -175,6 +177,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Configurations\jacobian_joints_from_shape.json" />
+    <None Include="Configurations\synthetic_shape_from_joints.json" />
     <None Include="Settings\UnitTests.runsettings">
       <SubType>Designer</SubType>
     </None>

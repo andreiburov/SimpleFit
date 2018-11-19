@@ -123,8 +123,8 @@ TEST_CASE("Jacobian Silhouette From Shape")
 
 TEST_CASE("Jacobian Silhouette From Pose")
 {
-	Generator generator(Generator::Configuration(std::string("../Model")));
-	Projector projector(Projector::Configuration(std::string("../Model")));
+	Generator generator(Generator::Configuration(std::string("../Model/")));
+	Projector projector(Projector::Configuration(std::string("../Model/")));
 	SilhouetteEnergy silhouette_optimizer(generator, projector);
 
 	Eigen::Vector3f translation(0.f, 0.2f, 4.0f);
@@ -194,8 +194,8 @@ TEST_CASE("Jacobian Silhouette From Pose")
 
 TEST_CASE("Reconstruct Shape From Synthetic Silhouette")
 {
-	Generator generator(Generator::Configuration(std::string("../Model")));
-	Projector projector(Projector::Configuration(std::string("../Model")));
+	Generator generator(Generator::Configuration(std::string("../Model/")));
+	Projector projector(Projector::Configuration(std::string("../Model/")));
 	SilhouetteEnergy silhouette_optimizer(generator, projector);
 
 	Eigen::Vector3f input_translation(0.f, 0.2f, 4.0f);

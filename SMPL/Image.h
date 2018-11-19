@@ -34,7 +34,7 @@ namespace smpl
 	extern FreeImageLibrary free_image_library;
 
 #ifdef USE_24_BITS_PER_PIXEL
-	struct PIXEL
+	struct Pixel
 	{
 		BYTE& b() { return v.rgbtBlue; }
 		BYTE& g() { return v.rgbtGreen; }
@@ -42,6 +42,11 @@ namespace smpl
 		const BYTE& bc() const { return v.rgbtBlue; }
 		const BYTE& gc() const { return v.rgbtGreen; }
 		const BYTE& rc() const { return v.rgbtRed; }
+
+		Pixel(BYTE red, BYTE green, BYTE blue)
+		{
+			v = { blue, green, red };
+		}
 
 		bool IsBlack() const
 		{
@@ -55,13 +60,13 @@ namespace smpl
 
 		float GrayScale() const
 		{
-			float gray = (0.3f * static_cast<float>(rc()/255) +
-				(0.59f * static_cast<float>(gc()/255)) + 
-				(0.11f * static_cast<float>(bc()/255)));
+			float gray = (0.3f * static_cast<float>(rc() / 255) +
+				(0.59f * static_cast<float>(gc() / 255)) +
+				(0.11f * static_cast<float>(bc() / 255)));
 			return std::max(0.f, std::min(1.f, gray));
 		}
 
-		bool operator==(const PIXEL& rgb) const
+		bool operator==(const Pixel& rgb) const
 		{
 			if (bc() == rgb.bc() && gc() == rgb.gc() && rc() == rgb.rc())
 			{
@@ -73,11 +78,41 @@ namespace smpl
 			}
 		}
 
+		static Pixel White()
+		{
+			return Pixel(255, 255, 255);
+		}
+
+		static Pixel Black()
+		{
+			return Pixel(0, 0, 0);
+		}
+
+		static Pixel Red()
+		{
+			return Pixel(255, 0, 0);
+		}
+
+		static Pixel Green()
+		{
+			return Pixel(0, 255, 0);
+		}
+
+		static Pixel Blue()
+		{
+			return Pixel(0, 0, 255);
+		}
+
+		static Pixel Yellow()
+		{
+			return Pixel(255, 255, 0);
+		}
+
 		RGBTRIPLE v;
 	};
 #endif
 #ifdef USE_32_BITS_PER_PIXEL
-	struct PIXEL
+	struct Pixel
 	{
 		BYTE& b() { return v.rgbBlue; }
 		BYTE& g() { return v.rgbGreen; }
@@ -102,12 +137,12 @@ namespace smpl
 	};
 #endif
 
-	extern PIXEL WHITE;
-	extern PIXEL RED;
-	extern PIXEL GREEN;
-	extern PIXEL BLUE;
-	extern PIXEL BLACK;
-	extern PIXEL YELLOW;
+	extern Pixel WHITE;
+	extern Pixel RED;
+	extern Pixel GREEN;
+	extern Pixel BLUE;
+	extern Pixel BLACK;
+	extern Pixel YELLOW;
 
 	class Image
 	{
@@ -135,34 +170,54 @@ namespace smpl
 		bool operator==(const Image& other) const;
 	
 		// first access y then access x!
-		PIXEL* operator[](int i);
+		Pixel* operator[](int i);
 
-		PIXEL operator()(int x, int y) const;
+		Pixel operator()(int x, int y) const;
 
-		PIXEL& operator()(int x, int y);
+		Pixel& operator()(int x, int y);
 
-		static void Draw3D(Image& image, const Projector& projector, const Eigen::Vector3f& translation,
-			const PIXEL& color, const int brush_size, const std::vector<float3>& pointcloud);
-
-		static void Draw3D(Image& image, const Projector& projector,
-			const PIXEL& color, const int brush_size, const std::vector<float3>& pointcloud)
+		static inline Eigen::Vector2f& Coordinate(Eigen::Vector2f&& point)
 		{
-			Draw3D(image, projector, Eigen::Vector3f(0.f,0.f,0.f), color, brush_size, pointcloud);
+			point.y() = IMAGE_HEIGHT - point.y();
+			return point;
 		}
 
-		static void Draw3D(Image& image, const Projector& projector, const Eigen::Vector3f& translation,
-			const PIXEL& color, const std::vector<float3>& pointcloud)
+		static inline std::vector<float>& Coordinates(std::vector<float>&& points)
 		{
-			Draw3D(image, projector, translation, color, 0, pointcloud);
+			for (size_t i = 1; i < points.size(); i += 2)
+			{
+				points[i] = IMAGE_HEIGHT - points[i];
+			}
+
+			return points;
 		}
 
-		static void Draw3D(Image& image, const Projector& projector,
-			const PIXEL& color, const std::vector<float3>& pointcloud)
+		static inline Eigen::Vector2f& Jacobian(Eigen::Vector2f&& point)
 		{
-			Draw3D(image, projector, color, 0, pointcloud);
+			point.y() = -point.y();
+			return point;
 		}
 
-		static void Draw2D(Image& image, const PIXEL& color, const int brush_size, const std::vector<float>& points);
+		static void Draw3D(Image& image, const Pixel& color, const int brush_size, 
+			const Projector& projector, const Eigen::Vector3f& translation,
+			const std::vector<float3>& pointcloud);
+
+		static void Draw3D(Image& image, const Pixel& color, 
+			const Projector& projector, const Eigen::Vector3f& translation,
+			const std::vector<float3>& pointcloud)
+		{
+			Draw3D(image, color, 0, 
+				projector, translation, pointcloud);
+		}
+
+		static void Draw2D(Image& image, const Pixel& color, const int brush_size, 
+			const std::vector<float>& points);
+
+		static void Draw2D(Image& image, const Pixel& color,
+			const std::vector<float>& points)
+		{
+			Draw2D(image, color, 1, points);
+		}
 
 		void SavePNG(const std::string& filename) const
 		{

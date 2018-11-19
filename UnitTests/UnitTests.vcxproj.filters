@@ -39,9 +39,6 @@
     <ClCompile Include="TestEigen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestReconstruction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TestSilhouetteReconstruction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -54,11 +51,23 @@
     <ClCompile Include="TestSilhouetteRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestJointsReconstruction.cpp">
+    <ClCompile Include="TestReconstruction2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestShapeFromJoints.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestJointsDerivatives.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Settings\UnitTests.runsettings" />
+    <None Include="Configurations\synthetic_shape_from_joints.json">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Configurations\jacobian_joints_from_shape.json">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@ using namespace smpl;
 
 TEST_CASE("Jacobian Body From Shape")
 {
-	Generator generator(Generator::Configuration(std::string("../Model")));
+	Generator generator(Generator::Configuration(std::string("../Model/")));
 
 	ShapeCoefficients input_betas;
 	PoseEulerCoefficients input_thetas;
@@ -39,7 +39,7 @@ TEST_CASE("Jacobian Body From Shape")
 
 TEST_CASE("Jacobian Body From Pose")
 {
-	Generator generator(Generator::Configuration(std::string("../Model")));
+	Generator generator(Generator::Configuration(std::string("../Model/")));
 	ShapeCoefficients input_betas;
 	PoseEulerCoefficients input_thetas;
 	input_thetas[HIP_RIGHT].z = 1.f;
