@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Definitions.h"
 #include "Generator.h"
 #include "Optimizer.h"
 #include "JointsRegressor.h"

@@ -45,15 +45,17 @@ namespace smpl
 		std::vector<float> FromRegressed
 			(const RegressedJoints& regressed_joints, const Eigen::Vector3f& translation) const;
 		
-		Eigen::Vector2f Jacobian(const Eigen::Vector3f& vertex, const Eigen::Vector3f& dvertex) const;
+		Eigen::Vector2f Jacobian(const Eigen::Vector3f& vertex, const Eigen::Vector3f& d_vertex) const;
 
 		Eigen::Matrix<float, 3, 2> Jacobian(const Eigen::Vector3f& vertex) const;
+
+		Eigen::Matrix4f CalculateView(const Eigen::Vector3f& translation) const;
+
+		Eigen::Matrix4f DirectXProjection(int width, int height) const;
 
 		const Eigen::Matrix3f& GetIntrinsics() const { return intrinsics_; }
 
 		const int IsRhs() const { return is_rhs_; }
-
-		Eigen::Matrix4f DirectXProjection(float width, float height) const;
 
 	private:
 		Eigen::Matrix4f CalculateNDC(float width, float height) const;

@@ -1,0 +1,6 @@
+{
+  "joints_weight": 1.0,
+  "silhouette_weight": 1.0,
+  "iterations": 30,
+  "ray_dist": 65
+}

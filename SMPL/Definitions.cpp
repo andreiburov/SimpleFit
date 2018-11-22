@@ -29,6 +29,46 @@ namespace smpl
 		"HAND_LEFT",
 	};
 
+	std::map<std::string, int> INDEX_FROM_JOINT = {
+		{"HIP_CENTER", 0},
+		{"HIP_RIGHT", 1},
+		{"HIP_LEFT", 2},
+		{"STOMACH", 3},
+		{"KNEE_RIGHT", 4},
+		{"KNEE_LEFT", 5},
+		{"BACKBONE", 6},
+		{"ANKLE_RIGHT", 7},
+		{"ANKLE_LEFT", 8},
+		{"CHEST", 9},
+		{"FOOT_RIGHT", 10},
+		{"FOOT_LEFT", 11},
+		{"SHOULDER_CENTER", 12},
+		{"PECK_RIGHT", 13},
+		{"PECK_LEFT", 14},
+		{"CHIN", 15},
+		{"SHOULDER_RIGHT", 16},
+		{"SHOULDER_LEFT", 17},
+		{"ELBOW_RIGHT", 18},
+		{"ELBOW_LEFT", 19},
+		{"WRIST_RIGHT", 20},
+		{"WRIST_LEFT", 21},
+		{"HAND_RIGHT", 22},
+		{"HAND_LEFT", 23}
+	};
+
+	int GetIndexFromJoint(std::string joint)
+	{
+		try {
+			return INDEX_FROM_JOINT.at(joint);
+		}
+		catch (...)
+		{
+			std::cerr << "Joint name not recognized: " << joint << std::endl;
+		}
+
+		return -1;
+	}
+
 	std::vector<float3> Joints2Vector(const RegressedJoints& joints)
 	{
 		std::vector<float3> r;

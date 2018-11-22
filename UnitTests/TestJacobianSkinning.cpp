@@ -4,8 +4,6 @@
 
 using namespace smpl;
 
-namespace skinning_derivatives
-{
 //	float prec = 0.9f;
 //	float delta = 0.15f;
 //
@@ -152,4 +150,3 @@ namespace skinning_derivatives
 //
 //		TestSkinningDerivatives(pose, indexes);
 //	}
-}

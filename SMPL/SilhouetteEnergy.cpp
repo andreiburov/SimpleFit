@@ -1,8 +1,8 @@
-#include "SilhouetteEnergy.h"
-
 #include <stdexcept>
 #include <cmath>
 #include <functional>
+
+#include "SilhouetteEnergy.h"
 #include "LevenbergMarquardt.h"
 
 namespace smpl
@@ -124,8 +124,11 @@ namespace smpl
 		}
 	}
 
-	SilhouetteEnergy::SilhouetteEnergy(const Generator& generator, const Projector& projector) :
-		generator_(generator), projector_(projector), silhouette_renderer_(generator_(true)), is_rhs_(projector.IsRhs()),
+	SilhouetteEnergy::SilhouetteEnergy(
+		const Generator& generator, 
+		const Projector& projector, 
+		const SilhouetteRenderer& renderer) :
+		generator_(generator), projector_(projector), silhouette_renderer_(renderer), 
 		pose_prior_per_theta_({
 		10, 10, 10, // 0
 		1, 10, 2, //1 
@@ -155,7 +158,9 @@ namespace smpl
 	{
 	}
 
-	Correspondences SilhouetteEnergy::FindCorrespondences(const Image& input, const Image& model, const std::vector<float4>& normals)
+	Correspondences SilhouetteEnergy::FindCorrespondences(
+		const Image& input, 
+		const Image& model, const std::vector<float4>& normals) const
 	{
 		Image correspondences(model);
 		Image input_contour(input);
@@ -205,6 +210,7 @@ namespace smpl
 			Bresenham(stop_condition, model_correspondence[i], input_correspondence[i],
 				correspondences, true);
 		}
+
 		// Draw input onto correspondences for clarity
 		for (int y = 0; y < IMAGE_HEIGHT; y++)
 			for (int x = 0; x < IMAGE_WIDTH; x++)
@@ -219,8 +225,10 @@ namespace smpl
 		return result;
 	}
 
-	void SilhouetteEnergy::PruneCorrepondences(const Image& input, const Image& model, const std::vector<float4>& normals,
-		Correspondences& correspondences)
+	void SilhouetteEnergy::PruneCorrepondences(
+		const Image& input, 
+		const Image& model, const std::vector<float4>& normals,
+		Correspondences& correspondences) const
 	{
 		std::vector<Point<float> > input_normals;
 		input_normals.reserve(correspondences.input_border.size());
@@ -314,17 +322,18 @@ namespace smpl
 		correspondences.image = draw_correspondences;
 	}
 
-	Silhouette SilhouetteEnergy::Infer(const std::string& image_filename, Eigen::Vector3f& translation,
-		ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
+	Silhouette SilhouetteEnergy::Infer(const Eigen::Vector3f& translation,
+		const ShapeCoefficients& betas,
+		const PoseEulerCoefficients& thetas) const
 	{
 		Body body = generator_(betas, thetas, true);
-		Silhouette result = silhouette_renderer_(body, CalculateView(translation),
-			projector_.DirectXProjection(static_cast<float>(IMAGE_WIDTH), static_cast<float>(IMAGE_HEIGHT)));
+		Silhouette result = silhouette_renderer_(body, projector_.CalculateView(translation),
+			projector_.DirectXProjection(IMAGE_WIDTH, IMAGE_HEIGHT));
 		return result;
 	}
 
 	void SilhouetteEnergy::ComputeSilhouetteError(const Correspondences& correspondences,
-		const int residuals, Eigen::VectorXf& error) const
+		const int residuals, const float weight, Eigen::VectorXf& error) const
 	{
 #pragma omp parallel for
 		for (int m = 0; m < residuals; m += 2)
@@ -337,25 +346,25 @@ namespace smpl
 		// that one adds up compared to the previous iteration
 		float norm = sqrt(static_cast<float>(correspondences.model_border.size() * 2));
 		error /= norm;
-		error *= silhouette_weight_;
+		error *= weight;
 	}
 
 	void SilhouetteEnergy::ComputePosePriorError(
-		const PoseEulerCoefficients& thetas, Eigen::VectorXf error) const
+		const PoseEulerCoefficients& thetas, const float weight, Eigen::VectorXf error) const
 	{
 #pragma omp parallel for
 		for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
 		{
-			error(k) = pose_prior_weight_ * pose_prior_per_theta_[k] * thetas(k);
+			error(k) = weight * pose_prior_per_theta_[k] * thetas(k);
 		}
 	}
 
 	void SilhouetteEnergy::ComputeSilhouetteFromShapeJacobian(
 		const Body& body, const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
 		const Silhouette& silhouette, const Correspondences& correspondences, 
-		const int residuals, Eigen::MatrixXf& jacobian) const
+		const int residuals, const float weight, Eigen::MatrixXf& jacobian) const
 	{
-		Eigen::Matrix3f view = CalculateView(translation).block<3, 3>(0, 0);
+		Eigen::Matrix3f view = projector_.CalculateView(translation).block<3, 3>(0, 0);
 
 #pragma omp parallel for
 		for (int m = 0; m < residuals; m += 2)
@@ -379,20 +388,27 @@ namespace smpl
 				Eigen::Vector3f dinterpolated = barycentrics[0] * dv0 +
 					barycentrics[1] * dv1 + barycentrics[2] * dv2;
 
-				Eigen::Vector2f dprojection = projector_.Jacobian(interpolated, dinterpolated);
-				jacobian(m, j) = dprojection.x();
-				// Flip the sign of y transforming from DirectX Image Space to FreeImage Image Space
-				jacobian(m + 1, j) = -dprojection.y();
+				Eigen::Vector2f dsilhouette = Image::Jacobian(
+					projector_.Jacobian(interpolated, dinterpolated));
+
+				jacobian(m, j) = dsilhouette.x();
+				jacobian(m + 1, j) = dsilhouette.y();
 			}
 		}
+
+		// need to normalize since there might be unequal number of correspondences
+		// that one adds up compared to the previous iteration
+		float norm = sqrt(static_cast<float>(correspondences.model_border.size() * 2));
+		jacobian /= norm;
+		jacobian *= weight;
 	}
 
 	void SilhouetteEnergy::ComputeSilhouetteFromPoseJacobian(
 		const Body& body, const std::vector<float3>& dpose, const Eigen::Vector3f& translation,
 		const Silhouette& silhouette, const Correspondences& correspondences,
-		const int residuals, Eigen::MatrixXf& jacobian) const
+		const int residuals, const float weight, Eigen::MatrixXf& jacobian) const
 	{
-		Eigen::Matrix3f view = CalculateView(translation).block<3, 3>(0, 0);
+		Eigen::Matrix3f view = projector_.CalculateView(translation).block<3, 3>(0, 0);
 
 #pragma omp parallel for
 		for (int m = 0; m < residuals; m += 2)
@@ -416,10 +432,11 @@ namespace smpl
 				Eigen::Vector3f dinterpolated = barycentrics[0] * dv0 +
 					barycentrics[1] * dv1 + barycentrics[2] * dv2;
 
-				Eigen::Vector2f dprojection = projector_.Jacobian(interpolated, dinterpolated);
-				jacobian(m, k) = dprojection.x();
-				// Flip the sign of y transforming from DirectX Image Space to FreeImage Image Space
-				jacobian(m + 1, k) = -dprojection.y();
+				Eigen::Vector2f dsilhouette = Image::Jacobian(
+					projector_.Jacobian(interpolated, dinterpolated));
+
+				jacobian(m, k) = dsilhouette.x();
+				jacobian(m + 1, k) = dsilhouette.y();
 			}
 		}
 
@@ -427,164 +444,15 @@ namespace smpl
 		// that one adds up compared to the previous iteration
 		float norm = sqrt(static_cast<float>(correspondences.model_border.size() * 2));
 		jacobian /= norm;
-		jacobian *= silhouette_weight_;
+		jacobian *= weight;
 	}
 
-	void SilhouetteEnergy::ComputePosePriorJacobian(Eigen::MatrixXf& jacobian) const
+	void SilhouetteEnergy::ComputePosePriorJacobian(const float weight, Eigen::MatrixXf& jacobian) const
 	{
 #pragma omp parallel for
 		for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
 		{
-			jacobian(k, k) = pose_prior_weight_ * pose_prior_per_theta_[k];
+			jacobian(k, k) = weight * pose_prior_per_theta_[k];
 		}
-	}
-
-	void SilhouetteEnergy::ReconstructShape(const std::string& log_path, const Image& input,
-		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
-	{
-		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT); // dsmpl/dbeta
-		const int iterations_ = 20;
-		const int unknowns = BETA_COUNT;
-
-		LevenbergMarquardt lm_solver(unknowns, true);
-
-		for (uint iteration = 0; iteration < iterations_; iteration++)
-		{
-			std::cout << "Iteration " << iteration << std::endl;
-			std::cout << "Beta" << std::endl;
-			for (uint j = 0; j < BETA_COUNT; j++)
-				std::cout << betas[j] << " ";
-			std::cout << std::endl;
-				
-			Body body = generator_(betas, thetas, true);
-			Silhouette silhouette = silhouette_renderer_(body, CalculateView(translation),
-				projector_.DirectXProjection(static_cast<float>(IMAGE_WIDTH), 
-					static_cast<float>(IMAGE_HEIGHT)));
-			silhouette.GetImage().SavePNG(
-				log_path + std::string("/silhouette") + 
-				std::to_string(iteration) + std::string(".png"));
-			Correspondences correspondences = FindCorrespondences(input, silhouette.GetImage(), silhouette.GetNormals());
-			correspondences.image.SavePNG(
-				log_path + std::string("/correspondences") +
-				std::to_string(iteration) + std::string(".png"));
-
-			// should be x2 since each point has two components
-			const int residuals = static_cast<int>(correspondences.model_border.size() * 2); 
-
-			Eigen::MatrixXf jacobian = Eigen::MatrixXf::Zero(residuals, unknowns);
-			Eigen::VectorXf error = Eigen::VectorXf::Zero(residuals);
-			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
-
-			ComputeSilhouetteError(correspondences, residuals, error);
-
-			generator_.ComputeBodyFromShapeJacobian(dshape);
-			ComputeSilhouetteFromShapeJacobian(body, dshape, translation, silhouette, 
-				correspondences, residuals, jacobian);
-
-			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
-			if (minimized)
-				for (int i = 0; i < unknowns; i++)
-					betas[i] -= delta(i);
-			else
-				for (int i = 0; i < unknowns; i++)
-					betas[i] += delta(i);
-		}
-	}
-
-	void SilhouetteEnergy::ReconstructPose(
-		const std::string& log_path, const Image& input, const int ray_dist,
-		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas)
-	{
-		std::vector<float3> dpose(VERTEX_COUNT * THETA_COMPONENT_COUNT); // dsmpl/dtheta
-		ray_dist_ = ray_dist;
-		const int iterations_ = 30;
-		const int unknowns = THETA_COMPONENT_COUNT;
-
-		LevenbergMarquardt lm_solver(unknowns, true);
-
-		for (uint iteration = 0; iteration < iterations_; iteration++)
-		{
-			std::cout << "Iteration " << iteration << std::endl;
-
-			Body body = generator_(betas, thetas, true);
-			Silhouette silhouette = silhouette_renderer_(body, CalculateView(translation),
-				projector_.DirectXProjection(static_cast<float>(IMAGE_WIDTH),
-					static_cast<float>(IMAGE_HEIGHT)));
-			silhouette.GetImage().SavePNG(
-				log_path + std::string("/silhouette") +
-				std::to_string(iteration) + std::string(".png"));
-			Correspondences correspondences = FindCorrespondences(input, silhouette.GetImage(), silhouette.GetNormals());
-			PruneCorrepondences(input, silhouette.GetImage(), silhouette.GetNormals(), correspondences);
-			correspondences.image.SavePNG(
-				log_path + std::string("/correspondences") +
-				std::to_string(iteration) + std::string(".png"));
-
-			// should be x2 since each point has two components
-			const int residuals_silhouette = static_cast<int>(correspondences.model_border.size() * 2);
-			Eigen::MatrixXf jacobian_silhouette = Eigen::MatrixXf::Zero(residuals_silhouette, unknowns);
-			Eigen::VectorXf error_silhouette = Eigen::VectorXf::Zero(residuals_silhouette);
-
-			ComputeSilhouetteError(correspondences, residuals_silhouette, error_silhouette);
-			generator_.ComputeBodyFromPoseJacobian(body, dpose);
-			ComputeSilhouetteFromPoseJacobian(body, dpose, translation, 
-				silhouette,	correspondences, 
-				residuals_silhouette, jacobian_silhouette);
-
-			const int residuals_pose_prior = THETA_COMPONENT_COUNT;
-			Eigen::MatrixXf jacobian_pose_prior = Eigen::MatrixXf::Zero(residuals_pose_prior, unknowns);
-			Eigen::VectorXf error_pose_prior = Eigen::VectorXf::Zero(residuals_pose_prior);
-
-			ComputePosePriorError(thetas, error_pose_prior);
-			ComputePosePriorJacobian(jacobian_pose_prior);
-
-			const int residuals = residuals_silhouette + residuals_pose_prior;
-			Eigen::MatrixXf jacobian(residuals, unknowns);
-			Eigen::VectorXf error(residuals);
-			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
-
-			jacobian << jacobian_silhouette, jacobian_pose_prior;
-			error << error_silhouette, error_pose_prior;
-
-			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
-			if (minimized)
-				for (int i = 0; i < unknowns; i++)
-					thetas(i) -= delta(i);
-			else
-				for (int i = 0; i < unknowns; i++)
-					thetas(i) += delta(i);
-
-			std::cout << "Thetas\n";
-			for (int i = 0; i < unknowns; i++)
-				std::cout << thetas(i) << " ";
-			std::cout << "\n";
-		}
-	}
-
-	Eigen::Matrix4f SilhouetteEnergy::CalculateView(Eigen::Vector3f translation) const
-	{
-		Eigen::Matrix4f view(Eigen::Matrix4f::Identity());
-
-		if (is_rhs_)
-		{
-			// put mesh at negative distance
-			view(0, 3) = translation.x();
-			view(1, 3) = translation.y();
-			view(2, 3) = -translation.z();
-		}
-		else 
-		{
-			// mesh is facing from us in LHS, rotate 180 around y
-			view(0, 0) = -1;
-			view(1, 1) = 1;
-			view(2, 2) = -1;
-
-			view(0, 3) = translation.x();
-			view(1, 3) = translation.y();
-			view(2, 3) = translation.z();
-		}
-
-		return view;
 	}
 }

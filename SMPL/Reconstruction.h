@@ -8,7 +8,7 @@
 
 #include <cereal/cereal.hpp>
 #include <cereal/archives/json.hpp>
-#include <cereal/types/vector.hpp>
+#include <cereal/experimental/eigen.hpp>
 #include <fstream>
 
 namespace smpl
@@ -19,40 +19,37 @@ namespace smpl
 
 		struct Configuration
 		{
-			bool logging_on_;
-			float joints_weight_;
-			int iterations_;
-			std::string model_path_;
-			std::string output_path_;
-			std::vector<float> translation_vector_;
-			
-			Eigen::Vector3f translation_;
+			float joints_weight;
+			float silhouette_weight;
+			int iterations;
+			int ray_dist;
+			std::string model_path;
 
 			Configuration() {}
 
-			Configuration(const std::string& configuration_path)
+			Configuration(
+				const std::string& model_path,
+				const std::string& config_path) :
+				model_path(model_path)
 			{
-				std::ifstream in(configuration_path);
-				if (!in) MessageBoxA(nullptr, std::string("File not found: ").append(configuration_path).c_str(), "Error", MB_OK);
+				std::string config(model_path + config_path);
+				std::ifstream in(config);
+				if (!in) MessageBoxA(nullptr, 
+					std::string("File not found: ").append(config).c_str(),
+					"Error", MB_OK);
 				cereal::JSONInputArchive archive(in);
 
 				Serialize(archive);
-
-				translation_(0) = translation_vector_[0];
-				translation_(1) = translation_vector_[1];
-				translation_(2) = translation_vector_[2];
 			}
 
 			template<class Archive>
 			void Serialize(Archive& archive)
 			{
 				archive(
-					CEREAL_NVP(logging_on_),
-					CEREAL_NVP(joints_weight_),
-					CEREAL_NVP(iterations_),
-					CEREAL_NVP(model_path_),
-					CEREAL_NVP(output_path_),
-					CEREAL_NVP(translation_vector_)
+					CEREAL_NVP(joints_weight),
+					CEREAL_NVP(silhouette_weight),
+					CEREAL_NVP(iterations),
+					CEREAL_NVP(ray_dist)
 				);
 			}
 
@@ -73,7 +70,34 @@ namespace smpl
 			const std::vector<float>& joints, Eigen::Vector3f& translation,
 			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
 
-		void ShapeFromJoints(const std::vector<float>& joints, ShapeCoefficients& betas) const;
+		void ShapeFromSilhouette(
+			const std::string& output_path,
+			const Image& input_silhouette,
+			const Eigen::Vector3f& translation,
+			ShapeCoefficients& betas) const;
+
+		void PoseFromSilhouette(
+			const std::string& output_path,
+			const Image& input_silhouette,
+			const Eigen::Vector3f& translation,
+			PoseEulerCoefficients& thetas) const;
+
+		void ShapeFromJoints(
+			const std::string& output_path, 
+			const std::vector<float>& input_joints, 
+			const Eigen::Vector3f& translation,
+			ShapeCoefficients& betas) const;
+
+		void PoseFromJoints(
+			const std::string& output_path,
+			const std::vector<float>& input_joints,
+			const Eigen::Vector3f& translation,
+			PoseEulerCoefficients& thetas) const;
+
+		const Generator& GetGenerator() const { return generator_; }
+		const Projector& GetProjector() const { return projector_; }
+		const JointsRegressor& GetJointsRegressor() const { return regressor_; }
+		const SilhouetteRenderer& GetSilhouetteRenderer() const { return silhouette_renderer_; }
 
 	private:
 
@@ -83,12 +107,9 @@ namespace smpl
 		const SilhouetteRenderer silhouette_renderer_;
 
 		// configuration
-
-		const bool logging_on_;
 		const float joints_weight_;
+		const float silhouette_weight_;
 		const int iterations_;
-		const std::string model_path_;
-		const std::string output_path_;
-		const Eigen::Vector3f translation_;
+		const int ray_dist_;
 	};
 }

@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <map>
 #include "DXUtils.h"
 
 #ifdef max
@@ -79,6 +80,7 @@ namespace smpl
 	};
 
 	extern const char* JOINT_FROM_INDEX[JOINT_COUNT];
+	int GetIndexFromJoint(std::string joint);
 
 	const int COCO_NOSE = 0;
 	const int COCO_SHOULDER_CENTER = 1;
@@ -133,6 +135,17 @@ namespace smpl
 		ShapeCoefficients()
 		{
 			betas.resize(BETA_COUNT);
+		}
+
+		ShapeCoefficients(const std::map<int, float>& map)
+		{
+			betas.resize(BETA_COUNT);
+			
+			std::map<int, float>::const_iterator cit = map.cbegin();
+			for (; cit != map.cend(); ++cit)
+			{
+				betas[cit->first] = cit->second;
+			}
 		}
 
 		ShapeCoefficients(const ShapeCoefficients& other) :
@@ -221,6 +234,17 @@ namespace smpl
 		PoseEulerCoefficients()
 		{
 			thetas.resize(THETA_COUNT, float3());
+		}
+
+		PoseEulerCoefficients(const std::map<std::string, float3>& map)
+		{
+			thetas.resize(THETA_COUNT, float3());
+
+			std::map<std::string, float3>::const_iterator cit = map.cbegin();
+			for (; cit != map.cend(); ++cit)
+			{
+				thetas[GetIndexFromJoint(cit->first)] = cit->second;
+			}
 		}
 
 		PoseEulerCoefficients(const PoseEulerCoefficients& other) :

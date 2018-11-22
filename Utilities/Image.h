@@ -20,7 +20,7 @@ public:
 	}
 
 	// first access y then access x!
-	RGBTRIPLE* operator[](unsigned i)
+	RGBTRIPLE* operator[](int i)
 	{
 		if (i < 0)
 		{

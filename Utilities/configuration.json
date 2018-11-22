@@ -1,11 +1,22 @@
 {
-    "with_normals": true,
-    "output_path": "hello world",
-    "precision": 0.10000000149011612,
-    "iterations": 10,
-    "numbers": [
-        3,
-        2,
-        1
-    ]
+    "betas": [],
+    "thetas": [
+        {
+            "key": "SHOULDER_RIGHT",
+            "value": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 1.0
+            }
+        }
+    ],
+    "translation": {
+        "rows": 3,
+        "cols": 1,
+        "value0": 1.0,
+        "value1": 2.0,
+        "value2": 3.0
+    },
+    "model_path": "Model",
+    "output_path": "Out"
 }

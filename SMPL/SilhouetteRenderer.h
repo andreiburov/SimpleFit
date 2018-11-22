@@ -122,41 +122,44 @@ namespace smpl
 			Eigen::Matrix4f projection;
 		};
 
-		SilhouetteRenderer(const Body& body); // pass body to allocate appropriate amounts of memory
-		Silhouette operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection); // pass body to create a silhouette
-
+		// pass body to allocate appropriate amounts of memory
+		SilhouetteRenderer(const Body& body); 
+		
+		// pass body to create a silhouette
+		Silhouette operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection) const;
+	
 	private:
 
-		void SetMatrices(const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection);
+		void SetMatrices(const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection) const;
 
 		// silhouette, normals, vertex indices, barycentric coordinates
 		static const int		render_targets_number_ = 4;
 
-		ID3D11Device*			device_ = nullptr;
-		ID3D11DeviceContext*	device_context_ = nullptr;
+		mutable ID3D11Device*			device_ = nullptr;
+		mutable ID3D11DeviceContext*	device_context_ = nullptr;
 
-		ID3D11VertexShader*		vertex_shader_ = nullptr;
-		ID3D11GeometryShader*	geometry_shader_ = nullptr;
-		ID3D11PixelShader*		pixel_shader_ = nullptr;
+		mutable ID3D11VertexShader*		vertex_shader_ = nullptr;
+		mutable ID3D11GeometryShader*	geometry_shader_ = nullptr;
+		mutable ID3D11PixelShader*		pixel_shader_ = nullptr;
 
-		ID3D11InputLayout *		input_layout_ = nullptr;
-		ID3D11Buffer*			vertex_buffer_ = nullptr;
-		ID3D11Buffer*			index_buffer_ = nullptr;
-		unsigned int			indices_count_ = 0;
+		mutable ID3D11InputLayout *		input_layout_ = nullptr;
+		mutable ID3D11Buffer*			vertex_buffer_ = nullptr;
+		mutable ID3D11Buffer*			index_buffer_ = nullptr;
+		mutable unsigned int			indices_count_ = 0;
 
-		ID3D11Buffer*			camera_constant_buffer_ = nullptr;
-		Matrices				matrices_;
+		mutable ID3D11Buffer*			camera_constant_buffer_ = nullptr;
+		mutable Matrices				matrices_;
 
-		ID3D11Texture2D*		render_target_textures_[render_targets_number_];
-		ID3D11Texture2D*		render_target_staging_textures_[render_targets_number_];
-		ID3D11Texture2D*		depth_stencil_texture_;
-		ID3D11RenderTargetView* render_target_views_[render_targets_number_];
-		ID3D11DepthStencilView* depth_stencil_view_;
-		ID3D11DepthStencilState*
+		mutable ID3D11Texture2D*		render_target_textures_[render_targets_number_];
+		mutable ID3D11Texture2D*		render_target_staging_textures_[render_targets_number_];
+		mutable ID3D11Texture2D*		depth_stencil_texture_;
+		mutable ID3D11RenderTargetView* render_target_views_[render_targets_number_];
+		mutable ID3D11DepthStencilView* depth_stencil_view_;
+		mutable ID3D11DepthStencilState*
 								depth_stencil_state_;
 
 #ifdef _DEBUG
-		RENDERDOC_API_1_1_2*	rdoc_api_ = nullptr;
+		mutable RENDERDOC_API_1_1_2*	rdoc_api_ = nullptr;
 #endif
 	};
 }

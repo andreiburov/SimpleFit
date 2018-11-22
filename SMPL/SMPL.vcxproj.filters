@@ -12,6 +12,9 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{874b7e42-a859-40e9-bb53-0618871e2327}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Reconstruction">
+      <UniqueIdentifier>{16b5dbe9-9993-4329-bb8b-6024e49fed04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Generator.h">
@@ -116,6 +119,12 @@
   <ItemGroup>
     <None Include="Silhouette.hlsli">
       <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Model\Reconstructions\quick.json">
+      <Filter>Reconstruction</Filter>
+    </None>
+    <None Include="..\Model\Reconstructions\medium.json">
+      <Filter>Reconstruction</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

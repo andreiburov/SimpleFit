@@ -224,7 +224,7 @@ namespace smpl
 		}
 	}
 
-	Silhouette SilhouetteRenderer::operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
+	Silhouette SilhouetteRenderer::operator()(const Body& body, const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection) const
 	{
 		SetMatrices(view, projection);
 
@@ -311,15 +311,6 @@ namespace smpl
 				silhouette_image[j][i].r() = (pixel[0] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[0] * 255 + 0.5f);
 				silhouette_image[j][i].g() = (pixel[1] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[1] * 255 + 0.5f);
 				silhouette_image[j][i].b() = (pixel[2] < 1e-8f) ? 0U : static_cast<BYTE>(pixel[2] * 255 + 0.5f);
-
-				/*float4 normal(copied_textures[1][j*IMAGE_WIDTH + i]);
-				float4 vertex_indices(copied_textures[2][j*IMAGE_WIDTH + i]);
-				float4 barycentric(copied_textures[3][j*IMAGE_WIDTH + i]);*/
-
-				/*if (pixel[0] > 0.00001f)
-				{
-					std::cout << "x " << i << ", y " << j << std::endl;
-				}*/
 			}
 		}
 #endif
@@ -333,7 +324,7 @@ namespace smpl
  		return silhouette;
 	}
 
-	void SilhouetteRenderer::SetMatrices(const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection)
+	void SilhouetteRenderer::SetMatrices(const Eigen::Matrix4f& view, const Eigen::Matrix4f& projection) const
 	{
 		matrices_.view = view;
 		matrices_.view_it = view.inverse().transpose();

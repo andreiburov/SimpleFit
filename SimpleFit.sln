@@ -5,6 +5,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SMPL", "SMPL\SMPL.vcxproj", "{83782BEA-C3B8-4414-9F19-FB1307AFFF51}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utilities", "Utilities\Utilities.vcxproj", "{94DA073E-4348-4849-9CB4-3716BEAB0DB6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{83782BEA-C3B8-4414-9F19-FB1307AFFF51} = {83782BEA-C3B8-4414-9F19-FB1307AFFF51}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5420484A-9685-4A5C-8620-704E4B74B7E6}"
 	ProjectSection(SolutionItems) = preProject

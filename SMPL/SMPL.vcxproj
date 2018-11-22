@@ -55,6 +55,8 @@
     <ClInclude Include="SMPL.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Model\Reconstructions\medium.json" />
+    <None Include="..\Model\Reconstructions\quick.json" />
     <None Include="Silhouette.hlsli" />
   </ItemGroup>
   <ItemGroup>
@@ -173,7 +175,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;_HAS_ITERATOR_DEBUGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;$(SolutionDir)3rdparty\Boost-1.68.0;</AdditionalIncludeDirectories>
       <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -240,7 +242,7 @@ copy *.cso ..\x64\Release\ /Y</Command>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;$(SolutionDir)3rdparty\Boost-1.68.0;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

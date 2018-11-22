@@ -44,7 +44,6 @@ namespace smpl
 		// rhs
 		Eigen::Vector3f ToView(const Eigen::Vector3f& vertex, const Eigen::Vector3f& translation) const;
 		Eigen::Vector3f ToView(const Eigen::Vector3f& vertex) const;
-		Eigen::Matrix4f CalculateView(Eigen::Vector3f translation) const;
 
 	private:
 

@@ -91,7 +91,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)SMPL;$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)3rdparty\Catch2;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)SMPL;$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)3rdparty\Catch2;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;$(SolutionDir)3rdparty\Boost-1.68.0;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)SMPL;$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)3rdparty\Catch2;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)SMPL;$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)3rdparty\Catch2;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;$(SolutionDir)3rdparty\Boost-1.68.0;C:\Program Files\RenderDoc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -155,20 +155,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="TestBodyDerivatives.cpp" />
+    <ClCompile Include="Common.cpp" />
+    <ClCompile Include="TestSilhouetteCorrespondences.cpp" />
+    <ClCompile Include="TestProjector.cpp" />
+    <ClCompile Include="TestJacobianBody.cpp" />
     <ClCompile Include="TestEigen.cpp" />
     <ClCompile Include="TestEulerAngles.cpp" />
     <ClCompile Include="TestExtrinsics.cpp" />
-    <ClCompile Include="TestJointsDerivatives.cpp" />
+    <ClCompile Include="TestJacobianJoints.cpp" />
     <ClCompile Include="TestKinematicChain.cpp" />
     <ClCompile Include="TestReconstruction2.cpp" />
     <ClCompile Include="TestPoseReconstruction2D.cpp" />
     <ClCompile Include="TestPoseReconstruction3D.cpp" />
     <ClCompile Include="TestShapeFromJoints.cpp" />
     <ClCompile Include="TestShapeReconstruction.cpp" />
-    <ClCompile Include="TestSilhouetteReconstruction.cpp" />
+    <ClCompile Include="TestJacobianSilhouette.cpp" />
+    <ClCompile Include="TestSyntheticReconstructionFromJoints.cpp" />
+    <ClCompile Include="TestSyntheticReconstructionFromSilhouette.cpp" />
     <ClCompile Include="TestSilhouetteRenderer.cpp" />
-    <ClCompile Include="TestSkinningDerivatives.cpp" />
+    <ClCompile Include="TestJacobianSkinning.cpp" />
     <ClCompile Include="UnitTests.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -177,11 +182,32 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Configurations\jacobian_joints_from_shape.json" />
-    <None Include="Configurations\synthetic_shape_from_joints.json" />
+    <None Include="Confs\jacobian_joints_from_pose0.json" />
+    <None Include="Confs\jacobian_joints_from_pose1.json" />
+    <None Include="Confs\jacobian_joints_from_pose2.json" />
+    <None Include="Confs\jacobian_joints_from_shape0.json" />
+    <None Include="Confs\jacobian_joints_from_shape1.json" />
+    <None Include="Confs\jacobian_silhouette_from_pose0.json" />
+    <None Include="Confs\jacobian_silhouette_from_pose1.json" />
+    <None Include="Confs\jacobian_silhouette_from_pose2.json" />
+    <None Include="Confs\jacobian_silhouette_from_shape0.json" />
+    <None Include="Confs\jacobian_silhouette_from_shape1.json" />
+    <None Include="Confs\synthetic_pose_from_joints0.json" />
+    <None Include="Confs\synthetic_pose_from_joints1.json" />
+    <None Include="Confs\synthetic_pose_from_joints2.json" />
+    <None Include="Confs\synthetic_pose_from_silhouette0.json" />
+    <None Include="Confs\synthetic_pose_from_silhouette1.json" />
+    <None Include="Confs\synthetic_pose_from_silhouette2.json" />
+    <None Include="Confs\synthetic_shape_from_joints0.json" />
+    <None Include="Confs\synthetic_shape_from_joints1.json" />
+    <None Include="Confs\synthetic_shape_from_silhouette0.json" />
+    <None Include="Confs\synthetic_shape_from_silhouette1.json" />
     <None Include="Settings\UnitTests.runsettings">
       <SubType>Designer</SubType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

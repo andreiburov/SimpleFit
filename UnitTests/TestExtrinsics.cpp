@@ -6,8 +6,6 @@
 
 using namespace smpl;
 
-namespace extrinsics
-{
 	/*ShapeCoefficients shape;
 	PoseEulerCoefficients pose;
 	Generator generator(smpl::Generator::Configuration(std::string("../Model")));
@@ -60,4 +58,3 @@ namespace extrinsics
 
 		TestExtrinsics("Frames0/1.png", tracked_joints);
 	}*/
-}

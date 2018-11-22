@@ -87,9 +87,9 @@ namespace smpl
 
 			for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
 			{
-				Eigen::Vector2f dprojection = projector_.Jacobian(v, dv[k]);
-				jacobian(m, k) = dprojection.x();
-				jacobian(m + 1, k) = dprojection.y();
+				Eigen::Vector2f djoint = Image::Jacobian(projector_.Jacobian(v, dv[k]));
+				jacobian(m, k) = djoint.x();
+				jacobian(m + 1, k) = djoint.y();
 			}
 		}
 
@@ -104,17 +104,5 @@ namespace smpl
 	Eigen::Vector3f JointsEnergy::ToView(const Eigen::Vector3f& vertex) const
 	{
 		return vertex;
-	}
-
-	Eigen::Matrix4f JointsEnergy::CalculateView(Eigen::Vector3f translation) const
-	{
-		Eigen::Matrix4f view(Eigen::Matrix4f::Identity());
-
-		// put mesh at negative distance
-		view(0, 3) = translation.x();
-		view(1, 3) = translation.y();
-		view(2, 3) = translation.z();
-
-		return view;
 	}
 }

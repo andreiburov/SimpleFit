@@ -1,0 +1,31 @@
+{
+  "betas": [],
+  "thetas": [
+    {
+      "key": "SHOULDER_RIGHT",
+      "value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+      }
+    },
+    {
+      "key": "ELBOW_RIGHT",
+      "value": {
+        "x": 0.0,
+        "y": -1.0,
+        "z": 0.5
+      }
+    }
+  ],
+  "translation": {
+    "rows": 3,
+    "cols": 1,
+    "value0": 0.0,
+    "value1": 0.15,
+    "value2": -4.2
+  },
+  "model_path": "../Model/",
+  "output_path": "JacobianJointsFromPose1/",
+  "reconstruction_config": "Reconstructions/quick.json"
+}

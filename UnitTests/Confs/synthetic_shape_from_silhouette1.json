@@ -1,0 +1,23 @@
+{
+  "betas": [
+    {
+      "key": 1,
+      "value": -4.0
+    },
+    {
+      "key": 6,
+      "value": -7.0
+    }
+  ],
+  "thetas": [],
+  "translation": {
+    "rows": 3,
+    "cols": 1,
+    "value0": 0.0,
+    "value1": 0.15,
+    "value2": -4.2
+  },
+  "model_path": "../Model/",
+  "output_path": "SyntheticShapeFromSilhouette1/",
+  "reconstruction_config": "Reconstructions/quick.json"
+}

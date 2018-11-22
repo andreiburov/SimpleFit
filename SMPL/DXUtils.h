@@ -3,6 +3,7 @@
 #include <d3d11_1.h>
 #include <iostream>
 #include <algorithm>
+#include <cereal/cereal.hpp>
 #include <Eigen/Eigen>
 #ifdef _DEBUG
 #include <renderdoc_app.h>
@@ -306,3 +307,22 @@ namespace smpl
 		ID3D11DeviceContext*     device_context = nullptr;
 	};
 } // smpl
+
+namespace cereal
+{
+	template <class Archive> inline
+		void save(Archive & ar, smpl::float3 const & vec)
+	{
+		ar(CEREAL_NVP_("x", vec.x));
+		ar(CEREAL_NVP_("y", vec.y));
+		ar(CEREAL_NVP_("z", vec.z));
+	}
+
+	template <class Archive> inline
+		void load(Archive & ar, smpl::float3 & vec)
+	{
+		ar(CEREAL_NVP_("x", vec.x));
+		ar(CEREAL_NVP_("y", vec.y));
+		ar(CEREAL_NVP_("z", vec.z));
+	}
+} // namespace cereal
