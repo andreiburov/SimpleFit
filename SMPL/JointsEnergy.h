@@ -6,13 +6,6 @@
 
 namespace smpl
 {
-	struct OpenPoseJoint
-	{
-		int x;
-		int y;
-		float confidence;
-	};
-
 	class JointsEnergy
 	{
 	public:
@@ -24,21 +17,32 @@ namespace smpl
 			We can start by reading the values from the file.
 			But then it should be from the openpose.
 		*/
-		/*std::vector<OpenPoseJoint> Infer(const std::string& image_filename, Eigen::Vector3f& translation,
+		/*std::vector<float> Infer(const std::string& image_filename, Eigen::Vector3f& translation,
 			ShapeCoefficients& betas, PoseEulerCoefficients& thetas);*/
 
+		void InitializeCameraPosition(
+			const JointsRegressor::JointType& joint_type,
+			const std::vector<float>& input_joints,
+			const float focal_length_y, Eigen::Vector3f& translation) const;
+
 		void ComputeError(const std::vector<float>& input_joints, 
-			const RegressedJoints& model_joints, const Eigen::Vector3f translation,
+			const RegressedJoints& model_joints, const Eigen::Vector3f& translation,
 			const int residuals, const float weight, Eigen::VectorXf& error) const;
 
 		void ComputeJacobianFromShape(
-			const Body& body, const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
+			const Body& body, const RegressedJoints& model_joints, 
+			const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
 			const int residuals, const float weight, Eigen::MatrixXf& jacobian) const;
 
 		void ComputeJacobianFromPose(
-			const Body& body, const std::vector<float3>& dpose, const Eigen::Vector3f& translation,
+			const Body& body, const RegressedJoints& model_joints, 
+			const std::vector<float3>& dpose, const Eigen::Vector3f& translation,
 			const int residuals, const float weight, Eigen::MatrixXf& jacobian) const;
 
+		void ComputeJacobianFromTranslation(
+			const Body& body, const RegressedJoints& model_joints, const Eigen::Vector3f& translation,
+			const int residuals, const float weight, Eigen::MatrixXf& jacobian) const;
+		
 	private:
 
 		// rhs

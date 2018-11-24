@@ -1,0 +1,28 @@
+{
+  "betas": [
+    {
+      "key": 1,
+      "value": -7.0
+    }
+  ],
+  "thetas": [
+    {
+      "key": "SHOULDER_RIGHT",
+      "value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    }
+  ],
+  "translation": {
+    "rows": 3,
+    "cols": 1,
+    "value0": 0.0,
+    "value1": 0.15,
+    "value2": -4.2
+  },
+  "model_path": "../Model/",
+  "output_path": "SyntheticBodyFromJoints0/",
+  "reconstruction_config": "Reconstructions/quick.json"
+}

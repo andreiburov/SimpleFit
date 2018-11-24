@@ -55,8 +55,10 @@
     <ClInclude Include="SMPL.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Model\Reconstructions\long.json" />
     <None Include="..\Model\Reconstructions\medium.json" />
     <None Include="..\Model\Reconstructions\quick.json" />
+    <None Include="..\Model\Reconstructions\regularized.json" />
     <None Include="Silhouette.hlsli" />
   </ItemGroup>
   <ItemGroup>

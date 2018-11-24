@@ -1,0 +1,14 @@
+{
+  "betas": [],
+  "thetas": [],
+  "translation": {
+    "rows": 3,
+    "cols": 1,
+    "value0": 0.5,
+    "value1": 0.55,
+    "value2": -3.2
+  },
+  "model_path": "../Model/",
+  "output_path": "JacobianJointsFromTranslation1/",
+  "reconstruction_config": "Reconstructions/quick.json"
+}

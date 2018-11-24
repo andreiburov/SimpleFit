@@ -32,7 +32,8 @@ namespace smpl
 
 	Optimizer::Optimizer(Configuration& configuration, const Generator& generate, const std::vector<float>& tracked_joints) :
 		generate_(generate), project_(configuration.intrinsics),
-		coco_regress_(configuration.coco_regressor, COCO_JOINT_COUNT), smpl_regress_(configuration.smpl_regressor, JOINT_COUNT),
+		coco_regress_(configuration.coco_regressor, JointsRegressor::COCO, COCO_JOINT_COUNT), 
+		smpl_regress_(configuration.smpl_regressor, JointsRegressor::SMPL, JOINT_COUNT),
 		tracked_joints_(tracked_joints), optimization_parameters(std::move(configuration.optimization_parameters)),
 		checked_joint_sets_smpl_({
 			{ HIP_RIGHT, HIP_LEFT, BACKBONE, CHEST },

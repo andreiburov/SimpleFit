@@ -1,0 +1,64 @@
+{
+  "betas": [
+    {
+      "key": 5,
+      "value": 3.0
+    },
+    {
+      "key": 7,
+      "value": -3.0
+    },
+    {
+      "key": 8,
+      "value": 7.3
+    },
+    {
+      "key": 9,
+      "value": -5.0
+    }
+  ],
+  "thetas": [
+    {
+      "key": "SHOULDER_RIGHT",
+      "value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+      }
+    },
+    {
+      "key": "ELBOW_RIGHT",
+      "value": {
+        "x": 0.0,
+        "y": -1.0,
+        "z": 0.5
+      }
+    },
+    {
+      "key": "HIP_LEFT",
+      "value": {
+        "x": -0.7,
+        "y": 0.0,
+        "z": -1.2
+      }
+    },
+    {
+      "key": "KNEE_LEFT",
+      "value": {
+        "x": 0.7,
+        "y": 0.0,
+        "z": 0.0
+      }
+    }
+  ],
+  "translation": {
+    "rows": 3,
+    "cols": 1,
+    "value0": 0.0,
+    "value1": 0.15,
+    "value2": -4.2
+  },
+  "model_path": "../Model/",
+  "output_path": "SyntheticBodyRegularizedFromJoints2/",
+  "reconstruction_config": "Reconstructions/regularized.json"
+}

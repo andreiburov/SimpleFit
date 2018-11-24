@@ -126,6 +126,12 @@
     <None Include="..\Model\Reconstructions\medium.json">
       <Filter>Reconstruction</Filter>
     </None>
+    <None Include="..\Model\Reconstructions\long.json">
+      <Filter>Reconstruction</Filter>
+    </None>
+    <None Include="..\Model\Reconstructions\regularized.json">
+      <Filter>Reconstruction</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="SilhouetteGS.hlsl">

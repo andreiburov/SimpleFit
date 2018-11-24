@@ -1,10 +1,5 @@
 {
-  "betas": [
-    {
-      "key": 1,
-      "value": -7.0
-    }
-  ],
+  "betas": [],
   "thetas": [
     {
       "key": "SHOULDER_RIGHT",

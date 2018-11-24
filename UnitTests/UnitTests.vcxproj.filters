@@ -84,6 +84,12 @@
     <ClCompile Include="TestSilhouetteCorrespondences.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestJointsRegressor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestSyntheticReconstructionRegularized.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Settings\UnitTests.runsettings" />
@@ -145,6 +151,36 @@
       <Filter>Resource Files\Configs\Synthetic</Filter>
     </None>
     <None Include="Confs\synthetic_shape_from_silhouette1.json">
+      <Filter>Resource Files\Configs\Synthetic</Filter>
+    </None>
+    <None Include="Confs\synthetic_translation_from_joints0.json">
+      <Filter>Resource Files\Configs\Synthetic</Filter>
+    </None>
+    <None Include="Confs\synthetic_translation_from_joints1.json">
+      <Filter>Resource Files\Configs\Synthetic</Filter>
+    </None>
+    <None Include="Confs\jacobian_joints_from_translation1.json">
+      <Filter>Resource Files\Configs\Jacobian</Filter>
+    </None>
+    <None Include="Confs\jacobian_joints_from_translation0.json">
+      <Filter>Resource Files\Configs\Jacobian</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_joints0.json">
+      <Filter>Resource Files\Configs\Synthetic</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_joints1.json">
+      <Filter>Resource Files\Configs\Synthetic</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_joints2.json">
+      <Filter>Resource Files\Configs\Synthetic</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_regularized_from_joints0.json">
+      <Filter>Resource Files\Configs\Synthetic</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_regularized_from_joints1.json">
+      <Filter>Resource Files\Configs\Synthetic</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_regularized_from_joints2.json">
       <Filter>Resource Files\Configs\Synthetic</Filter>
     </None>
   </ItemGroup>

@@ -15,4 +15,7 @@ void ConvertBack(int argc, char** argv);
 
 int Serialize(int argc, char** argv);
 
+// input.png output.png
+int EraseGray(int argc, char** argv);
+
 void FreeImageExample();

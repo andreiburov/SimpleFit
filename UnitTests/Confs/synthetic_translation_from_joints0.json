@@ -1,0 +1,14 @@
+{
+  "betas": [],
+  "thetas": [],
+  "translation": {
+    "rows": 3,
+    "cols": 1,
+    "value0": -0.5,
+    "value1": 0.5,
+    "value2": -4.2
+  },
+  "model_path": "../Model/",
+  "output_path": "SyntheticTranslationFromJoints0/",
+  "reconstruction_config": "Reconstructions/quick.json"
+}

@@ -39,8 +39,8 @@ TEST_CASE("Synthetic Pose From Silhouette")
 	TestConfiguration test;
 
 	SECTION("0") { test = TestConfiguration("Confs/synthetic_pose_from_silhouette0.json"); }
-	SECTION("1") { test = TestConfiguration("Confs/synthetic_pose_from_silhouette1.json"); }
-	SECTION("2") { test = TestConfiguration("Confs/synthetic_pose_from_silhouette2.json"); }
+	//SECTION("1") { test = TestConfiguration("Confs/synthetic_pose_from_silhouette1.json"); }
+	//SECTION("2") { test = TestConfiguration("Confs/synthetic_pose_from_silhouette2.json"); }
 
 	ShapeCoefficients betas;
 	PoseEulerCoefficients input_thetas(test.thetas), thetas;

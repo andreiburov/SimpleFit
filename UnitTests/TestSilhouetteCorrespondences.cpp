@@ -11,7 +11,7 @@ TEST_CASE("Find Correspondences")
 	Generator generator(Generator::Configuration(std::string("../Model")));
 	Projector projector(Projector::Configuration(std::string("../Model")));
 	SilhouetteRenderer renderer(generator(true));
-	SilhouetteEnergy silhouette_energy(generator, projector, renderer);
+	SilhouetteEnergy silhouette_energy(generator, projector, renderer, 35, 5);
 
 	Eigen::Vector3f translation(0.f, 0.2f, 4.0f);
 	ShapeCoefficients input_betas;
@@ -34,7 +34,7 @@ TEST_CASE("Prune Correspondences")
 	Generator generator(Generator::Configuration(std::string("../Model")));
 	Projector projector(Projector::Configuration(std::string("../Model")));
 	SilhouetteRenderer renderer(generator(true));
-	SilhouetteEnergy silhouette_energy(generator, projector, renderer);
+	SilhouetteEnergy silhouette_energy(generator, projector, renderer, 35, 5);
 
 	Eigen::Vector3f translation(0.f, 0.2f, 4.0f);
 	ShapeCoefficients input_betas;

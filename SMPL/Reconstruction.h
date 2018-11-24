@@ -21,8 +21,13 @@ namespace smpl
 		{
 			float joints_weight;
 			float silhouette_weight;
+			float pose_prior_weight;
+			float bend_prior_weight;
+			float shape_prior_weight;
+
 			int iterations;
 			int ray_dist;
+			int pruning_derivative_half_dx;
 			std::string model_path;
 
 			Configuration() {}
@@ -48,8 +53,12 @@ namespace smpl
 				archive(
 					CEREAL_NVP(joints_weight),
 					CEREAL_NVP(silhouette_weight),
+					CEREAL_NVP(pose_prior_weight),
+					CEREAL_NVP(bend_prior_weight),
+					CEREAL_NVP(shape_prior_weight),
 					CEREAL_NVP(iterations),
-					CEREAL_NVP(ray_dist)
+					CEREAL_NVP(ray_dist),
+					CEREAL_NVP(pruning_derivative_half_dx)
 				);
 			}
 
@@ -66,8 +75,14 @@ namespace smpl
 
 		void BodyFromSilhouette(const Image& silhouette, ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
 
+		void BodyFromJointsRegularized(
+			const std::string& output_path,
+			const std::vector<float>& input_joints, Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
+
 		void BodyFromJoints(
-			const std::vector<float>& joints, Eigen::Vector3f& translation,
+			const std::string& output_path,
+			const std::vector<float>& input_joints, Eigen::Vector3f& translation,
 			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
 
 		void ShapeFromSilhouette(
@@ -81,6 +96,11 @@ namespace smpl
 			const Image& input_silhouette,
 			const Eigen::Vector3f& translation,
 			PoseEulerCoefficients& thetas) const;
+
+		void TranslationFromJoints(
+			const std::string& output_path,
+			const std::vector<float>& input_joints,
+			Eigen::Vector3f& translation) const;
 
 		void ShapeFromJoints(
 			const std::string& output_path, 
@@ -109,7 +129,12 @@ namespace smpl
 		// configuration
 		const float joints_weight_;
 		const float silhouette_weight_;
+		const float pose_prior_weight_;
+		const float bend_prior_weight_;
+		const float shape_prior_weight_;
+
 		const int iterations_;
 		const int ray_dist_;
+		const int pruning_derivative_half_dx_;
 	};
 }

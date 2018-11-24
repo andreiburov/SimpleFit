@@ -20,7 +20,7 @@ TEST_CASE("Jacobian Silhouette From Shape")
 	Generator generator(conf.model_path);
 	Projector projector(conf.model_path);
 	SilhouetteRenderer renderer(generator(true));
-	SilhouetteEnergy silhouette_energy(generator, projector, renderer);
+	SilhouetteEnergy silhouette_energy(generator, projector, renderer, 35, 5);
 
 	Eigen::Vector3f translation(conf.translation);
 	ShapeCoefficients input_betas(conf.betas), model_betas;
@@ -109,7 +109,7 @@ TEST_CASE("Jacobian Silhouette From Pose")
 	Generator generator(Generator::Configuration(conf.model_path));
 	Projector projector(Projector::Configuration(conf.model_path));
 	SilhouetteRenderer renderer(generator(true));
-	SilhouetteEnergy silhouette_energy(generator, projector, renderer);
+	SilhouetteEnergy silhouette_energy(generator, projector, renderer, 35, 5);
 
 	Eigen::Vector3f translation(conf.translation);
 	ShapeCoefficients betas;

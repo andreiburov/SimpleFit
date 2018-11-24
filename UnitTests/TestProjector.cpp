@@ -81,13 +81,15 @@ TEST_CASE("Project - DirectX")
 	Generator generator(model);
 	Projector projector(model);
 
+	bool is_rhs = projector.IsRhs() ? true : false;
+
 	Body body = generator();
 	Eigen::Vector3f translation(0.f, 0.1f, -4.2f);
 
 	Eigen::Matrix4f view = projector.CalculateView(translation);
 	Eigen::Matrix4f proj = projector.DirectXProjection(IMAGE_WIDTH, IMAGE_HEIGHT);
-	Eigen::Matrix4f intr = Intrinsics(projector.IsRhs());
-	Eigen::Matrix4f ndc = Ndc(IMAGE_WIDTH, IMAGE_HEIGHT, projector.IsRhs());
+	Eigen::Matrix4f intr = Intrinsics(is_rhs);
+	Eigen::Matrix4f ndc = Ndc((float)IMAGE_WIDTH, (float)IMAGE_HEIGHT, is_rhs);
 
 	for (int j = 0; j < VERTEX_COUNT; j++)
 	{
@@ -106,11 +108,11 @@ TEST_CASE("Project - DirectX")
 		Eigen::Vector4f hx = dx / dx(3);
 
 		// viewport transform
-		float x = (h(0) + 1) * IMAGE_WIDTH * 0.5;
-		float y = (1 - h(1)) * IMAGE_HEIGHT * 0.5;
+		float x = (h(0) + 1) * IMAGE_WIDTH * 0.5f;
+		float y = (1 - h(1)) * IMAGE_HEIGHT * 0.5f;
 		
-		float xxx = (hx(0) + 1) * IMAGE_WIDTH * 0.5;
-		float yyy = (1 - hx(1)) * IMAGE_HEIGHT * 0.5;
+		float xxx = (hx(0) + 1) * IMAGE_WIDTH * 0.5f;
+		float yyy = (1 - hx(1)) * IMAGE_HEIGHT * 0.5f;
 
 		float w = x / y;
 	}

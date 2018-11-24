@@ -73,7 +73,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
-    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -91,8 +90,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -110,7 +107,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SMPL.lib;FreeImage.lib;d3d11.lib;opencv_calib3d2413.lib;opencv_core2413.lib;opencv_features2d2413.lib;opencv_highgui2413.lib;opencv_imgproc2413.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SMPL.lib;FreeImage.lib;d3d11.lib;opencv_calib3d2413d.lib;opencv_core2413d.lib;opencv_features2d2413d.lib;opencv_highgui2413d.lib;opencv_imgproc2413d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64\;$(SolutionDir)3rdparty\OpenCV-2.4.13.6\build\x64\vc14\lib;$(SolutionDir)$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -180,6 +177,7 @@
     <ClCompile Include="..\3rdparty\OpenCV-2.4.13.6\sources\samples\cpp\grabcut.cpp" />
     <ClCompile Include="CameraCalibration.cpp" />
     <ClCompile Include="ConvertBinary.cpp" />
+    <ClCompile Include="EraseGray.cpp" />
     <ClCompile Include="FreeImageExample.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="RecordVideo.cpp" />

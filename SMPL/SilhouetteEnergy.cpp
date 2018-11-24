@@ -127,8 +127,10 @@ namespace smpl
 	SilhouetteEnergy::SilhouetteEnergy(
 		const Generator& generator, 
 		const Projector& projector, 
-		const SilhouetteRenderer& renderer) :
-		generator_(generator), projector_(projector), silhouette_renderer_(renderer), 
+		const SilhouetteRenderer& renderer,
+		const int ray_dist, const int pruning_derivative_half_dx) :
+		generator_(generator), projector_(projector), silhouette_renderer_(renderer),
+		ray_dist_(ray_dist), pd_(pruning_derivative_half_dx),
 		pose_prior_per_theta_({
 		10, 10, 10, // 0
 		1, 10, 2, //1 
@@ -335,6 +337,8 @@ namespace smpl
 	void SilhouetteEnergy::ComputeSilhouetteError(const Correspondences& correspondences,
 		const int residuals, const float weight, Eigen::VectorXf& error) const
 	{
+		assert(error.size() == residuals);
+
 #pragma omp parallel for
 		for (int m = 0; m < residuals; m += 2)
 		{
@@ -349,21 +353,15 @@ namespace smpl
 		error *= weight;
 	}
 
-	void SilhouetteEnergy::ComputePosePriorError(
-		const PoseEulerCoefficients& thetas, const float weight, Eigen::VectorXf error) const
-	{
-#pragma omp parallel for
-		for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
-		{
-			error(k) = weight * pose_prior_per_theta_[k] * thetas(k);
-		}
-	}
 
 	void SilhouetteEnergy::ComputeSilhouetteFromShapeJacobian(
 		const Body& body, const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
 		const Silhouette& silhouette, const Correspondences& correspondences, 
 		const int residuals, const float weight, Eigen::MatrixXf& jacobian) const
 	{
+		assert(jacobian.rows() == residuals);
+		assert(jacobian.cols() == BETA_COUNT);
+
 		Eigen::Matrix3f view = projector_.CalculateView(translation).block<3, 3>(0, 0);
 
 #pragma omp parallel for
@@ -408,6 +406,9 @@ namespace smpl
 		const Silhouette& silhouette, const Correspondences& correspondences,
 		const int residuals, const float weight, Eigen::MatrixXf& jacobian) const
 	{
+		assert(jacobian.rows() == residuals);
+		assert(jacobian.cols() == THETA_COMPONENT_COUNT);
+
 		Eigen::Matrix3f view = projector_.CalculateView(translation).block<3, 3>(0, 0);
 
 #pragma omp parallel for
@@ -445,14 +446,5 @@ namespace smpl
 		float norm = sqrt(static_cast<float>(correspondences.model_border.size() * 2));
 		jacobian /= norm;
 		jacobian *= weight;
-	}
-
-	void SilhouetteEnergy::ComputePosePriorJacobian(const float weight, Eigen::MatrixXf& jacobian) const
-	{
-#pragma omp parallel for
-		for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
-		{
-			jacobian(k, k) = weight * pose_prior_per_theta_[k];
-		}
 	}
 }

@@ -30,7 +30,8 @@ namespace smpl
 		SilhouetteEnergy(
 			const Generator& generator,
 			const Projector& projector,
-			const SilhouetteRenderer& renderer);
+			const SilhouetteRenderer& renderer,
+			const int ray_dist, const int pruning_derivative_half_dx);
 
 		Correspondences FindCorrespondences(const Image& input, 
 			const Image& model, const std::vector<float4>& normals) const;
@@ -46,11 +47,6 @@ namespace smpl
 		void ComputeSilhouetteError(const Correspondences& correspondences, 
 			const int residuals, const float weight, Eigen::VectorXf& error) const;
 
-		void ComputePosePriorError(
-			const PoseEulerCoefficients& thetas, 
-			const float weight,
-			Eigen::VectorXf error) const;
-
 		void ComputeSilhouetteFromShapeJacobian(
 			const Body& body, const std::vector<float3>& dshape, const Eigen::Vector3f& translation,
 			const Silhouette& silhouette, const Correspondences& correspondences,
@@ -61,8 +57,6 @@ namespace smpl
 			const Silhouette& silhouette, const Correspondences& correspondences,
 			const int residuals, const float weight, Eigen::MatrixXf& jacobian) const;
 
-		void ComputePosePriorJacobian(const float weight, Eigen::MatrixXf& jacobian) const;
-
 	private:
 
 		const Generator& generator_;
@@ -70,8 +64,8 @@ namespace smpl
 		const SilhouetteRenderer& silhouette_renderer_;
 
 		// hyper parameters
-		int ray_dist_ = 35;
-		const int pd_ = 5; 
+		const int ray_dist_ = 35; // max distance when ray marching
+		const int pd_ = 5; // the lookup distance when computing derivatives for pruning
 
 		// priors per theta components
 		const std::vector<float> pose_prior_per_theta_;

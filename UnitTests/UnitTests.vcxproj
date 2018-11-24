@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="TestJointsRegressor.cpp" />
     <ClCompile Include="TestSilhouetteCorrespondences.cpp" />
     <ClCompile Include="TestProjector.cpp" />
     <ClCompile Include="TestJacobianBody.cpp" />
@@ -174,6 +175,7 @@
     <ClCompile Include="TestSyntheticReconstructionFromSilhouette.cpp" />
     <ClCompile Include="TestSilhouetteRenderer.cpp" />
     <ClCompile Include="TestJacobianSkinning.cpp" />
+    <ClCompile Include="TestSyntheticReconstructionRegularized.cpp" />
     <ClCompile Include="UnitTests.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -187,11 +189,19 @@
     <None Include="Confs\jacobian_joints_from_pose2.json" />
     <None Include="Confs\jacobian_joints_from_shape0.json" />
     <None Include="Confs\jacobian_joints_from_shape1.json" />
+    <None Include="Confs\jacobian_joints_from_translation0.json" />
+    <None Include="Confs\jacobian_joints_from_translation1.json" />
     <None Include="Confs\jacobian_silhouette_from_pose0.json" />
     <None Include="Confs\jacobian_silhouette_from_pose1.json" />
     <None Include="Confs\jacobian_silhouette_from_pose2.json" />
     <None Include="Confs\jacobian_silhouette_from_shape0.json" />
     <None Include="Confs\jacobian_silhouette_from_shape1.json" />
+    <None Include="Confs\synthetic_body_from_joints0.json" />
+    <None Include="Confs\synthetic_body_from_joints1.json" />
+    <None Include="Confs\synthetic_body_from_joints2.json" />
+    <None Include="Confs\synthetic_body_regularized_from_joints0.json" />
+    <None Include="Confs\synthetic_body_regularized_from_joints1.json" />
+    <None Include="Confs\synthetic_body_regularized_from_joints2.json" />
     <None Include="Confs\synthetic_pose_from_joints0.json" />
     <None Include="Confs\synthetic_pose_from_joints1.json" />
     <None Include="Confs\synthetic_pose_from_joints2.json" />
@@ -202,6 +212,8 @@
     <None Include="Confs\synthetic_shape_from_joints1.json" />
     <None Include="Confs\synthetic_shape_from_silhouette0.json" />
     <None Include="Confs\synthetic_shape_from_silhouette1.json" />
+    <None Include="Confs\synthetic_translation_from_joints0.json" />
+    <None Include="Confs\synthetic_translation_from_joints1.json" />
     <None Include="Settings\UnitTests.runsettings">
       <SubType>Designer</SubType>
     </None>
