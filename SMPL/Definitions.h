@@ -123,6 +123,34 @@ namespace smpl
 		COCO_EYE_RIGHT // 17
 	};
 
+	// https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/media/keypoints_pose_25.png
+	const int BODY_25_NOSE = 0;
+	const int BODY_25_SHOULDER_CENTER = 1;
+	const int BODY_25_SHOULDER_LEFT = 2;
+	const int BODY_25_ELBOW_LEFT = 3;
+	const int BODY_25_WRIST_LEFT = 4;
+	const int BODY_25_SHOULDER_RIGHT = 5;
+	const int BODY_25_ELBOW_RIGHT = 6;
+	const int BODY_25_WRIST_RIGHT = 7;
+	const int BODY_25_HIP_CENTER = 8; // new
+	const int BODY_25_HIP_LEFT = 9;
+	const int BODY_25_KNEE_LEFT = 10;
+	const int BODY_25_ANKLE_LEFT = 11;
+	const int BODY_25_HIP_RIGHT = 12;
+	const int BODY_25_KNEE_RIGHT = 13;
+	const int BODY_25_ANKLE_RIGHT = 14;
+	const int BODY_25_EYE_LEFT = 15;
+	const int BODY_25_EYE_RIGHT = 16;
+	const int BODY_25_EAR_LEFT = 17;
+	const int BODY_25_EAR_RIGHT = 18;
+	const int BODY_25_BIG_TOE_RIGHT = 19; // new
+	const int BODY_25_LITTLE_TOE_RIGHT = 20; // new
+	const int BODY_25_HEEL_RIGHT = 21; // new
+	const int BODY_25_BIG_TOE_LEFT = 22; // new
+	const int BODY_25_LITTLE_TOE_LEFT = 23; // new
+	const int BODY_25_HEEL_LEFT = 24; // new
+	const int BODY_25_JOINT_COUNT = 25;
+
 	const int RESIDUALS = COCO_JOINT_COUNT * 2 + BETA_COUNT + THETA_COUNT * 3;
 	const int UNKNOWNS = 3 + BETA_COUNT + THETA_COUNT * 3;
 

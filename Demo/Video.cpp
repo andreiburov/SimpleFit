@@ -14,7 +14,7 @@ int Video(int argc, char** argv)
 		cap >> frame;
 
 		cv::imshow("Video", frame);
-		cv::waitKey(0);
+		cv::waitKey(1);
 	}
 	
 	cap.release();
