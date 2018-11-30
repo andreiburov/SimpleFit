@@ -156,7 +156,7 @@ namespace smpl
 		mutable ID3D11RenderTargetView* render_target_views_[render_targets_number_];
 		mutable ID3D11DepthStencilView* depth_stencil_view_;
 		mutable ID3D11DepthStencilState*
-								depth_stencil_state_;
+										depth_stencil_state_;
 
 #ifdef _DEBUG
 		mutable RENDERDOC_API_1_1_2*	rdoc_api_ = nullptr;

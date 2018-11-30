@@ -29,5 +29,7 @@ namespace smpl
 		const std::vector<float> bend_mask_per_theta_;
 		// centering the exponent
 		const std::vector<float> bend_bias_per_theta_;
+		// mirroring the exponent
+		const std::vector<float> bend_sign_per_theta_;
 	};
 }

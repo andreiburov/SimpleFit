@@ -171,11 +171,11 @@
     <ClCompile Include="TestShapeFromJoints.cpp" />
     <ClCompile Include="TestShapeReconstruction.cpp" />
     <ClCompile Include="TestJacobianSilhouette.cpp" />
+    <ClCompile Include="TestSyntheticReconstructionFromJointsAndSilhouettes.cpp" />
     <ClCompile Include="TestSyntheticReconstructionFromJoints.cpp" />
     <ClCompile Include="TestSyntheticReconstructionFromSilhouette.cpp" />
     <ClCompile Include="TestSilhouetteRenderer.cpp" />
     <ClCompile Include="TestJacobianSkinning.cpp" />
-    <ClCompile Include="TestSyntheticReconstructionRegularized.cpp" />
     <ClCompile Include="UnitTests.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -199,6 +199,12 @@
     <None Include="Confs\synthetic_body_from_joints0.json" />
     <None Include="Confs\synthetic_body_from_joints1.json" />
     <None Include="Confs\synthetic_body_from_joints2.json" />
+    <None Include="Confs\synthetic_body_from_joints_and_silhouette0.json" />
+    <None Include="Confs\synthetic_body_from_joints_and_silhouette1.json" />
+    <None Include="Confs\synthetic_body_from_joints_and_silhouette2.json" />
+    <None Include="Confs\synthetic_body_from_silhouette0.json" />
+    <None Include="Confs\synthetic_body_from_silhouette1.json" />
+    <None Include="Confs\synthetic_body_from_silhouette2.json" />
     <None Include="Confs\synthetic_body_regularized_from_joints0.json" />
     <None Include="Confs\synthetic_body_regularized_from_joints1.json" />
     <None Include="Confs\synthetic_body_regularized_from_joints2.json" />

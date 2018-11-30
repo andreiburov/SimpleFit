@@ -19,8 +19,11 @@
     <Filter Include="Resource Files\Configs\Jacobian">
       <UniqueIdentifier>{76662d14-3fc5-4e2b-a96f-78a77a08096d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\Configs\Synthetic">
+    <Filter Include="Resource Files\Configs\SyntheticParameters">
       <UniqueIdentifier>{aa2b59f7-6642-4f04-8041-2c52e42b3346}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Configs\SyntheticBodies">
+      <UniqueIdentifier>{2c164dc2-01c5-4895-9f0d-dd486c8f6354}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -87,7 +90,7 @@
     <ClCompile Include="TestJointsRegressor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestSyntheticReconstructionRegularized.cpp">
+    <ClCompile Include="TestSyntheticReconstructionFromJointsAndSilhouettes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -124,40 +127,40 @@
       <Filter>Resource Files\Configs\Jacobian</Filter>
     </None>
     <None Include="Confs\synthetic_pose_from_joints0.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_pose_from_joints1.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_pose_from_joints2.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_pose_from_silhouette0.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_pose_from_silhouette1.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_pose_from_silhouette2.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_shape_from_joints0.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_shape_from_joints1.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_shape_from_silhouette0.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_shape_from_silhouette1.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_translation_from_joints0.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\synthetic_translation_from_joints1.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticParameters</Filter>
     </None>
     <None Include="Confs\jacobian_joints_from_translation1.json">
       <Filter>Resource Files\Configs\Jacobian</Filter>
@@ -165,23 +168,41 @@
     <None Include="Confs\jacobian_joints_from_translation0.json">
       <Filter>Resource Files\Configs\Jacobian</Filter>
     </None>
+    <None Include="Confs\synthetic_body_from_joints_and_silhouette0.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_joints_and_silhouette1.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_joints_and_silhouette2.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
     <None Include="Confs\synthetic_body_from_joints0.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
     </None>
     <None Include="Confs\synthetic_body_from_joints1.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
     </None>
     <None Include="Confs\synthetic_body_from_joints2.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
     </None>
     <None Include="Confs\synthetic_body_regularized_from_joints0.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
     </None>
     <None Include="Confs\synthetic_body_regularized_from_joints1.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
     </None>
     <None Include="Confs\synthetic_body_regularized_from_joints2.json">
-      <Filter>Resource Files\Configs\Synthetic</Filter>
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_silhouette0.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_silhouette1.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_silhouette2.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

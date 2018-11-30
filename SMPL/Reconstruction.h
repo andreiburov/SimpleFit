@@ -73,18 +73,6 @@ namespace smpl
 
 		Reconstruction(const Configuration& configuration);
 
-		void BodyFromSilhouette(const Image& silhouette, ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
-
-		void BodyFromJointsRegularized(
-			const std::string& output_path,
-			const std::vector<float>& input_joints, Eigen::Vector3f& translation,
-			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
-
-		void BodyFromJoints(
-			const std::string& output_path,
-			const std::vector<float>& input_joints, Eigen::Vector3f& translation,
-			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
-
 		void ShapeFromSilhouette(
 			const std::string& output_path,
 			const Image& input_silhouette,
@@ -96,6 +84,26 @@ namespace smpl
 			const Image& input_silhouette,
 			const Eigen::Vector3f& translation,
 			PoseEulerCoefficients& thetas) const;
+
+		void BodyFromSilhouette(const std::string& output_path,
+			const Image& input_silhouette,
+			const Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
+
+		void BodyFromJointsAndSilhouette(
+			const std::string& output_path,
+			const std::vector<float>& input_joints, const Image& input_silhouette, 
+			Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
+
+		void BodyFromJointsRegularized(
+			const std::string& output_path,
+			const std::vector<float>& input_joints, Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
+
+		void BodyFromJoints(
+			const std::string& output_path,
+			const std::vector<float>& input_joints, Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
 
 		void TranslationFromJoints(
 			const std::string& output_path,
@@ -132,6 +140,8 @@ namespace smpl
 		const float pose_prior_weight_;
 		const float bend_prior_weight_;
 		const float shape_prior_weight_;
+		// increase the linear delta step
+		const float shape_delta_weight_ = 1.3f;
 
 		const int iterations_;
 		const int ray_dist_;

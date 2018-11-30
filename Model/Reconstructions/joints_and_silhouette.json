@@ -1,10 +1,10 @@
 {
-  "joints_weight": 5.0,
+  "joints_weight": 0.0,
   "silhouette_weight": 1.0,
-  "pose_prior_weight": 10.0,
+  "pose_prior_weight": 0.0,
   "bend_prior_weight": 50.0,
-  "shape_prior_weight": 20.0,
+  "shape_prior_weight": 5.0,
   "iterations": 15,
-  "ray_dist": 30,
+  "ray_dist": 40,
   "pruning_derivative_half_dx":  5
 }
