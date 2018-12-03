@@ -78,7 +78,7 @@ namespace smpl {
 		/*
 			Computes skinning Jacobian.
 			
-			float4x4 dskinning[THETA_COUNT*3 * JOINT_COUNT]
+			float4x4 dskinning[THETA_COMPONENT_COUNT * JOINT_COUNT]
 
 				body_parts 
 				__________
@@ -96,7 +96,7 @@ namespace smpl {
 		/*
 			Computes Jacobian in Body from Pose.
 
-			float3 dpose[VERTEX_COUNT * THETA_COUNT*3]
+			float3 dpose[VERTEX_COUNT * THETA_COMPONENT_COUNT]
 		*/
 		void ComputeBodyFromPoseJacobian(const Body& body, std::vector<float3>& dpose) const;
 

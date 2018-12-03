@@ -13,6 +13,7 @@ namespace smpl
 		regressor_(JointsRegressor::Configuration(
 			configuration.model_path, JointsRegressor::COCO)),
 		silhouette_renderer_(generator_(true)),
+        silhouette_correspondences_finder_(configuration.model_path),
 
 		// configuration
 		joints_weight_(configuration.joints_weight),
@@ -42,7 +43,7 @@ namespace smpl
 		const int unknowns = BETA_COUNT;
 		LevenbergMarquardt lm_solver(unknowns, logging_on);
 
-		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT); // dsmpl/dbeta
+		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT);
 
 		for (int iteration = 0; iteration < iterations_; iteration++)
 		{
@@ -69,7 +70,7 @@ namespace smpl
 				input_silhouette, silhouette.GetImage(), silhouette.GetNormals());
 			if (logging_on)
 				correspondences.image.SavePNG(
-					output_path + std::string("/correspondences") +
+					output_path + std::string("correspondences") +
 					std::to_string(iteration) + std::string(".png"));
 
 			// should be x2 since each point has two components
@@ -181,7 +182,8 @@ namespace smpl
 		}
 	}
 
-	void Reconstruction::BodyFromSilhouette(const std::string& output_path,
+	void Reconstruction::BodyFromSilhouette(
+		const std::string& output_path,
 		const Image& input_silhouette,
 		const Eigen::Vector3f& translation,
 		ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const
@@ -230,13 +232,11 @@ namespace smpl
 			const int residuals_silhouette = static_cast<int>(correspondences.model_border.size() * 2);
 			Eigen::VectorXf error_silhouette = Eigen::VectorXf::Zero(residuals_silhouette);
 
-			Eigen::MatrixXf jacobian_silhouette_translation = Eigen::MatrixXf::Zero(residuals_silhouette, 3);
 			Eigen::MatrixXf jacobian_silhouette_shape = Eigen::MatrixXf::Zero(residuals_silhouette, BETA_COUNT);
 			Eigen::MatrixXf jacobian_silhouette_pose = Eigen::MatrixXf::Zero(residuals_silhouette, THETA_COMPONENT_COUNT);
 
 			silhouette_energy.ComputeSilhouetteError(
 				correspondences, residuals_silhouette, silhouette_weight_, error_silhouette);
-			generator_.ComputeBodyFromPoseJacobian(body, dpose);
 			silhouette_energy.ComputeSilhouetteFromShapeJacobian(
 				body, dshape, translation, silhouette,
 				correspondences, residuals_silhouette, silhouette_weight_, jacobian_silhouette_shape);
@@ -245,28 +245,33 @@ namespace smpl
 				silhouette, correspondences,
 				residuals_silhouette, silhouette_weight_, jacobian_silhouette_pose);
 
-			Eigen::MatrixXf jacobian_silhouette(residuals_silhouette, unknowns);
-			jacobian_silhouette << jacobian_silhouette_translation, jacobian_silhouette_shape, jacobian_silhouette_pose;
+			Eigen::MatrixXf jacobian_silhouette_shape_ext = Eigen::MatrixXf::Zero(residuals_silhouette, unknowns);
+			Eigen::MatrixXf jacobian_silhouette_pose_ext = Eigen::MatrixXf::Zero(residuals_silhouette, unknowns);
+			jacobian_silhouette_shape_ext.block(0, 3, residuals_silhouette, BETA_COUNT) = jacobian_silhouette_shape;
+			jacobian_silhouette_pose_ext.block(0, 3 + BETA_COUNT, residuals_silhouette, THETA_COMPONENT_COUNT) = jacobian_silhouette_pose;
+
+			Eigen::MatrixXf jacobian_silhouette(residuals_silhouette * 2, unknowns);
+			jacobian_silhouette << jacobian_silhouette_shape_ext, jacobian_silhouette_pose_ext*0;
 
 			// Reconstruction
-			const int residuals = residuals_silhouette;
+			const int residuals = residuals_silhouette * 2;
 			Eigen::MatrixXf jacobian(residuals, unknowns);
 			Eigen::VectorXf error(residuals);
 			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
 
 			jacobian << jacobian_silhouette;
-			error << error_silhouette;
+			error << error_silhouette, error_silhouette*0;
 
 			// levenberg marquardt
 			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 			{
-				for (int i = 0; i < BETA_COUNT; i++) betas[i] -= shape_delta_weight_ * delta(i + 3);
+				for (int i = 0; i < BETA_COUNT; i++) betas[i] -= delta(i + 3);
 				for (int i = 0; i < THETA_COMPONENT_COUNT; i++) thetas(i) -= delta(i + 3 + BETA_COUNT);
 			}
 			else
 			{
-				for (int i = 0; i < BETA_COUNT; i++) betas[i] += shape_delta_weight_ * delta(i + 3);
+				for (int i = 0; i < BETA_COUNT; i++) betas[i] += delta(i + 3);
 				for (int i = 0; i < THETA_COMPONENT_COUNT; i++) thetas(i) += delta(i + 3 + BETA_COUNT);
 			}
 
@@ -284,10 +289,155 @@ namespace smpl
 		}
 	}
 
-	void Reconstruction::BodyFromJointsAndSilhouette(
+    void Reconstruction::BodyFromJointsAndSilhouette(
+        const std::string& output_path,
+        const std::vector<float>& input_joints, const Image& input_silhouette,
+        Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const
+    {
+        bool logging_on = true;
+        if (output_path.empty()) logging_on = false;
+
+        JointsEnergy joints_energy(generator_, projector_, regressor_);
+        SilhouetteEnergy silhouette_energy(generator_, projector_,
+            silhouette_renderer_, ray_dist_, pruning_derivative_half_dx_);
+
+        const int unknowns = 3 + BETA_COUNT + THETA_COMPONENT_COUNT;
+        LevenbergMarquardt lm_solver(unknowns, logging_on);
+
+        joints_energy.InitializeCameraPosition(regressor_.GetJointType(),
+            input_joints, projector_.GetIntrinsics()(1, 1), translation);
+
+        std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT);
+        std::vector<float3> dpose(VERTEX_COUNT * THETA_COMPONENT_COUNT);
+        for (int iteration = 0; iteration < iterations_; iteration++)
+        {
+            if (logging_on)
+                std::cout << "Iteration " << iteration << std::endl;
+
+            Body body = generator_(betas, thetas, true);
+            RegressedJoints model_joints = regressor_(body.vertices);
+            if (logging_on)
+            {
+                std::vector<float> joints = Image::Coordinates(
+                    projector_.FromRegressed(model_joints, translation));
+
+                Image image;
+                Image::Draw3D(image, Pixel::White(), projector_, translation, body.vertices);
+                Image::Draw2D(image, Pixel::Yellow(), input_joints);
+                Image::Draw2D(image, Pixel::Blue(), joints);
+                image.SavePNG(output_path + std::string("/joints") +
+                    std::to_string(iteration) + ".png");
+            }
+
+            Silhouette silhouette = silhouette_renderer_(body,
+                projector_.CalculateView(translation),
+                projector_.DirectXProjection(
+                    IMAGE_WIDTH, IMAGE_HEIGHT));
+            if (logging_on)
+                silhouette.GetImage().SavePNG(
+                    output_path + std::string("/silhouette") +
+                    std::to_string(iteration) + std::string(".png"));
+
+            Correspondences correspondences = silhouette_energy.FindCorrespondences(
+                input_silhouette, silhouette.GetImage(), silhouette.GetNormals());
+            silhouette_energy.PruneCorrepondences(input_silhouette,
+                silhouette.GetImage(), silhouette.GetNormals(), correspondences);
+            if (logging_on)
+                correspondences.image.SavePNG(
+                    output_path + std::string("/correspondences") +
+                    std::to_string(iteration) + std::string(".png"));
+
+            // Prepare Jacobians and Errors
+            generator_.ComputeBodyFromShapeJacobian(dshape);
+            generator_.ComputeBodyFromPoseJacobian(body, dpose);
+
+            // JOINTS
+            const int residuals_joints = static_cast<int>(input_joints.size());
+            Eigen::VectorXf error_joints = Eigen::VectorXf::Zero(residuals_joints);
+
+            Eigen::MatrixXf jacobian_joints_translation = Eigen::MatrixXf::Zero(residuals_joints, 3);
+            Eigen::MatrixXf jacobian_joints_shape = Eigen::MatrixXf::Zero(residuals_joints, BETA_COUNT);
+            Eigen::MatrixXf jacobian_joints_pose = Eigen::MatrixXf::Zero(residuals_joints, THETA_COMPONENT_COUNT);
+
+            joints_energy.ComputeError(input_joints, model_joints, translation,
+                residuals_joints, joints_weight_, error_joints);
+            joints_energy.ComputeJacobianFromTranslation(body, model_joints, translation,
+                residuals_joints, joints_weight_, jacobian_joints_translation);
+            joints_energy.ComputeJacobianFromShape(body, model_joints, dshape, translation,
+                residuals_joints, joints_weight_, jacobian_joints_shape);
+            joints_energy.ComputeJacobianFromPose(body, model_joints, dpose, translation,
+                residuals_joints, joints_weight_, jacobian_joints_pose);
+
+            Eigen::MatrixXf jacobian_joints(residuals_joints, unknowns);
+            jacobian_joints << jacobian_joints_translation, jacobian_joints_shape, jacobian_joints_pose;
+
+            // SILHOUETTE
+            const int residuals_silhouette = static_cast<int>(correspondences.model_border.size() * 2);
+            Eigen::VectorXf error_silhouette = Eigen::VectorXf::Zero(residuals_silhouette);
+
+            Eigen::MatrixXf jacobian_silhouette_translation = Eigen::MatrixXf::Zero(residuals_silhouette, 3);
+            Eigen::MatrixXf jacobian_silhouette_shape = Eigen::MatrixXf::Zero(residuals_silhouette, BETA_COUNT);
+            Eigen::MatrixXf jacobian_silhouette_pose = Eigen::MatrixXf::Zero(residuals_silhouette, THETA_COMPONENT_COUNT);
+
+            silhouette_energy.ComputeSilhouetteError(
+                correspondences, residuals_silhouette, silhouette_weight_, error_silhouette);
+            generator_.ComputeBodyFromPoseJacobian(body, dpose);
+            silhouette_energy.ComputeSilhouetteFromShapeJacobian(
+                body, dshape, translation, silhouette,
+                correspondences, residuals_silhouette, silhouette_weight_, jacobian_silhouette_shape);
+            silhouette_energy.ComputeSilhouetteFromPoseJacobian(
+                body, dpose, translation,
+                silhouette, correspondences,
+                residuals_silhouette, silhouette_weight_, jacobian_silhouette_pose);
+
+            Eigen::MatrixXf jacobian_silhouette(residuals_silhouette, unknowns);
+            jacobian_silhouette << jacobian_silhouette_translation, jacobian_silhouette_shape, jacobian_silhouette_pose;
+
+            // Reconstruction
+            const int residuals = residuals_joints + residuals_silhouette;
+            Eigen::MatrixXf jacobian(residuals, unknowns);
+            Eigen::VectorXf error(residuals);
+            Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
+
+            jacobian << jacobian_joints, jacobian_silhouette;
+            error << error_joints, error_silhouette;
+
+            // levenberg marquardt
+            bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+            if (minimized)
+            {
+                for (int i = 0; i < 3; i++)	translation(i) -= delta(i);
+                for (int i = 0; i < BETA_COUNT; i++) betas[i] -= delta(i + 3);
+                for (int i = 0; i < THETA_COMPONENT_COUNT; i++) thetas(i) -= delta(i + 3 + BETA_COUNT);
+            }
+            else
+            {
+                for (int i = 0; i < 3; i++)	translation(i) += delta(i);
+                for (int i = 0; i < BETA_COUNT; i++) betas[i] += delta(i + 3);
+                for (int i = 0; i < THETA_COMPONENT_COUNT; i++) thetas(i) += delta(i + 3 + BETA_COUNT);
+            }
+
+            if (logging_on)
+            {
+                if (minimized)
+                {
+                    std::cout << "Translation + Betas + Thetas" << std::endl;
+                    for (int i = 0; i < 3; i++)	std::cout << translation(i) << std::endl;
+                    std::cout << "---------------------------------" << std::endl;
+                    for (int i = 0; i < BETA_COUNT; i++) std::cout << betas[i] << std::endl;
+                    std::cout << "---------------------------------" << std::endl;
+                    for (int i = 0; i < THETA_COMPONENT_COUNT; i++) std::cout << thetas(i) << std::endl;
+                    std::cout << std::endl;
+                }
+            }
+        }
+    }
+
+	void Reconstruction::BodyFromJointsAndSilhouetteRegularized(
 		const std::string& output_path,
 		const std::vector<float>& input_joints, const Image& input_silhouette, 
-		Eigen::Vector3f& translation, ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const
+		Eigen::Vector3f& translation, 
+        ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const
 	{
 		bool logging_on = true;
 		if (output_path.empty()) logging_on = false;
@@ -295,9 +445,10 @@ namespace smpl
 		JointsEnergy joints_energy(generator_, projector_, regressor_);
 		SilhouetteEnergy silhouette_energy(generator_, projector_, 
 			silhouette_renderer_, ray_dist_, pruning_derivative_half_dx_);
+        PriorEnergy prior_energy;
 
 		const int unknowns = 3 + BETA_COUNT + THETA_COMPONENT_COUNT;
-		LevenbergMarquardt lm_solver(unknowns, logging_on);
+		LevenbergMarquardt lm_solver(unknowns, logging_on, std::string("../Model/LM/fast.json"));
 
 		joints_energy.InitializeCameraPosition(regressor_.GetJointType(),
 			input_joints, projector_.GetIntrinsics()(1, 1), translation);
@@ -310,6 +461,9 @@ namespace smpl
 				std::cout << "Iteration " << iteration << std::endl;
 
 			Body body = generator_(betas, thetas, true);
+            generator_.ComputeBodyFromShapeJacobian(dshape);
+            generator_.ComputeBodyFromPoseJacobian(body, dpose);
+
 			RegressedJoints model_joints = regressor_(body.vertices);
 			if (logging_on)
 			{
@@ -333,18 +487,13 @@ namespace smpl
 					output_path + std::string("/silhouette") +
 					std::to_string(iteration) + std::string(".png"));
 
-			Correspondences correspondences = silhouette_energy.FindCorrespondences(
-				input_silhouette, silhouette.GetImage(), silhouette.GetNormals());
-			silhouette_energy.PruneCorrepondences(input_silhouette,
-				silhouette.GetImage(), silhouette.GetNormals(), correspondences);
+			Correspondences correspondences = silhouette_correspondences_finder_(
+				input_silhouette, silhouette.GetImage(), silhouette.GetNormals(),
+                silhouette.GetVertexIndices(), "");
 			if (logging_on)
 				correspondences.image.SavePNG(
 					output_path + std::string("/correspondences") +
 					std::to_string(iteration) + std::string(".png"));
-
-			// Prepare Jacobians and Errors
-			generator_.ComputeBodyFromShapeJacobian(dshape);
-			generator_.ComputeBodyFromPoseJacobian(body, dpose);
 
 			// JOINTS
 			const int residuals_joints = static_cast<int>(input_joints.size());
@@ -388,14 +537,46 @@ namespace smpl
 			Eigen::MatrixXf jacobian_silhouette(residuals_silhouette, unknowns);
 			jacobian_silhouette << jacobian_silhouette_translation, jacobian_silhouette_shape, jacobian_silhouette_pose;
 
+            // REGULARIZER
+            const int residuals_prior = BETA_COUNT + THETA_COMPONENT_COUNT * 2;
+            Eigen::VectorXf error_shape_prior = Eigen::VectorXf::Zero(BETA_COUNT);
+            Eigen::VectorXf error_pose_prior = Eigen::VectorXf::Zero(THETA_COMPONENT_COUNT);
+            Eigen::VectorXf error_bend_prior = Eigen::VectorXf::Zero(THETA_COMPONENT_COUNT);
+            Eigen::MatrixXf jacobian_shape_prior = Eigen::MatrixXf::Zero(BETA_COUNT, BETA_COUNT);
+            Eigen::MatrixXf jacobian_pose_prior = Eigen::MatrixXf::Zero(THETA_COMPONENT_COUNT, THETA_COMPONENT_COUNT);
+            Eigen::MatrixXf jacobian_bend_prior = Eigen::MatrixXf::Zero(THETA_COMPONENT_COUNT, THETA_COMPONENT_COUNT);
+
+            prior_energy.ComputeShapePriorError(betas, shape_prior_weight_, error_shape_prior);
+            prior_energy.ComputePosePriorError(thetas, pose_prior_weight_, error_pose_prior);
+            prior_energy.ComputeBendPriorError(thetas, bend_prior_weight_, error_bend_prior);
+            prior_energy.ComputeShapePriorJacobian(shape_prior_weight_, jacobian_shape_prior);
+            prior_energy.ComputePosePriorJacobian(pose_prior_weight_, jacobian_pose_prior);
+            prior_energy.ComputeBendPriorJacobian(thetas, bend_prior_weight_, jacobian_bend_prior);
+
+            Eigen::MatrixXf jacobian_prior = Eigen::MatrixXf::Zero(residuals_prior, unknowns);
+            jacobian_prior.block<BETA_COUNT, BETA_COUNT>(0, 3) = jacobian_shape_prior;
+            jacobian_prior.block<THETA_COMPONENT_COUNT, THETA_COMPONENT_COUNT>
+                (BETA_COUNT, 3 + BETA_COUNT) = jacobian_pose_prior;
+            jacobian_prior.block<THETA_COMPONENT_COUNT, THETA_COMPONENT_COUNT>
+                (BETA_COUNT + THETA_COMPONENT_COUNT, 3 + BETA_COUNT) = jacobian_bend_prior;
+
 			// Reconstruction
-			const int residuals = residuals_joints + residuals_silhouette;
+			const int residuals = residuals_joints + residuals_silhouette + residuals_prior;
 			Eigen::MatrixXf jacobian(residuals, unknowns);
 			Eigen::VectorXf error(residuals);
 			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
 
-			jacobian << jacobian_joints, jacobian_silhouette;
-			error << error_joints, error_silhouette;
+			jacobian << jacobian_joints, jacobian_silhouette, jacobian_prior;
+			error << error_joints, error_silhouette, error_shape_prior, error_pose_prior, error_bend_prior;
+
+            if (logging_on)
+            {
+                std::cout << "Error joints: " << error_joints.squaredNorm() << std::endl;
+                std::cout << "Error silhouette: " << error_silhouette.squaredNorm() << std::endl;
+                std::cout << "Error shape reg.: " << error_shape_prior.squaredNorm() << std::endl;
+                std::cout << "Error pose reg.: " << error_pose_prior.squaredNorm() << std::endl;
+                std::cout << "Error bend reg.: " << error_bend_prior.squaredNorm() << std::endl;
+            }
 
 			// levenberg marquardt
 			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
@@ -416,13 +597,13 @@ namespace smpl
 			{
 				if (minimized)
 				{
-					std::cout << "Translation + Betas + Thetas" << std::endl;
+					/*std::cout << "Translation + Betas + Thetas" << std::endl;
 					for (int i = 0; i < 3; i++)	std::cout << translation(i) << std::endl;
 					std::cout << "---------------------------------" << std::endl;
 					for (int i = 0; i < BETA_COUNT; i++) std::cout << betas[i] << std::endl;
 					std::cout << "---------------------------------" << std::endl;
 					for (int i = 0; i < THETA_COMPONENT_COUNT; i++) std::cout << thetas(i) << std::endl;
-					std::cout << std::endl;
+					std::cout << std::endl;*/
 				}
 			}
 		}
@@ -878,6 +1059,109 @@ namespace smpl
 				Image::Draw3D(image, Pixel::White(), projector_, translation, body.vertices);
 				Image::Draw2D(image, Pixel::Yellow(), input_joints);
 				Image::Draw2D(image, Pixel::Blue(), joints);
+				image.SavePNG(output_path + std::to_string(iteration) + ".png");
+			}
+		}
+	}
+
+	void Reconstruction::BodyFromBody(
+		const std::string& output_path,
+		const std::vector<float3>& input_body,
+		const Eigen::Vector3f& translation,
+		ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const
+	{
+		bool logging_on = true;
+		if (output_path.empty()) logging_on = false;
+
+		const int unknowns = BETA_COUNT + THETA_COMPONENT_COUNT;
+		LevenbergMarquardt lm_solver(unknowns, logging_on, std::string("../Model/LM/fast.json"));
+
+		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT);
+		std::vector<float3> dpose(VERTEX_COUNT * THETA_COMPONENT_COUNT);
+		for (int iteration = 0; iteration < iterations_; iteration++)
+		{
+			if (logging_on)
+				std::cout << "Iteration " << iteration << std::endl;
+
+			Body body = generator_(betas, thetas, false);
+
+			// Prepare Jacobians and Errors
+			generator_.ComputeBodyFromShapeJacobian(dshape);
+			generator_.ComputeBodyFromPoseJacobian(body, dpose);
+
+			const int residuals_body = static_cast<int>(body.vertices.size() * 3);
+			Eigen::VectorXf error_body = Eigen::VectorXf::Zero(residuals_body);
+			Eigen::MatrixXf jacobian_body_shape = Eigen::MatrixXf::Zero(residuals_body, BETA_COUNT);
+			Eigen::MatrixXf jacobian_body_pose = Eigen::MatrixXf::Zero(residuals_body, THETA_COMPONENT_COUNT);
+
+			// Compute Error
+			for (int m = 0; m < residuals_body; m += 3)
+			{
+				const int vertex_idx = m / 3;
+				error_body(m) = body.vertices[vertex_idx].x - input_body[vertex_idx].x;
+				error_body(m+1) = body.vertices[vertex_idx].y - input_body[vertex_idx].y;
+				error_body(m+2) = body.vertices[vertex_idx].z - input_body[vertex_idx].z;
+			}
+
+			// Compute Jacobians
+			for (int m = 0; m < residuals_body; m += 3)
+			{
+				const int vertex_idx = m / 3;
+
+				for (int j = 0; j < BETA_COUNT; j++)
+				{
+					jacobian_body_shape(m, j) = dshape[vertex_idx*BETA_COUNT + j].x;
+					jacobian_body_shape(m+1, j) = dshape[vertex_idx*BETA_COUNT + j].y;
+					jacobian_body_shape(m+2, j) = dshape[vertex_idx*BETA_COUNT + j].z;
+				}
+
+				for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
+				{
+					jacobian_body_pose(m, k) = dpose[vertex_idx*THETA_COMPONENT_COUNT + k].x;
+					jacobian_body_pose(m + 1, k) = dpose[vertex_idx*THETA_COMPONENT_COUNT + k].y;
+					jacobian_body_pose(m + 2, k) = dpose[vertex_idx*THETA_COMPONENT_COUNT + k].z;
+				}
+			}
+
+			Eigen::MatrixXf jacobian_body(residuals_body, unknowns);
+			jacobian_body << jacobian_body_shape, jacobian_body_pose;
+
+			// Reconstruction
+			const int residuals = residuals_body;
+			Eigen::MatrixXf jacobian(residuals, unknowns);
+			Eigen::VectorXf error(residuals);
+			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
+
+			jacobian << jacobian_body;
+			error << error_body;
+
+			// levenberg marquardt
+			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			if (minimized)
+			{
+				for (int i = 0; i < BETA_COUNT; i++) betas[i] -= delta(i);
+				for (int i = 0; i < THETA_COMPONENT_COUNT; i++) thetas(i) -= delta(i + BETA_COUNT);
+			}
+			else
+			{
+				for (int i = 0; i < BETA_COUNT; i++) betas[i] += delta(i);
+				for (int i = 0; i < THETA_COMPONENT_COUNT; i++) thetas(i) += delta(i + BETA_COUNT);
+			}
+
+			if (logging_on)
+			{
+				if (minimized)
+				{
+					/*std::cout << "Betas + Thetas" << std::endl;
+					for (int i = 0; i < BETA_COUNT; i++) std::cout << betas[i] << std::endl;
+					std::cout << "----------------------------------" << std::endl;
+					for (int i = 0; i < THETA_COMPONENT_COUNT; i++) std::cout << thetas(i) << std::endl;
+					std::cout << std::endl;*/
+				}
+
+				Image image;
+				Image::Draw3D(image, Pixel::White(), projector_, translation, body.vertices);
+				Image::Draw3D(image, Pixel::Yellow(), projector_, translation, input_body);
 				image.SavePNG(output_path + std::to_string(iteration) + ".png");
 			}
 		}

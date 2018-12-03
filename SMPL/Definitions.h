@@ -400,6 +400,11 @@ namespace smpl
 			else return false;
 		}
 
+		float Norm() const
+		{
+			return sqrt(static_cast<float>(x * x + y * y));
+		}
+
 		Point normalized() const
 		{
 			Point point;

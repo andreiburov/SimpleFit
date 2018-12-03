@@ -171,6 +171,7 @@
     <ClCompile Include="TestShapeFromJoints.cpp" />
     <ClCompile Include="TestShapeReconstruction.cpp" />
     <ClCompile Include="TestJacobianSilhouette.cpp" />
+    <ClCompile Include="TestSyntheticReconstructionFromBody.cpp" />
     <ClCompile Include="TestSyntheticReconstructionFromJointsAndSilhouettes.cpp" />
     <ClCompile Include="TestSyntheticReconstructionFromJoints.cpp" />
     <ClCompile Include="TestSyntheticReconstructionFromSilhouette.cpp" />
@@ -184,6 +185,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Confs\find_correspondences0.json" />
+    <None Include="Confs\find_correspondences1.json" />
+    <None Include="Confs\find_correspondences2.json" />
     <None Include="Confs\jacobian_joints_from_pose0.json" />
     <None Include="Confs\jacobian_joints_from_pose1.json" />
     <None Include="Confs\jacobian_joints_from_pose2.json" />
@@ -196,12 +200,16 @@
     <None Include="Confs\jacobian_silhouette_from_pose2.json" />
     <None Include="Confs\jacobian_silhouette_from_shape0.json" />
     <None Include="Confs\jacobian_silhouette_from_shape1.json" />
+    <None Include="Confs\synthetic_body_from_body0.json" />
     <None Include="Confs\synthetic_body_from_joints0.json" />
     <None Include="Confs\synthetic_body_from_joints1.json" />
     <None Include="Confs\synthetic_body_from_joints2.json" />
     <None Include="Confs\synthetic_body_from_joints_and_silhouette0.json" />
     <None Include="Confs\synthetic_body_from_joints_and_silhouette1.json" />
     <None Include="Confs\synthetic_body_from_joints_and_silhouette2.json" />
+    <None Include="Confs\synthetic_body_from_js_reg0.json" />
+    <None Include="Confs\synthetic_body_from_js_reg1.json" />
+    <None Include="Confs\synthetic_body_from_js_reg2.json" />
     <None Include="Confs\synthetic_body_from_silhouette0.json" />
     <None Include="Confs\synthetic_body_from_silhouette1.json" />
     <None Include="Confs\synthetic_body_from_silhouette2.json" />

@@ -14,7 +14,7 @@ bool LevenbergMarquardt::operator()(const Eigen::MatrixXf& jacobian,
 	std::cout << "Error " << current_residual_error << std::endl;
 	
 	if (last_residual_error_ == MINF ||
-		(last_residual_error_ >= current_residual_error))
+		(last_residual_error_ > current_residual_error))
 	{
 		JtJ += lambda_ * JtJ_diag;
 
@@ -25,14 +25,19 @@ bool LevenbergMarquardt::operator()(const Eigen::MatrixXf& jacobian,
 		delta_old_ = delta;
 		last_residual_error_ = current_residual_error;
 
-		lambda_ *= beta_;
+		lambda_ *= beta_; // inverse increases the speed of convergence
 		if (lambda_ < lambda_min_) lambda_ = lambda_min_;
+		std::cout << "lambda: " << lambda_ << std::endl;
+		
 		return true;
 	}
-	else if (last_residual_error_ < current_residual_error)
+	else if (last_residual_error_ <= current_residual_error)
 	{
 		delta = delta_old_;
-		lambda_ *= alpha_;
+
+		lambda_ *= alpha_; // inverse damps the speed of convergence
+		std::cout << "lambda: " << lambda_ << std::endl;
+
 		return false;
 	}
 

@@ -4,7 +4,7 @@
   "pose_prior_weight": 0.0,
   "bend_prior_weight": 50.0,
   "shape_prior_weight": 5.0,
-  "iterations": 40,
-  "ray_dist": 20,
+  "iterations": 50,
+  "ray_dist": 50,
   "pruning_derivative_half_dx":  5
 }

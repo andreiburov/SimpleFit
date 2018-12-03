@@ -31,6 +31,7 @@
     <ClCompile Include="Projector.cpp" />
     <ClCompile Include="JointsRegressor.cpp" />
     <ClCompile Include="Optimizer.cpp" />
+    <ClCompile Include="SilhouetteCorrespondences.cpp" />
     <ClCompile Include="SilhouetteRenderer.cpp" />
     <ClCompile Include="SilhouetteEnergy.cpp" />
     <ClCompile Include="Utils.cpp" />
@@ -47,6 +48,7 @@
     <ClInclude Include="Projector.h" />
     <ClInclude Include="JointsRegressor.h" />
     <ClInclude Include="Optimizer.h" />
+    <ClInclude Include="SilhouetteCorrespondences.h" />
     <ClInclude Include="SilhouetteRenderer.h" />
     <ClInclude Include="SilhouetteEnergy.h" />
     <ClInclude Include="Utils.h" />
@@ -55,11 +57,15 @@
     <ClInclude Include="SMPL.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Model\LM\fast.json" />
+    <None Include="..\Model\Reconstructions\all.json" />
+    <None Include="..\Model\Reconstructions\body.json" />
     <None Include="..\Model\Reconstructions\joints_and_silhouette.json" />
     <None Include="..\Model\Reconstructions\long.json" />
     <None Include="..\Model\Reconstructions\medium.json" />
     <None Include="..\Model\Reconstructions\quick.json" />
     <None Include="..\Model\Reconstructions\regularized.json" />
+    <None Include="..\Model\silhouette_correspondences.json" />
     <None Include="Silhouette.hlsli" />
   </ItemGroup>
   <ItemGroup>
@@ -178,7 +184,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;_HAS_ITERATOR_DEBUGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;$(SolutionDir)3rdparty\Boost-1.68.0;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;$(SolutionDir)3rdparty\Boost-1.68.0</AdditionalIncludeDirectories>
       <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>

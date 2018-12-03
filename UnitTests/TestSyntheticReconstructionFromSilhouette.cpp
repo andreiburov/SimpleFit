@@ -1,6 +1,3 @@
-//#include <direct.h>  
-//#include <stdlib.h>
-//#include <thread>
 #include <catch.hpp>
 #include <SMPL.h>
 #include "Common.h"
@@ -69,6 +66,9 @@ TEST_CASE("Synthetic Body From Silhouette")
 	TestConfiguration test;
 
 	SECTION("0") { test = TestConfiguration("Confs/synthetic_body_from_silhouette0.json"); }
+
+	//SECTION("3") { test = TestConfiguration("Confs/synthetic_shape_from_silhouette0.json"); }
+
 	//SECTION("1") { test = TestConfiguration("Confs/synthetic_body_from_silhouette1.json"); }
 	//SECTION("2") { test = TestConfiguration("Confs/synthetic_body_from_silhouette2.json"); }
 
@@ -91,6 +91,7 @@ TEST_CASE("Synthetic Body From Silhouette")
 	reconstruction.BodyFromSilhouette(test.output_path,
 		input_silhouette.GetImage(), translation, betas, thetas);
 
+	input_silhouette.GetImage().SavePNG(test.output_path + "input_silhouette.png");
 	Body body = generator(betas, thetas, false);
 	body.Dump(test.output_path + "body.obj");
 }

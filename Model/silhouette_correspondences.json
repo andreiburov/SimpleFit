@@ -1,0 +1,8 @@
+{
+  "ray_distance": 30,
+  "input_derivative_half_dx": 5,
+  "prune_head": false,
+  "prune_crotch": true,
+  "prune_feet": true,
+  "prune_hand": true
+}

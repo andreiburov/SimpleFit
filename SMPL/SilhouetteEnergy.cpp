@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <functional>
+#include <tuple>
 
 #include "SilhouetteEnergy.h"
 #include "LevenbergMarquardt.h"
@@ -23,6 +24,47 @@ namespace smpl
 			return true;
 		else
 			return false;
+	}
+
+	Point<int> Bresenham(
+		std::function<bool(int, int)> stop_condition,
+		const Point<int>& p0, const Point<int>& p1)
+	{
+		if (!p1.IsDefined()) return Point<int>();
+
+		// ensure integer coordinates
+		int x0 = p0[0];
+		int y0 = p0[1];
+		int x1 = p1[0];
+		int y1 = p1[1];
+
+		// compute deltas and update directions
+		float dx = abs(static_cast<float>(x1 - x0));
+		int sx = x0 < x1 ? 1 : -1;
+		float dy = -abs(static_cast<float>(y1 - y0));
+		int sy = y0 < y1 ? 1 : -1;
+		float err = dx + dy;
+		float e2 = 0; // error value e_xy
+
+		// set initial coordinates
+		int x = x0;
+		int y = y0;
+
+		// start loop to set nPixels
+		int nPixels = static_cast<int>(std::max(dx, -dy));
+		for (int i = 0; i < nPixels; ++i)
+		{
+			if (x < 0 || y < 0 || x >= IMAGE_WIDTH || y >= IMAGE_HEIGHT) return Point<int>();
+			if (stop_condition(x, y)) return Point<int>(x, y);
+
+			// update error
+			e2 = 2 * err;
+			// update coordinates depending on the error
+			if (e2 > dy) { err += dy; x += sx; } /* e_xy+e_x > 0 */
+			if (e2 < dx) { err += dx; y += sy; } /* e_xy+e_y < 0 */
+		}
+
+		return Point<int>();
 	}
 
 	Point<int> Bresenham(std::function<bool(int, int)> stop_condition, 
@@ -53,9 +95,8 @@ namespace smpl
 		int nPixels = static_cast<int>(std::max(dx, -dy));
 		for (int i = 0; i < nPixels; ++i)
 		{
-			if (painted) model(x, y) = BLUE;
-
 			if (x < 0 || y < 0 || x >= IMAGE_WIDTH || y >= IMAGE_HEIGHT) return Point<int>();
+			if (painted) model(x, y) = Pixel::Blue();
 			if (stop_condition(x, y)) return Point<int>(x, y);
 			
 			// update error
@@ -66,6 +107,54 @@ namespace smpl
 		}
 
 		return Point<int>();
+	}
+
+	std::tuple<Point<int>, Point<int>> 
+	BresenhamNext(std::function<bool(int, int)> stop_condition,
+		const Point<int>& p0, const Point<int>& p1,
+		Image& log_marching, bool painted)
+	{
+		if (!p1.IsDefined()) return std::make_tuple(Point<int>(), Point<int>());
+
+		// ensure integer coordinates
+		int x0 = p0[0];
+		int y0 = p0[1];
+		int x1 = p1[0];
+		int y1 = p1[1];
+
+		// compute deltas and update directions
+		float dx = abs(static_cast<float>(x1 - x0));
+		int sx = x0 < x1 ? 1 : -1;
+		float dy = -abs(static_cast<float>(y1 - y0));
+		int sy = y0 < y1 ? 1 : -1;
+		float err = dx + dy;
+		float e2 = 0; // error value e_xy
+
+		// set initial coordinates
+		int x = x0;
+		int y = y0;
+
+		// start loop to set nPixels
+		int nPixels = static_cast<int>(std::max(dx, -dy));
+		for (int i = 0; i < nPixels; ++i)
+		{
+			if (x < 0 || y < 0 || x >= IMAGE_WIDTH || y >= IMAGE_HEIGHT) 
+				return std::make_tuple(Point<int>(), Point<int>());
+			if (painted) log_marching(x, y) = Pixel::Blue();
+			
+			Point<int> correspondence(x, y);
+
+			// update error
+			e2 = 2 * err;
+			// update coordinates depending on the error
+			if (e2 > dy) { err += dy; x += sx; } /* e_xy+e_x > 0 */
+			if (e2 < dx) { err += dx; y += sy; } /* e_xy+e_y < 0 */
+
+			if (stop_condition(correspondence.x, correspondence.y))
+				return std::make_tuple(correspondence, Point<int>(x, y));
+		}
+
+		return std::make_tuple(Point<int>(), Point<int>());
 	}
 
 	void AddCorrespondence(std::function<bool(int, int)> stop_condition,
@@ -130,33 +219,7 @@ namespace smpl
 		const SilhouetteRenderer& renderer,
 		const int ray_dist, const int pruning_derivative_half_dx) :
 		generator_(generator), projector_(projector), silhouette_renderer_(renderer),
-		ray_dist_(ray_dist), pd_(pruning_derivative_half_dx),
-		pose_prior_per_theta_({
-		10, 10, 10, // 0
-		1, 10, 2, //1 
-		1, 10, 2, //2
-		2, 4, 4, //3
-		1, 100, 100, //4
-		1, 100, 100, //5
-		2, 4, 4, //6
-		100, 100, 100, //7
-		100, 100, 100, //8
-		10, 4, 4, //9
-		100, 100, 100, //10
-		100, 100, 100, //11
-		1, 1, 2, //12
-		10, 10, 10, //13
-		10, 10, 10, //14
-		4, 2, 4, //15
-		2, 1, 1, //16
-		2, 1, 1, //17
-		100, 2, 1, //18
-		100, 2, 1, //19
-		100, 100, 100, //20
-		100, 100, 100, //21
-		100, 100, 100, //22
-		100, 100, 100  //23
-		})
+		ray_dist_(ray_dist), pd_(pruning_derivative_half_dx)
 	{
 	}
 
@@ -183,17 +246,17 @@ namespace smpl
 				if (!input(i, j).IsBlack())
 					if (IsBorderingPixelBlack(input, i, j))
 					{
-						input_contour(i, j) = WHITE;
+						input_contour(i, j) = Pixel::White();
 					}
-					else input_contour(i, j) = BLACK;
+					else input_contour(i, j) = Pixel::Black();
 
 				if (!model(i, j).IsBlack())
 					if (IsBorderingPixelBlack(model, i, j))
 					{
-						correspondences(i, j) = WHITE;
+						correspondences(i, j) = Pixel::White();
 						model_border.push_back(Point<int>(i, j));
 					}
-					else correspondences(i, j) = BLACK;
+					else correspondences(i, j) = Pixel::Black();
 			}
 		}
 
@@ -219,7 +282,7 @@ namespace smpl
 			{
 				if (input_contour(x, y).IsWhite())
 				{
-					correspondences(x, y) = YELLOW;
+					correspondences(x, y) = Pixel::Yellow();
 				}
 			}
 
@@ -228,7 +291,7 @@ namespace smpl
 	}
 
 	void SilhouetteEnergy::PruneCorrepondences(
-		const Image& input, 
+		const Image& input,
 		const Image& model, const std::vector<float4>& normals,
 		Correspondences& correspondences) const
 	{
@@ -269,7 +332,7 @@ namespace smpl
 			auto& p = correspondences.model_border[i];
 			float4 normal4 = normals[p.y*IMAGE_WIDTH + p.x];
 			Point<float> n = Point<float>(normal4.x, -normal4.y).normalized();
-			
+
 			Point<float>& n_target = input_normals[i];
 			if (n.dot(n_target) > threshold) filtered_indices.push_back(i);
 		}
@@ -298,11 +361,11 @@ namespace smpl
 			{
 				if (!model(i, j).IsBlack())
 					if (IsBorderingPixelBlack(model, i, j))
-						draw_correspondences(i, j) = WHITE;
-					else draw_correspondences(i, j) = BLACK;
+						draw_correspondences(i, j) = Pixel::White();
+					else draw_correspondences(i, j) = Pixel::Black();
 			}
 		}
-		
+
 		for (int i = 0; i < model_border.size(); i++)
 		{
 			Bresenham(stop_condition, model_border[i], input_border[i],
@@ -313,15 +376,220 @@ namespace smpl
 		{
 			for (int i = 0; i < IMAGE_WIDTH; i++)
 			{
-				if(!input(i, j).IsBlack())
+				if (!input(i, j).IsBlack())
 					if (IsBorderingPixelBlack(input, i, j))
 					{
-						draw_correspondences(i, j) = YELLOW;
+						draw_correspondences(i, j) = Pixel::Yellow();
 					}
 			}
 		}
 
 		correspondences.image = draw_correspondences;
+	}
+
+	std::tuple<Point<int>, Point<float>>
+	SilhouetteEnergy::MarchingPruned(
+		const std::function<bool(int, int)>& stop_condition,
+		const Point<int>& model_point,
+		const Point<float>& model_normal, int max_dist,
+		const Image& input_silhouette,
+		bool logging_on,
+		Image& log_marching,
+		Image& log_input_derivatives) const
+	{
+		Point<int> endpoint(
+			static_cast<int>(model_point[0] + max_dist * model_normal[0]),
+			static_cast<int>(model_point[1] + max_dist * model_normal[1]));
+
+		Point<int> current, next(model_point);
+
+		while (true)
+		{
+			std::tie(current, next) = BresenhamNext(stop_condition, next, endpoint, log_marching, logging_on);
+
+			if (!current.IsDefined()) break;
+			else 
+			{
+				// Derivatives in FreeImage space, inverted to point out of the silhouette
+				// Taking step to because the contours can have a width of 2
+				float dx = (input_silhouette(current.x + pd_, current.y).GrayScale()
+					- input_silhouette(current.x - pd_, current.y).GrayScale()) / 2.f;
+				float dy = (input_silhouette(current.x, current.y + pd_).GrayScale()
+					- input_silhouette(current.x, current.y - pd_).GrayScale()) / 2.f;
+				Point<float> input_normal = Point<float>(-dx, -dy).normalized();
+
+				if (logging_on)
+				{
+					const int radius = 5;
+					Point<int> log_end(static_cast<int>(current.x + radius * input_normal.x),
+						static_cast<int>(current.y + radius * input_normal.y));
+					auto stop_on_endpoint = [](int x, int y) { return false; };
+					Bresenham(stop_on_endpoint, current, log_end, log_input_derivatives, true);
+				}
+
+				const float threshold = 0.2f;
+				if (model_normal.dot(input_normal) > threshold)
+				{
+					Point<float> distance(
+						static_cast<float>(model_point[0] - current[0]),
+						static_cast<float>(model_point[1] - current[1]));
+					return std::make_tuple(current, distance);
+				}
+				else
+				{
+					//std::cout << "!";
+				}
+			}
+		}
+
+		return std::make_tuple(Point<int>(), Point<float>());
+	}
+
+	void SilhouetteEnergy::AddCorrespondencePruned(
+		std::function<bool(int, int)> stop_condition,
+		const Point<int>& model_point,
+		const Point<float>& model_normal, int max_dist,
+		const Image& input_silhouette,
+		std::vector<Point<int>>& model_correspondence,
+		std::vector<Point<int>>& input_correspondence,
+		std::vector<Point<float>>& distance,
+		bool logging_on,
+		Image& log_marching,
+		Image& log_input_normals) const
+	{
+		Point<int> c1, c2;		// input_point
+		Point<float> d1, d2;	// distance
+
+		std::tie(c1, d1) = MarchingPruned(stop_condition, model_point, model_normal, 
+			max_dist, input_silhouette, logging_on, log_marching, log_input_normals);
+		std::tie(c2, d2) = MarchingPruned(stop_condition, model_point, model_normal, 
+			-max_dist, input_silhouette, logging_on, log_marching, log_input_normals);
+
+		if (!c1.IsDefined() && !c2.IsDefined()) return;
+		if (c1.IsDefined() && !c2.IsDefined())
+		{
+			model_correspondence.push_back(model_point);
+			input_correspondence.push_back(c1);
+			distance.push_back(d1);
+		}
+		if (!c1.IsDefined() && c2.IsDefined())
+		{
+			model_correspondence.push_back(model_point);
+			input_correspondence.push_back(c2);
+			distance.push_back(d2);
+		}
+		if (d1.Norm() < d2.Norm())
+		{
+			model_correspondence.push_back(model_point);
+			input_correspondence.push_back(c1);
+			distance.push_back(d1);
+		}
+		else
+		{
+			model_correspondence.push_back(model_point);
+			input_correspondence.push_back(c2);
+			distance.push_back(d2);
+		}
+	}
+
+	Correspondences SilhouetteEnergy::FindCorrespondencesPruned(
+		const Image& input_silhouette,
+		const Image& model_silhouette, 
+		const std::vector<float4>& model_normals,
+		const std::string& output_path) const
+	{
+		bool logging_on = true;
+		if (output_path.empty()) logging_on = false;
+
+		Image model_contour(model_silhouette), input_contour(input_silhouette);
+		// model border detected visually
+		std::vector<Point<int>> model_border;
+
+		// create contours, detect model border
+		for (int j = 0; j < IMAGE_HEIGHT; j++)
+		{
+			for (int i = 0; i < IMAGE_WIDTH; i++)
+			{
+				if (!input_silhouette(i, j).IsBlack())
+					if (IsBorderingPixelBlack(input_silhouette, i, j))
+					{
+						input_contour(i, j) = Pixel::White();
+					}
+					else input_contour(i, j) = Pixel::Black();
+
+				if (!model_silhouette(i, j).IsBlack())
+					if (IsBorderingPixelBlack(model_silhouette, i, j))
+					{
+						model_contour(i, j) = Pixel::White();
+						model_border.push_back(Point<int>(i, j));
+					}
+					else model_contour(i, j) = Pixel::Black();
+			}
+		}
+
+		// model border points that have input correspondences
+		std::vector<Point<int>> model_correspondence;
+		std::vector<Point<int>> input_correspondence;
+		std::vector<Point<float>> distance;
+
+		Image log_correspondences(model_contour), 
+			log_marching(model_contour), 
+			log_input_normals(input_contour);
+
+		auto stop_condition = [&input_contour](int x, int y) { return (input_contour(x, y).IsWhite()); };
+		//auto stop_condition = [](int x, int y) { return false; };
+		for (auto& point : model_border)
+		{
+			float4 normal4 = model_normals[point.y*IMAGE_WIDTH + point.x];
+			Point<float> normal = Point<float>(normal4.x, -normal4.y).normalized();
+			AddCorrespondencePruned(stop_condition, point, normal, ray_dist_,
+				input_silhouette, model_correspondence, input_correspondence, distance,
+				logging_on, log_marching, log_input_normals);
+		}
+
+		// Draw correspondences
+		auto stop_on_endpoint = [](int x, int y) { return false; };
+		for (int i = 0; i < model_correspondence.size(); i++)
+		{
+			Bresenham(stop_on_endpoint, model_correspondence[i], input_correspondence[i], log_correspondences, true);
+		}
+
+		// Draw input onto correspondences for clarity
+		for (int y = 0; y < IMAGE_HEIGHT; y++)
+			for (int x = 0; x < IMAGE_WIDTH; x++)
+			{
+				if (input_contour(x, y).IsWhite())
+				{
+					log_correspondences(x, y) = Pixel::Yellow();
+				}
+			}
+
+		if (logging_on)
+		{
+			input_contour.SavePNG(output_path + "input_contour.png");
+			model_contour.SavePNG(output_path + "model_contour.png");
+			log_correspondences.SavePNG(output_path + "correspondences.png");
+
+			for (int y = 0; y < IMAGE_HEIGHT; y++)
+				for (int x = 0; x < IMAGE_WIDTH; x++)
+				{
+					if (model_contour(x, y).IsWhite())
+					{
+						log_marching(x, y) = Pixel::Yellow();
+					}
+
+					if (input_contour(x, y).IsWhite())
+					{
+						log_marching(x, y) = Pixel::Red();
+					}
+				}
+
+			log_marching.SavePNG(output_path + "marching.png");
+			log_input_normals.SavePNG(output_path + "input_normals.png");
+		}
+
+		Correspondences result(log_correspondences, model_correspondence, input_correspondence, distance);
+		return result;
 	}
 
 	Silhouette SilhouetteEnergy::Infer(const Eigen::Vector3f& translation,
@@ -346,11 +614,11 @@ namespace smpl
 			error(m + 1) = correspondences.distance[m / 2].y;
 		}
 		
+		error *= weight;
 		// need to normalize since there might be unequal number of correspondences
 		// that one adds up compared to the previous iteration
-		float norm = sqrt(static_cast<float>(correspondences.model_border.size() * 2));
+		float norm = static_cast<float>(correspondences.model_border.size() * 2);
 		error /= norm;
-		error *= weight;
 	}
 
 
@@ -394,11 +662,11 @@ namespace smpl
 			}
 		}
 
+		jacobian *= weight;
 		// need to normalize since there might be unequal number of correspondences
 		// that one adds up compared to the previous iteration
-		float norm = sqrt(static_cast<float>(correspondences.model_border.size() * 2));
+		float norm = static_cast<float>(correspondences.model_border.size() * 2);
 		jacobian /= norm;
-		jacobian *= weight;
 	}
 
 	void SilhouetteEnergy::ComputeSilhouetteFromPoseJacobian(
@@ -441,10 +709,10 @@ namespace smpl
 			}
 		}
 
+		jacobian *= weight;
 		// need to normalize since there might be unequal number of correspondences
 		// that one adds up compared to the previous iteration
-		float norm = sqrt(static_cast<float>(correspondences.model_border.size() * 2));
+		float norm = static_cast<float>(correspondences.model_border.size() * 2);
 		jacobian /= norm;
-		jacobian *= weight;
 	}
 }

@@ -83,7 +83,7 @@
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\AntTweakBar-1.16\include;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)SMPL;C:\Program Files\RenderDoc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\AntTweakBar-1.16\include;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;$(SolutionDir)SMPL;C:\Program Files\RenderDoc</AdditionalIncludeDirectories>
     </ClCompile>
     <PreBuildEvent>
       <Command>fxc /Od /Zi /T vs_4_0_level_9_1 /E MainVS /Fh $(IntDir)TwSimpleDX11_VS.h TwSimpleDX11.hlsl
@@ -126,7 +126,7 @@ fxc /Od /Zi /T ps_4_0_level_9_1 /E MainPS /Fh $(IntDir)TwSimpleDX11_PS.h TwSimpl
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_WINDOWS;_HAS_ITERATOR_DEBUGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\AntTweakBar-1.16\include;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)SMPL;C:\Program Files\RenderDoc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\FreeImage-3.17.0\Dist\x64;$(SolutionDir)3rdparty\AntTweakBar-1.16\include;$(SolutionDir)3rdparty\Eigen-3.3.4;$(SolutionDir)3rdparty\Сereal-1.2.2\include;$(SolutionDir)SMPL;C:\Program Files\RenderDoc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

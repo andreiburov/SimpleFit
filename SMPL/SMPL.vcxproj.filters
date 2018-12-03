@@ -15,6 +15,12 @@
     <Filter Include="Reconstruction">
       <UniqueIdentifier>{16b5dbe9-9993-4329-bb8b-6024e49fed04}</UniqueIdentifier>
     </Filter>
+    <Filter Include="LM">
+      <UniqueIdentifier>{d3a8ae93-c96f-4cda-98d6-aa5b6f9a5ab8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other">
+      <UniqueIdentifier>{684f2663-9638-4a49-a9ec-a5f7b6971685}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Generator.h">
@@ -68,6 +74,9 @@
     <ClInclude Include="JointsRegressor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SilhouetteCorrespondences.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generator.cpp">
@@ -115,6 +124,9 @@
     <ClCompile Include="JointsRegressor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SilhouetteCorrespondences.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Silhouette.hlsli">
@@ -133,6 +145,18 @@
       <Filter>Reconstruction</Filter>
     </None>
     <None Include="..\Model\Reconstructions\joints_and_silhouette.json">
+      <Filter>Reconstruction</Filter>
+    </None>
+    <None Include="..\Model\Reconstructions\body.json">
+      <Filter>Reconstruction</Filter>
+    </None>
+    <None Include="..\Model\LM\fast.json">
+      <Filter>LM</Filter>
+    </None>
+    <None Include="..\Model\silhouette_correspondences.json">
+      <Filter>Other</Filter>
+    </None>
+    <None Include="..\Model\Reconstructions\all.json">
       <Filter>Reconstruction</Filter>
     </None>
   </ItemGroup>

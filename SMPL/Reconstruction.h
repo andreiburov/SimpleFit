@@ -4,6 +4,7 @@
 #include "Image.h"
 #include "Generator.h"
 #include "Projector.h"
+#include "SilhouetteCorrespondences.h"
 #include "SilhouetteRenderer.h"
 
 #include <cereal/cereal.hpp>
@@ -90,6 +91,12 @@ namespace smpl
 			const Eigen::Vector3f& translation,
 			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
 
+        void BodyFromJointsAndSilhouetteRegularized(
+            const std::string& output_path,
+            const std::vector<float>& input_joints, const Image& input_silhouette,
+            Eigen::Vector3f& translation,
+            ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
+
 		void BodyFromJointsAndSilhouette(
 			const std::string& output_path,
 			const std::vector<float>& input_joints, const Image& input_silhouette, 
@@ -122,6 +129,12 @@ namespace smpl
 			const Eigen::Vector3f& translation,
 			PoseEulerCoefficients& thetas) const;
 
+		void BodyFromBody(
+			const std::string& output_path,
+			const std::vector<float3>& input_body,
+			const Eigen::Vector3f& translation,
+			ShapeCoefficients& betas, PoseEulerCoefficients& thetas) const;
+
 		const Generator& GetGenerator() const { return generator_; }
 		const Projector& GetProjector() const { return projector_; }
 		const JointsRegressor& GetJointsRegressor() const { return regressor_; }
@@ -133,6 +146,7 @@ namespace smpl
 		const Projector projector_;
 		const JointsRegressor regressor_;
 		const SilhouetteRenderer silhouette_renderer_;
+        const SilhouetteCorrespondencesFinder silhouette_correspondences_finder_;
 
 		// configuration
 		const float joints_weight_;

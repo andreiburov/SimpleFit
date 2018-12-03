@@ -25,6 +25,9 @@
     <Filter Include="Resource Files\Configs\SyntheticBodies">
       <UniqueIdentifier>{2c164dc2-01c5-4895-9f0d-dd486c8f6354}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Configs\SilhouetteCorrespondences">
+      <UniqueIdentifier>{9da3a4af-8e60-4971-aada-63a97e44ae02}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="UnitTests.cpp">
@@ -91,6 +94,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TestSyntheticReconstructionFromJointsAndSilhouettes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestSyntheticReconstructionFromBody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -202,6 +208,27 @@
       <Filter>Resource Files\Configs\SyntheticBodies</Filter>
     </None>
     <None Include="Confs\synthetic_body_from_silhouette2.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_body0.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\find_correspondences0.json">
+      <Filter>Resource Files\Configs\SilhouetteCorrespondences</Filter>
+    </None>
+    <None Include="Confs\find_correspondences1.json">
+      <Filter>Resource Files\Configs\SilhouetteCorrespondences</Filter>
+    </None>
+    <None Include="Confs\find_correspondences2.json">
+      <Filter>Resource Files\Configs\SilhouetteCorrespondences</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_js_reg0.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_js_reg1.json">
+      <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\synthetic_body_from_js_reg2.json">
       <Filter>Resource Files\Configs\SyntheticBodies</Filter>
     </None>
   </ItemGroup>
