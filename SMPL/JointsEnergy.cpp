@@ -124,10 +124,11 @@ namespace smpl
 #pragma omp parallel for
 			for (int i = 0; i < VERTEX_COUNT; i++)
 			{
-				for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
-				{
-					dv[k] += ToView(joint_regressor(i) * dpose[i*THETA_COMPONENT_COUNT + k].ToEigen());
-				}
+                if (std::abs(joint_regressor(i)) > 0.0001f)
+				    for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
+				    {
+					    dv[k] += ToView(joint_regressor(i) * dpose[i*THETA_COMPONENT_COUNT + k].ToEigen());
+				    }
 			}
 
 			for (int k = 0; k < THETA_COMPONENT_COUNT; k++)

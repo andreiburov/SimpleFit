@@ -39,30 +39,37 @@ public:
 	};
 
 	LevenbergMarquardt(const int unknowns, const bool logging_on) :
-		unknowns_(unknowns), logging_on_(logging_on), delta_old_(Eigen::VectorXf::Zero(unknowns))
+		logging_on_(logging_on), unknowns_(unknowns), 
+        JtJ_(Eigen::MatrixXf::Zero(unknowns, unknowns)),
+        JtF_(Eigen::VectorXf::Zero(unknowns)),
+        parameters_(Eigen::VectorXf::Zero(unknowns))
 	{
 	}
 
 	LevenbergMarquardt(const int unknowns, const bool logging_on, const Configuration& config) :
-		unknowns_(unknowns), logging_on_(logging_on), delta_old_(Eigen::VectorXf::Zero(unknowns)),
-		lambda_min_(config.lambda_min), alpha_(config.alpha), beta_(config.beta), lambda_(config.lambda)
+        logging_on_(logging_on), unknowns_(unknowns),
+        JtJ_(Eigen::MatrixXf::Zero(unknowns, unknowns)),
+        JtF_(Eigen::VectorXf::Zero(unknowns)),
+        parameters_(Eigen::VectorXf::Zero(unknowns)),
+		lambda_min_(config.lambda_min), alpha_(config.alpha), beta_(config.beta), 
+        lambda_(config.lambda)
 	{
 	}
 
-	// true if minimized, false otherwise
-	bool operator()(const Eigen::MatrixXf& jacobian, const Eigen::VectorXf& error,
-		const int residuals, const int iteration, Eigen::VectorXf& delta);
+	void operator()(const Eigen::MatrixXf& jacobian, const Eigen::VectorXf& error,
+		const int residuals, const int iteration, Eigen::VectorXf& parameters);
 
 private:
+    const bool logging_on_;
+
 	const int unknowns_;
-	Eigen::VectorXf delta_old_;
-
-	const float MINF = -100000.f;
-	const bool logging_on_;
-
+    Eigen::MatrixXf JtJ_;
+    Eigen::VectorXf JtF_;
+    Eigen::VectorXf parameters_;
+    float last_residual_error_ = 1e30f;
+    
 	const float lambda_min_ = 0.05f;
 	const float alpha_ = 1.8f;		// increase lambda factor when error goes up
 	const float beta_ = 0.6f;		// decrease lambda factor when error goes down
-	float lambda_ = 2.0f;			// the linear step factor
-	float last_residual_error_ = MINF;
+	float lambda_ = 2.0f;			// the linear step factor, the bigger the more GD ist the step, and smaller the stepsize
 };

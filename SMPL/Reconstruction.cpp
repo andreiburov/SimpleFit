@@ -89,7 +89,8 @@ namespace smpl
 				correspondences, residuals, silhouette_weight_, jacobian);
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 				for (int i = 0; i < unknowns; i++)
 					betas[i] -= delta(i);
@@ -161,7 +162,8 @@ namespace smpl
 			Eigen::VectorXf error(error_silhouette);
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 				for (int i = 0; i < unknowns; i++)
 					thetas(i) -= delta(i);
@@ -263,7 +265,8 @@ namespace smpl
 			error << error_silhouette, error_silhouette*0;
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 			{
 				for (int i = 0; i < BETA_COUNT; i++) betas[i] -= delta(i + 3);
@@ -403,7 +406,8 @@ namespace smpl
             error << error_joints, error_silhouette;
 
             // levenberg marquardt
-            bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+            bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
             if (minimized)
             {
                 for (int i = 0; i < 3; i++)	translation(i) -= delta(i);
@@ -447,14 +451,19 @@ namespace smpl
 			silhouette_renderer_, ray_dist_, pruning_derivative_half_dx_);
         PriorEnergy prior_energy;
 
+        joints_energy.InitializeCameraPosition(regressor_.GetJointType(),
+            input_joints, projector_.GetIntrinsics()(1, 1), translation);
+
 		const int unknowns = 3 + BETA_COUNT + THETA_COMPONENT_COUNT;
 		LevenbergMarquardt lm_solver(unknowns, logging_on, std::string("../Model/LM/fast.json"));
-
-		joints_energy.InitializeCameraPosition(regressor_.GetJointType(),
-			input_joints, projector_.GetIntrinsics()(1, 1), translation);
+        Eigen::VectorXf parameters(Eigen::VectorXf::Zero(unknowns));
+        for (int i = 0; i < 3; i++)	parameters(i) = translation(i);
+        for (int i = 0; i < BETA_COUNT; i++) parameters(i + 3) = betas[i];
+        for (int i = 0; i < THETA_COMPONENT_COUNT; i++) parameters(i + 3 + BETA_COUNT) = thetas(i);
 
 		std::vector<float3> dshape(VERTEX_COUNT * BETA_COUNT);
 		std::vector<float3> dpose(VERTEX_COUNT * THETA_COMPONENT_COUNT);
+
 		for (int iteration = 0; iteration < iterations_; iteration++)
 		{
 			if (logging_on)
@@ -525,7 +534,6 @@ namespace smpl
 			
 			silhouette_energy.ComputeSilhouetteError(
 				correspondences, residuals_silhouette, silhouette_weight_, error_silhouette);
-			generator_.ComputeBodyFromPoseJacobian(body, dpose);
 			silhouette_energy.ComputeSilhouetteFromShapeJacobian(
 				body, dshape, translation, silhouette,
 				correspondences, residuals_silhouette, silhouette_weight_, jacobian_silhouette_shape);
@@ -564,7 +572,6 @@ namespace smpl
 			const int residuals = residuals_joints + residuals_silhouette + residuals_prior;
 			Eigen::MatrixXf jacobian(residuals, unknowns);
 			Eigen::VectorXf error(residuals);
-			Eigen::VectorXf delta = Eigen::VectorXf::Zero(unknowns);
 
 			jacobian << jacobian_joints, jacobian_silhouette, jacobian_prior;
 			error << error_joints, error_silhouette, error_shape_prior, error_pose_prior, error_bend_prior;
@@ -579,32 +586,20 @@ namespace smpl
             }
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
-			if (minimized)
-			{
-				for (int i = 0; i < 3; i++)	translation(i) -= delta(i);
-				for (int i = 0; i < BETA_COUNT; i++) betas[i] -= delta(i + 3);
-				for (int i = 0; i < THETA_COMPONENT_COUNT; i++) thetas(i) -= delta(i + 3 + BETA_COUNT);
-			}
-			else
-			{
-				for (int i = 0; i < 3; i++)	translation(i) += delta(i);
-				for (int i = 0; i < BETA_COUNT; i++) betas[i] += delta(i + 3);
-				for (int i = 0; i < THETA_COMPONENT_COUNT; i++) thetas(i) += delta(i + 3 + BETA_COUNT);
-			}
+			lm_solver(jacobian, error, residuals, iteration, parameters);
+            for (int i = 0; i < 3; i++)	translation(i) = parameters(i);
+            for (int i = 0; i < BETA_COUNT; i++) betas[i] = parameters(i + 3);
+            for (int i = 0; i < THETA_COMPONENT_COUNT; i++) thetas(i) = parameters(i + 3 + BETA_COUNT);
 
 			if (logging_on)
 			{
-				if (minimized)
-				{
-					/*std::cout << "Translation + Betas + Thetas" << std::endl;
-					for (int i = 0; i < 3; i++)	std::cout << translation(i) << std::endl;
-					std::cout << "---------------------------------" << std::endl;
-					for (int i = 0; i < BETA_COUNT; i++) std::cout << betas[i] << std::endl;
-					std::cout << "---------------------------------" << std::endl;
-					for (int i = 0; i < THETA_COMPONENT_COUNT; i++) std::cout << thetas(i) << std::endl;
-					std::cout << std::endl;*/
-				}
+				/*std::cout << "Translation + Betas + Thetas" << std::endl;
+				for (int i = 0; i < 3; i++)	std::cout << translation(i) << std::endl;
+				std::cout << "---------------------------------" << std::endl;
+				for (int i = 0; i < BETA_COUNT; i++) std::cout << betas[i] << std::endl;
+				std::cout << "---------------------------------" << std::endl;
+				for (int i = 0; i < THETA_COMPONENT_COUNT; i++) std::cout << thetas(i) << std::endl;
+				std::cout << std::endl;*/
 			}
 		}
 	}
@@ -695,7 +690,8 @@ namespace smpl
 			error << error_joints, error_shape_prior, error_pose_prior, error_bend_prior;
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+            bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 			{
 				for (int i = 0; i < 3; i++)	translation(i) -= delta(i);
@@ -793,7 +789,8 @@ namespace smpl
 			error << error_joints;
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 			{
 				for (int i = 0; i < 3; i++)	translation(i) -= delta(i);
@@ -878,7 +875,8 @@ namespace smpl
 			error << error_joints;
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 				for (int i = 0; i < unknowns; i++)
 					translation(i) -= delta(i);
@@ -956,7 +954,8 @@ namespace smpl
 			error << error_joints;
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 				for (int i = 0; i < unknowns; i++)
 					betas[i] -= delta(i);
@@ -1034,7 +1033,8 @@ namespace smpl
 			error << error_joints;
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 				for (int i = 0; i < unknowns; i++)
 					thetas(i) -= delta(i);
@@ -1136,7 +1136,8 @@ namespace smpl
 			error << error_body;
 
 			// levenberg marquardt
-			bool minimized = lm_solver(jacobian, error, residuals, iteration, delta);
+			bool minimized = true;
+            lm_solver(jacobian, error, residuals, iteration, delta);
 			if (minimized)
 			{
 				for (int i = 0; i < BETA_COUNT; i++) betas[i] -= delta(i);

@@ -54,6 +54,8 @@ namespace smpl {
 				part_transformations_[i] = Eigen::Matrix4f::Identity();
 				palette_[i] = Eigen::Matrix4f::Identity();
 			}
+
+            dskinning_.resize(THETA_COMPONENT_COUNT * JOINT_COUNT);
 		}
 
 		void operator()(const PoseAxisAngleCoefficients& thetas, 
@@ -91,7 +93,7 @@ namespace smpl {
 			
 			dskinning[angle_component * joint_count + body_part] - derivative of skinning in body part w.r.t. angle component
 		*/
-		void ComputeSkinningJacobian(const Body& body, Eigen::Matrix4f* dskinning) const;
+		void ComputeSkinningJacobian(const Body& body, std::vector<Eigen::Matrix4f>& dskinning) const;
 
 		/*
 			Computes Jacobian in Body from Pose.
@@ -117,6 +119,7 @@ namespace smpl {
 
 	private:
 		const std::vector<Skin> skins_;
+        mutable std::vector<Eigen::Matrix4f> dskinning_;
 		mutable Eigen::Matrix4f part_transformations_[JOINT_COUNT]; // blended unhierarchical per part transformations
 		mutable Eigen::Matrix4f palette_[JOINT_COUNT]; // hierarchical skinning palette used for rendering
 	};

@@ -132,11 +132,13 @@ namespace smpl
 		}
 	}
 
-	void SkinMorph::ComputeSkinningJacobian(const Body& body, Eigen::Matrix4f* dskinning) const
+	void SkinMorph::ComputeSkinningJacobian(const Body& body, std::vector<Eigen::Matrix4f>& dskinning) const
 	{
 		const PoseEulerCoefficients& thetas = body.thetas;
 		const RegressedJoints& joints = body.joints;
-		ZeroMemory(dskinning, sizeof(Eigen::Matrix4f) * JOINT_COUNT * JOINT_COUNT * 3);
+        
+        for (auto& el : dskinning)
+            el.setZero();
 
 		// main diagonal initialization
 		{
@@ -168,8 +170,7 @@ namespace smpl
 
 	void SkinMorph::ComputeBodyFromPoseJacobian(const Body& body, std::vector<float3>& dpose) const
 	{
-		Eigen::Matrix4f* dskinning = new Eigen::Matrix4f[THETA_COMPONENT_COUNT * JOINT_COUNT];
-		ComputeSkinningJacobian(body, dskinning);
+		ComputeSkinningJacobian(body, dskinning_);
 
 		dpose.resize(VERTEX_COUNT * THETA_COMPONENT_COUNT);
 
@@ -179,15 +180,13 @@ namespace smpl
 			for (int k = 0; k < THETA_COMPONENT_COUNT; k++)
 			{
 				dpose[i*THETA_COMPONENT_COUNT + k] =
-					float3(((skins_[i].weight.x * dskinning[k * JOINT_COUNT + skins_[i].joint_index.x] +
-						skins_[i].weight.y * dskinning[k * JOINT_COUNT + skins_[i].joint_index.y] +
-						skins_[i].weight.z * dskinning[k * JOINT_COUNT + skins_[i].joint_index.z] +
-						skins_[i].weight.w * dskinning[k * JOINT_COUNT + skins_[i].joint_index.w]) *
+					float3(((skins_[i].weight.x * dskinning_[k * JOINT_COUNT + skins_[i].joint_index.x] +
+						skins_[i].weight.y * dskinning_[k * JOINT_COUNT + skins_[i].joint_index.y] +
+						skins_[i].weight.z * dskinning_[k * JOINT_COUNT + skins_[i].joint_index.z] +
+						skins_[i].weight.w * dskinning_[k * JOINT_COUNT + skins_[i].joint_index.w]) *
 						body.deformed_template[i].ToEigen().homogeneous()).head(3));
 			}
 		}
-
-		delete dskinning;
 	}
 
 	Body Generator::operator()(const ShapeCoefficients& betas, const PoseAxisAngleCoefficients& thetas) const
