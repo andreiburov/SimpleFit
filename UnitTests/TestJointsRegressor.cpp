@@ -46,7 +46,7 @@ TEST_CASE("Body25 Regressor From Different Views")
     Generator generator(test.model_path);
     Projector projector(test.model_path);
     JointsRegressor joints_regressor(
-        JointsRegressor::Configuration(test.model_path, JointsRegressor::BODY_25));
+        JointsRegressor::Configuration(test.model_path, JointsRegressor::BODY25));
     ShapeCoefficients betas(test.betas);
     PoseEulerCoefficients thetas(test.thetas);
 

@@ -11,7 +11,7 @@ namespace smpl
 		generator_(configuration.model_path),
 		projector_(configuration.model_path),
 		regressor_(JointsRegressor::Configuration(
-			configuration.model_path, JointsRegressor::COCO)),
+			configuration.model_path, configuration.regressor)),
 		silhouette_renderer_(generator_(true)),
         silhouette_correspondences_finder_(configuration.model_path),
 

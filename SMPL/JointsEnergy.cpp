@@ -29,6 +29,19 @@ namespace smpl
 			translation = Eigen::Vector3f(0.f, 0.f, -z);
 			break;
 		}
+        case JointsRegressor::BODY25:
+        {
+            float model_avg_shoulders_to_hips = 1.04932f;
+            float _x = (input_joints[2 * BODY25_SHOULDER_LEFT] - input_joints[2 * BODY25_HIP_LEFT]) +
+                (input_joints[2 * BODY25_SHOULDER_RIGHT] - input_joints[2 * BODY25_HIP_RIGHT]);
+            float _y = (input_joints[2 * BODY25_SHOULDER_LEFT + 1] - input_joints[2 * BODY25_HIP_LEFT + 1]) +
+                (input_joints[2 * BODY25_SHOULDER_RIGHT + 1] - input_joints[2 * BODY25_HIP_RIGHT + 1]);
+            float image_avg_shoulders_to_hips = sqrtf(_x * _x + _y * _y);
+
+            float z = model_avg_shoulders_to_hips / image_avg_shoulders_to_hips * focal_length_y;
+            translation = Eigen::Vector3f(0.f, 0.f, -z);
+            break;
+        }
 		default:
 			MessageBoxA(nullptr, "Guess Camera Position", "Error", MB_OK);
 			throw std::exception("Not implemented");

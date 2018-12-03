@@ -29,6 +29,7 @@ namespace smpl
 			int iterations;
 			int ray_dist;
 			int pruning_derivative_half_dx;
+            std::string regressor;
 			std::string model_path;
 
 			Configuration() {}
@@ -51,13 +52,14 @@ namespace smpl
 			template<class Archive>
 			void Serialize(Archive& archive)
 			{
-				archive(
-					CEREAL_NVP(joints_weight),
-					CEREAL_NVP(silhouette_weight),
-					CEREAL_NVP(pose_prior_weight),
-					CEREAL_NVP(bend_prior_weight),
-					CEREAL_NVP(shape_prior_weight),
-					CEREAL_NVP(iterations),
+                archive(
+                    CEREAL_NVP(joints_weight),
+                    CEREAL_NVP(silhouette_weight),
+                    CEREAL_NVP(pose_prior_weight),
+                    CEREAL_NVP(bend_prior_weight),
+                    CEREAL_NVP(shape_prior_weight),
+                    CEREAL_NVP(iterations),
+                    CEREAL_NVP(regressor),
 					CEREAL_NVP(ray_dist),
 					CEREAL_NVP(pruning_derivative_half_dx)
 				);

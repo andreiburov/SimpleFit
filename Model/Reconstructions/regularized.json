@@ -6,5 +6,6 @@
   "shape_prior_weight": 20.0,
   "iterations": 15,
   "ray_dist": 30,
-  "pruning_derivative_half_dx":  5
+  "pruning_derivative_half_dx": 5,
+  "regressor": "coco"
 }

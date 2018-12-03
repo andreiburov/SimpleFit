@@ -12,7 +12,7 @@ namespace smpl
 		{
 			SMPL,
 			COCO,
-			BODY_25
+			BODY25
 		};
 
 		struct Configuration
@@ -21,19 +21,24 @@ namespace smpl
 			JointType joint_type;
 			int joint_count;
 
-			Configuration(const std::string& model_path, const std::string& joint_type)
+            static JointType String2JointType(const std::string& string)
+            {
+                if (string.compare("coco") == 0)
+                    return COCO;
+                else if (string.compare("smpl") == 0)
+                    return SMPL;
+                else if (string.compare("body25") == 0)
+                    return BODY25;
+                else
+                {
+                    MessageBoxA(nullptr, "Invalid regressor in reconstruction configuration", "Error", MB_OK);
+                    throw std::exception("Invalid regressor");
+                }
+            }
+
+			Configuration(const std::string& model_path, const std::string& joint_type) :
+                Configuration(model_path, String2JointType(joint_type))
 			{
-				if (joint_type.compare("coco") == 0)
-					Configuration(model_path, COCO);
-				else if (joint_type.compare("smpl") == 0)
-					Configuration(model_path, SMPL);
-				else if (joint_type.compare("body25") == 0)
-					Configuration(model_path, BODY_25);
-				else
-				{
-					MessageBoxA(nullptr, "Invalid regressor in reconstruction configuration", "Error", MB_OK);
-					throw std::exception("Invalid regressor");
-				}
 			}
 
 			Configuration(const std::string& model_path, const JointType& joint_type) : joint_type(joint_type)
@@ -48,15 +53,15 @@ namespace smpl
 					ReadSparseMatrixFile(model_path + std::string("coco_regressor.txt"), regressor);
 					joint_count = COCO_JOINT_COUNT;
 					break;
-				case BODY_25:
+				case BODY25:
                     ReadSparseMatrixFile(model_path + std::string("body25_regressor.txt"), regressor);
-                    joint_count = BODY_25_JOINT_COUNT;
+                    joint_count = BODY25_JOINT_COUNT;
 					break;
 				}	
 			}
 		};
 
-		JointsRegressor(Configuration&& configuration) :
+		JointsRegressor(const Configuration& configuration) :
 			JointsRegressor(
 				configuration.regressor, 
 				configuration.joint_type, 
