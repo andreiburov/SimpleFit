@@ -28,6 +28,9 @@
     <Filter Include="Resource Files\Configs\SilhouetteCorrespondences">
       <UniqueIdentifier>{9da3a4af-8e60-4971-aada-63a97e44ae02}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Configs\Regressor">
+      <UniqueIdentifier>{8954739d-69c4-484a-a3a8-d68a082fd3ee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="UnitTests.cpp">
@@ -97,6 +100,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TestSyntheticReconstructionFromBody.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestRealJointsAndSilhouettesRegularized.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -230,6 +236,24 @@
     </None>
     <None Include="Confs\synthetic_body_from_js_reg2.json">
       <Filter>Resource Files\Configs\SyntheticBodies</Filter>
+    </None>
+    <None Include="Confs\body25_regressor_back0.json">
+      <Filter>Resource Files\Configs\Regressor</Filter>
+    </None>
+    <None Include="Confs\body25_regressor_back1.json">
+      <Filter>Resource Files\Configs\Regressor</Filter>
+    </None>
+    <None Include="Confs\body25_regressor_front0.json">
+      <Filter>Resource Files\Configs\Regressor</Filter>
+    </None>
+    <None Include="Confs\body25_regressor_front1.json">
+      <Filter>Resource Files\Configs\Regressor</Filter>
+    </None>
+    <None Include="Confs\body25_regressor_side0.json">
+      <Filter>Resource Files\Configs\Regressor</Filter>
+    </None>
+    <None Include="Confs\body25_regressor_side1.json">
+      <Filter>Resource Files\Configs\Regressor</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

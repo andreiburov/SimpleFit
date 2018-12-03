@@ -1,0 +1,28 @@
+{
+  "betas": [
+    {
+      "key": 1,
+      "value": -7.0
+    }
+  ],
+  "thetas": [
+    {
+      "key": "HIP_CENTER",
+      "value": {
+        "x": 0.0,
+        "y": 2.8,
+        "z": 0.4
+      }
+    }
+  ],
+  "translation": {
+    "rows": 3,
+    "cols": 1,
+    "value0": 0.0,
+    "value1": 0.15,
+    "value2": -4.2
+  },
+  "model_path": "../Model/",
+  "output_path": "Body25RegressorBack1/",
+  "reconstruction_config": "Reconstructions/quick.json"
+}

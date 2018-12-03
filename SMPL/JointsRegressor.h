@@ -49,8 +49,8 @@ namespace smpl
 					joint_count = COCO_JOINT_COUNT;
 					break;
 				case BODY_25:
-					MessageBoxA(nullptr, "BODY_25 regressor not implemented!", "Error", MB_OK);
-					throw std::exception("Not implemented");
+                    ReadSparseMatrixFile(model_path + std::string("body25_regressor.txt"), regressor);
+                    joint_count = BODY_25_JOINT_COUNT;
 					break;
 				}	
 			}

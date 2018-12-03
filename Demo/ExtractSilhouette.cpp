@@ -15,7 +15,7 @@
 //#define FROM_VIDEO
 #define TUNE_HYPERPARAMETERS
 //#define WRITE_DOWN
-//#define RENDER_POSE
+#define RENDER_POSE
 const int BODY_25_JOINT_COUNT = 25;
 const bool kUseBody25 = true;
 const int kImageWidth = 640;

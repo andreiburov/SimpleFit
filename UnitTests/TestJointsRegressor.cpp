@@ -1,9 +1,10 @@
 #include <SMPL.h>
 #include <catch.hpp>
+#include "Common.h"
 
 using namespace smpl;
 
-TEST_CASE("Joints COCO")
+TEST_CASE("Estimate for depth")
 {
 	const std::string model_path("../Model/");
 	Generator generator(model_path);
@@ -30,4 +31,32 @@ TEST_CASE("Joints COCO")
 	std::cout << "model_avg_shoulders_to_hips_norm: " << model_avg_shoulders_to_hips_norm << std::endl;
 	std::cout << "model_avg_shoulders_to_hips_norm_manual: " << model_avg_shoulders_to_hips_norm_manual << std::endl;
 	std::cout << "debug: " << debug << std::endl;
+}
+
+TEST_CASE("Body25 Regressor From Different Views")
+{
+    TestConfiguration test;
+    SECTION("0") { test = TestConfiguration("Confs/body25_regressor_front0.json"); }
+    SECTION("1") { test = TestConfiguration("Confs/body25_regressor_side0.json"); }
+    SECTION("2") { test = TestConfiguration("Confs/body25_regressor_back0.json"); }
+    SECTION("3") { test = TestConfiguration("Confs/body25_regressor_front1.json"); }
+    SECTION("4") { test = TestConfiguration("Confs/body25_regressor_side1.json"); }
+    SECTION("5") { test = TestConfiguration("Confs/body25_regressor_back1.json"); }
+
+    Generator generator(test.model_path);
+    Projector projector(test.model_path);
+    JointsRegressor joints_regressor(
+        JointsRegressor::Configuration(test.model_path, JointsRegressor::BODY_25));
+    ShapeCoefficients betas(test.betas);
+    PoseEulerCoefficients thetas(test.thetas);
+
+    Body body = generator(betas, thetas);
+    RegressedJoints joints = joints_regressor(body.vertices);
+    std::vector<float> joints2d = Image::Coordinates(
+        projector.FromRegressed(joints, test.translation));
+
+    Image image;
+    Image::Draw3D(image, Pixel::White(), projector, test.translation, body.vertices);
+    Image::Draw2D(image, Pixel::Red(), 2, joints2d);
+    image.SavePNG(test.output_path + "body.png");
 }

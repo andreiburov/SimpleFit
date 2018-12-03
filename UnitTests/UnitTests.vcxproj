@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="TestJointsRegressor.cpp" />
+    <ClCompile Include="TestRealJointsAndSilhouettesRegularized.cpp" />
     <ClCompile Include="TestSilhouetteCorrespondences.cpp" />
     <ClCompile Include="TestProjector.cpp" />
     <ClCompile Include="TestJacobianBody.cpp" />
@@ -185,6 +186,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Confs\body25_regressor_back0.json" />
+    <None Include="Confs\body25_regressor_back1.json" />
+    <None Include="Confs\body25_regressor_front0.json" />
+    <None Include="Confs\body25_regressor_front1.json" />
+    <None Include="Confs\body25_regressor_side0.json" />
+    <None Include="Confs\body25_regressor_side1.json" />
     <None Include="Confs\find_correspondences0.json" />
     <None Include="Confs\find_correspondences1.json" />
     <None Include="Confs\find_correspondences2.json" />

@@ -8,9 +8,9 @@ TEST_CASE("Synthetic Body From Joints And Silhouette")
 {
 	TestConfiguration test;
 
-	SECTION("0") { test = TestConfiguration("Confs/synthetic_body_from_joints_and_silhouette0.json"); }
-	/*SECTION("1") { test = TestConfiguration("Confs/synthetic_body_from_joints_and_silhouette1.json"); }
-	SECTION("2") { test = TestConfiguration("Confs/synthetic_body_from_joints_and_silhouette2.json"); }*/
+	//SECTION("0") { test = TestConfiguration("Confs/synthetic_body_from_joints_and_silhouette0.json"); }
+	SECTION("1") { test = TestConfiguration("Confs/synthetic_body_from_joints_and_silhouette1.json"); }
+	//SECTION("2") { test = TestConfiguration("Confs/synthetic_body_from_joints_and_silhouette2.json"); }
 
 	ShapeCoefficients input_betas(test.betas), betas;
 	PoseEulerCoefficients input_thetas(test.thetas), thetas;
@@ -44,9 +44,9 @@ TEST_CASE("Synthetic Body From Joints And Silhouette Regularized")
 {
     TestConfiguration test;
 
-    SECTION("0") { test = TestConfiguration("Confs/synthetic_body_from_js_reg0.json"); }
-    /*SECTION("1") { test = TestConfiguration("Confs/synthetic_body_from_js_reg1.json"); }
-    SECTION("2") { test = TestConfiguration("Confs/synthetic_body_from_js_reg2.json"); }*/
+    //SECTION("0") { test = TestConfiguration("Confs/synthetic_body_from_js_reg0.json"); }
+    //SECTION("1") { test = TestConfiguration("Confs/synthetic_body_from_js_reg1.json"); }
+    SECTION("2") { test = TestConfiguration("Confs/synthetic_body_from_js_reg2.json"); }
 
     ShapeCoefficients input_betas(test.betas), betas;
     PoseEulerCoefficients input_thetas(test.thetas), thetas;
